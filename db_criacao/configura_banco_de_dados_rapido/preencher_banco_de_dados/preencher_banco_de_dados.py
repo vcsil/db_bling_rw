@@ -390,3 +390,27 @@ def preencher_contatos_indicador_inscricao_estadual():
         valores_placeholder=colunas,
         conn_string=conn_string
     )
+
+
+def preencher_contatos_classificacao():
+    """
+    Preenche a tabela contatos_classificacao da database.
+
+    Returns
+    -------
+    None.
+
+    """
+    colunas = pega_nome_colunas(tabela='contatos_classificacao')
+
+    ROTA = BASE_URL + '/contatos/tipos'
+    contatos_classificacao = solicita_na_api(ROTA, header=header)
+
+    valores = contatos_classificacao['data']
+    insert_in_db(
+        tabela='contatos_classificacao',
+        colunas=colunas,
+        valores=valores,
+        valores_placeholder=colunas,
+        conn_string=conn_string
+    )
