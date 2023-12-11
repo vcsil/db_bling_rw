@@ -309,3 +309,33 @@ def pega_nome_colunas(tabela: str) -> List[str]:
     return nome_colunas
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+
+
+# =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
+
+def preencher_contatos_situacao():
+    """
+    Preenche a tabela contatos_situacao da database.
+
+    Returns
+    -------
+    None.
+
+    """
+    colunas = pega_nome_colunas(tabela='contatos_situacao')
+    colunas.remove('id')
+
+    valores = [
+        {"nome": 'Ativo', "sigla": 'A'},
+        {"nome": 'Excluído', "sigla": 'E'},
+        {"nome": 'Inativo', "sigla": 'I'},
+        {"nome": 'Sem movimentação', "sigla": 'S'},
+    ]
+    insert_in_db(
+        tabela='contatos_situacao',
+        colunas=colunas,
+        valores=valores,
+        valores_placeholder=colunas,
+        conn_string=conn_string
+    )
+
