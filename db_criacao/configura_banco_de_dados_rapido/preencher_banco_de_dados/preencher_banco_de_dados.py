@@ -430,7 +430,7 @@ def _pega_id_contatos() -> List[int]:
     tem_contatos = True  # Verifica se tem contatos na página
     pagina = 0
 
-    barra_carregamento = tqdm(desc='Paginas')
+    barra_carregamento = tqdm(desc='Paginas de contatos')
     while tem_contatos:
         pagina += 1
         ROTA = BASE_URL + f'/contatos?pagina={pagina}&criterio=1'
