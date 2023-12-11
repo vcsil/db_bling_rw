@@ -415,6 +415,7 @@ def preencher_contatos_classificacao():
         conn_string=conn_string
     )
 
+
 def _pega_id_contatos() -> List[int]:
     """
     Pega todos o ID de todos os contatos no Bling.
