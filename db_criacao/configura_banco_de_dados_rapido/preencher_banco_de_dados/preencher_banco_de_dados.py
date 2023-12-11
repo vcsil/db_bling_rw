@@ -227,7 +227,6 @@ def select_all_from_db(
         )
 
     try:
-    # Conecte-se a um banco de dados existente
         with psycopg.connect(conn_string) as conn:
             # print(query.as_string(conn))
             array_dados = conn.execute(query).fetchall()
@@ -235,16 +234,7 @@ def select_all_from_db(
         return array_dados
     except psycopg.Error as e:
         print(f"Erro ao conectar ao banco de dados: {e}")
-                id serial PRIMARY KEY,
-                num integer,
-                data text)
-            """)
 
-        # Passe os dados para preencher os espaços reservados de uma consulta
-        # e deixe o Psycopg executar a conversão correta (sem injeções de SQL!)
-        conn.execute(
-            "INSERT INTO test (num, data) VALUES (%s, %s)",
-            (100, "abc'def"))
 
 def insert_in_db(
         tabela: str,
