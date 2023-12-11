@@ -414,3 +414,34 @@ def preencher_contatos_classificacao():
         valores_placeholder=colunas,
         conn_string=conn_string
     )
+
+def _pega_id_contatos() -> List[int]:
+    """
+    Pega todos o ID de todos os contatos no Bling.
+
+    Returns
+    -------
+    List[int]
+        Lista com o ids de cada contato.
+
+    """
+    list_ids = []  # Vai armazenar as ids
+    tem_contatos = True  # Verifica se tem contatos na página
+    pagina = 0
+
+    barra_carregamento = tqdm(desc='Paginas')
+    while tem_contatos:
+        pagina += 1
+        ROTA = BASE_URL + f'/contatos?pagina={pagina}&criterio=1'
+
+        contatos_reduzido = solicita_na_api(ROTA=ROTA, header=header)['data']
+
+        if (len(contatos_reduzido)) > 0:
+            for contato in contatos_reduzido:
+                list_ids.append(contato['id'])
+
+            barra_carregamento.update(1)
+        else:
+            tem_contatos = False
+
+    return list_ids
