@@ -19,12 +19,45 @@ from psycopg import sql
 import psycopg
 import time
 
+# =-=-=-=-=-=-=-=-=-=-=-=- Carregando chaves de acesso =-=-=-=-=-=-=-=-=-=-=-=-
 # Path consegue lidar com diretório em vários Sistemas Operacionais
-arquivo_env = Path(".") / ".." / ".." / ".." / ".env"
+env_path = Path(".") / ".." / ".." / ".." / ".env"
 
-# Pega os valores das variáveis de ambiente
-env = dotenv_values(dotenv_path=arquivo_env)
+# Verifica e pega se o access token estiver no .env
+OAUTH_ACCESS_TOKEN = get_key(
+    dotenv_path=env_path,
+    key_to_get="OAUTH_ACCESS_TOKEN")
 
+if not (OAUTH_ACCESS_TOKEN):
+    # Solicita novas credenciais de acesso e salva no arquivo .env
+    oauth_blingV3(save_env=True, save_txt=False)
+
+
+def pega_variaveis_ambiente(
+        dotenv_path: Union[str, os.PathLike, None]
+) -> Dict[str, Optional[str]]:
+    """
+    Pega os valores das variáveis de ambiente.
+
+    Parameters
+    ----------
+    dotenv_path : Union[str, os.PathLike, None], optional
+        DESCRIPTION. The default is None.
+
+    Returns
+    -------
+    Dict[str, Optional[str]]
+        Todas variáveis do .env do projeto.
+
+    """
+    global env
+    env = dotenv_values(dotenv_path=env_path)
+    return env
+
+
+env = pega_variaveis_ambiente(dotenv_path=env_path)
+
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-
 # Construindo a string de conexão
 conn_string = f"""
     dbname={env["POSTGRES_DATABASE"]}
