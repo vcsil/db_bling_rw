@@ -169,19 +169,33 @@ header = cria_header_http(access_token=env['OAUTH_ACCESS_TOKEN'])
 # =-=-=-=-=-=-=-=-=-=-=-=-= Conexão ao Banco de Dados =-=-=-=-=-=-=-=-=-=-=-=-=
 
 # Construindo a string de conexão
-conn_string = f"""
-    dbname={env["POSTGRES_DATABASE"]}
-    user={env["POSTGRES_USERNAME"]}
-    password={env["POSTGRES_PASSWORD"]}
-    host={env["POSTGRES_HOST"]}
-    port={env["POSTGRES_PORT"]}
-"""
+
+
+def conectar_ao_banco():
+    """
+    Conecta ao banco de dados.
+
+    Returns
+    -------
+    TYPE
+        DESCRIPTION.
+
+    """
+    conn_string = f"""
+        dbname={env["POSTGRES_DATABASE"]}
+        user={env["POSTGRES_USERNAME"]}
+        password={env["POSTGRES_PASSWORD"]}
+        host={env["POSTGRES_HOST"]}
+        port={env["POSTGRES_PORT"]}
+    """
+
+    return psycopg.connect(conn_string)
 
 
 def select_all_from_db(
         tabela: str,
         colunas: Union[str, List[str]],
-        conn_string: str,
+        conn,
         filtro: Tuple[str, Tuple[Union[str, int]]] = None
 ) -> List[Tuple[int]]:
     """
@@ -195,8 +209,8 @@ def select_all_from_db(
         Nome da tabela.
     colunas : Union[str, List[str]]
         Nome da coluna ou um array com o nome das colunas .
-    conn_string : str
-        String de conexão com banco de dados.
+    conn : Connection
+        Conexão com banco de dados.
     filtro : Tuple[str, Tuple[Union[str, int]]], optional
         Uma tupla com o Filtro seguindo por uma tupla com o valor do filtro.
         The default is None.
@@ -227,13 +241,12 @@ def select_all_from_db(
         )
 
     try:
-        with psycopg.connect(conn_string) as conn:
-            # print(query.as_string(conn))
-            array_dados = conn.execute(query).fetchall()
+        # print(query.as_string(conn))
+        array_dados = conn.execute(query).fetchall()
 
         return array_dados
     except psycopg.Error as e:
-        print(f"Erro ao conectar ao banco de dados: {e}")
+        print(f"Erro no banco de dados: {e}")
 
 
 def insert_in_db(
@@ -241,7 +254,7 @@ def insert_in_db(
         colunas: Union[str, List[str]],
         valores: List[Dict[str, Union[str, int]]],
         valores_placeholder: List[str],
-        conn_string: str
+        conn
 ):
     """
     Faz um INSERT no banco de dados.
@@ -257,6 +270,9 @@ def insert_in_db(
         Nome da coluna.
     valores_placeholder : List[str]
         Lista utilizada para nomear cada coluna que vai receber o valor.
+        Nome da coluna.
+    conn : Connection
+        Conexão com banco de dados.
 
     Returns
     -------
@@ -277,11 +293,11 @@ def insert_in_db(
     )
 
     try:
-        with psycopg.connect(conn_string) as conn:
-            with conn.cursor() as cur:
-                cur.executemany(query, valores)
+        print(query.as_string(conn))
+        with conn.cursor() as cur:
+            cur.executemany(query, valores)
     except psycopg.Error as e:
-        print(f"Erro ao conectar ao banco de dados: {e}")
+        print(f"Erro no banco de dados: {e}")
 
 
 def pega_nome_colunas(tabela: str) -> List[str]:
@@ -299,10 +315,12 @@ def pega_nome_colunas(tabela: str) -> List[str]:
         Lista de tupla com os nomes das colunas.
 
     """
-    nome_colunas = select_all_from_db(tabela='"information_schema"."columns"',
-                                      colunas="column_name",
-                                      filtro=("WHERE table_name =", tabela),
-                                      conn_string=conn_string)
+    with conectar_ao_banco() as conn:
+        nome_colunas = select_all_from_db(
+            tabela='"information_schema"."columns"',
+            colunas="column_name", filtro=("WHERE table_name =", tabela),
+            conn=conn)
+
     # Tirar os valores da tupla e deixar dentro de uma array
     nome_colunas = [coluna[0] for coluna in nome_colunas]
 
@@ -331,13 +349,14 @@ def preencher_contatos_situacao():
         {"nome": 'Inativo', "sigla": 'I'},
         {"nome": 'Sem movimentação', "sigla": 'S'},
     ]
-    insert_in_db(
-        tabela='contatos_situacao',
-        colunas=colunas,
-        valores=valores,
-        valores_placeholder=colunas,
-        conn_string=conn_string
-    )
+    with conectar_ao_banco() as conn:
+        insert_in_db(
+            tabela='contatos_situacao',
+            colunas=colunas,
+            valores=valores,
+            valores_placeholder=colunas,
+            conn=conn
+        )
 
 
 def preencher_contatos_tipo():
@@ -357,13 +376,15 @@ def preencher_contatos_tipo():
         {"nome": 'Física', "sigla": 'F'},
         {"nome": 'Estrangeira', "sigla": 'E'},
     ]
-    insert_in_db(
-        tabela='contatos_tipo',
-        colunas=colunas,
-        valores=valores,
-        valores_placeholder=colunas,
-        conn_string=conn_string
-    )
+
+    with conectar_ao_banco() as conn:
+        insert_in_db(
+            tabela='contatos_tipo',
+            colunas=colunas,
+            valores=valores,
+            valores_placeholder=colunas,
+            conn=conn
+        )
 
 
 def preencher_contatos_indicador_inscricao_estadual():
@@ -383,13 +404,15 @@ def preencher_contatos_indicador_inscricao_estadual():
         {"id": 2, "nome": nome2},
         {"id": 9, "nome": 'Não Contribuinte'},
     ]
-    insert_in_db(
-        tabela='contatos_indicador_inscricao_estadual',
-        colunas=colunas,
-        valores=valores,
-        valores_placeholder=colunas,
-        conn_string=conn_string
-    )
+
+    with conectar_ao_banco() as conn:
+        insert_in_db(
+            tabela='contatos_indicador_inscricao_estadual',
+            colunas=colunas,
+            valores=valores,
+            valores_placeholder=colunas,
+            conn=conn
+        )
 
 
 def preencher_contatos_classificacao():
@@ -407,13 +430,15 @@ def preencher_contatos_classificacao():
     contatos_classificacao = solicita_na_api(ROTA, header=header)
 
     valores = contatos_classificacao['data']
-    insert_in_db(
-        tabela='contatos_classificacao',
-        colunas=colunas,
-        valores=valores,
-        valores_placeholder=colunas,
-        conn_string=conn_string
-    )
+
+    with conectar_ao_banco() as conn:
+        insert_in_db(
+            tabela='contatos_classificacao',
+            colunas=colunas,
+            valores=valores,
+            valores_placeholder=colunas,
+            conn=conn
+        )
 
 
 def _pega_id_contatos() -> List[int]:
