@@ -58,6 +58,113 @@ def pega_variaveis_ambiente(
 env = pega_variaveis_ambiente(dotenv_path=env_path)
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-
+
+# =-=-=-=-=-=-=-=-=-=-=-=-= Configurando acesso a API =-=-=-=-=-=-=-=-=-=-=-=-=
+
+# URL API BLing V3
+BASE_URL = env['BLING_BASEURL']
+
+
+def cria_header_http(access_token: str) -> Dict[str, Optional[str]]:
+    """
+    Cria header utilizado nas requisições da API V3 Bling.
+
+    Parameters
+    ----------
+    access_token : str
+        Token de acesso gerado pelo bling.
+
+    Returns
+    -------
+    Dict[str]
+        Header com 'Accept' e 'Authorization'.
+
+    """
+    global header
+    header = {
+      'Accept': 'application/json',
+      'Authorization': f"Bearer {access_token}"
+    }
+    return header
+
+
+def atualiza_token(refresh_token: str) -> Dict[str, Optional[str]]:
+    """
+    Gera um novo token de acesso a partir do refresh token.
+
+    Atualiza header e .env
+
+    Parameters
+    ----------
+    refresh_token : str
+        Gerado na criação de credenciais, fica dentro do .env.
+
+    Returns
+    -------
+    Dict[str]
+        Retorna o header da requisição.
+
+    """
+    # Faz requisição de novas credenciais
+    oauth_refresh_blingV3(
+        refresh_token=refresh_token,
+        save_env=True,
+        save_txt=False
+    )
+    # Atualiza a variável env com as novas variáveis de ambiente
+    env_atualizado = pega_variaveis_ambiente(dotenv_path=env_path)
+    # Atualiza header
+    header_atualizado = cria_header_http(
+        access_token=env_atualizado['OAUTH_ACCESS_TOKEN']
+    )
+    return header_atualizado
+
+
+def solicita_na_api(ROTA: str, header: Dict[str, Optional[str]]):
+    """
+    Faz um GET para a API e retorna o response.json().
+
+    Parameters
+    ----------
+    ROTA : str
+        Rota da solicitação.
+    header : Dict[str, Optional[str]]
+        Header de aturoização.
+
+    Raises
+    ------
+    UnauthorizedError
+        Ocorre quando o token de acessor inspira.
+
+    Returns
+    -------
+    JSON
+        Arquivo json do response da requisição.
+
+    """
+    try:
+        response = requests.get(url=ROTA, headers=header)
+
+        situationStatusCode = response.status_code
+
+        if situationStatusCode == 401:
+            raise UnauthorizedError(response.json()['error'])
+
+        return response.json()
+
+    except UnauthorizedError as e:
+        print(f'UnauthorizedError: {e}')
+
+        # Solicita novas credenciais de acesso
+        header_novo = atualiza_token(refresh_token=env['OAUTH_REFRESH_TOKEN'])
+
+        # Refaz o pedido de busca com credencial atualizado
+        return solicita_na_api(ROTA=ROTA, header=header_novo)
+
+
+header = cria_header_http(access_token=env['OAUTH_ACCESS_TOKEN'])
+
+# =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-
 # Construindo a string de conexão
 conn_string = f"""
     dbname={env["POSTGRES_DATABASE"]}
