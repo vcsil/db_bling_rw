@@ -5,12 +5,19 @@ preencher_banco_de_dados.
 
 Script para pegar os dados do Bling e passar para o banco de dados
 """
-import time
+from bling_api_v3_oauth.BlingV3 import oauth_blingV3, oauth_refresh_blingV3
+from Errors import UnauthorizedError
 
-from dotenv import dotenv_values
+from dotenv import dotenv_values, get_key
+from typing import List, Tuple, Dict, Union, Optional
 from pathlib import Path
+import requests
+import os
 
+from tqdm import tqdm
+from psycopg import sql
 import psycopg
+import time
 
 # Path consegue lidar com diretório em vários Sistemas Operacionais
 arquivo_env = Path(".") / ".." / ".." / ".." / ".env"
