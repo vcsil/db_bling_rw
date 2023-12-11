@@ -364,3 +364,29 @@ def preencher_contatos_tipo():
         valores_placeholder=colunas,
         conn_string=conn_string
     )
+
+
+def preencher_contatos_indicador_inscricao_estadual():
+    """
+    Preenche a tabela contatos_indicador_inscricao_estadual da database.
+
+    Returns
+    -------
+    None.
+
+    """
+    colunas = pega_nome_colunas(tabela='contatos_indicador_inscricao_estadual')
+
+    nome2 = 'Contribuinte isento de Inscrição no cadastro de Contribuintes'
+    valores = [
+        {"id": 1, "nome": 'Contribuinte ICMS'},
+        {"id": 2, "nome": nome2},
+        {"id": 9, "nome": 'Não Contribuinte'},
+    ]
+    insert_in_db(
+        tabela='contatos_indicador_inscricao_estadual',
+        colunas=colunas,
+        valores=valores,
+        valores_placeholder=colunas,
+        conn_string=conn_string
+    )
