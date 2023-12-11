@@ -339,3 +339,28 @@ def preencher_contatos_situacao():
         conn_string=conn_string
     )
 
+
+def preencher_contatos_tipo():
+    """
+    Preenche a tabela contatos_tipo da database.
+
+    Returns
+    -------
+    None.
+
+    """
+    colunas = pega_nome_colunas(tabela='contatos_tipo')
+    colunas.remove('id')
+
+    valores = [
+        {"nome": 'Jurídica', "sigla": 'J'},
+        {"nome": 'Física', "sigla": 'F'},
+        {"nome": 'Estrangeira', "sigla": 'E'},
+    ]
+    insert_in_db(
+        tabela='contatos_tipo',
+        colunas=colunas,
+        valores=valores,
+        valores_placeholder=colunas,
+        conn_string=conn_string
+    )
