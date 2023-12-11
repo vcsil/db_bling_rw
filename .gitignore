@@ -89,3 +89,4 @@ typings/
 
 # Spyder project
 .spyproject/
+__pycache__/
