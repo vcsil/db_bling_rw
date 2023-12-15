@@ -15,7 +15,7 @@ CREATE TABLE "contatos"(
     "orgao_emissor"                     VARCHAR(55),
     "email"                             VARCHAR(255),
     "data_nascimento"                   DATE,
-    "sexo"                              INTEGER             NOT NULL CHECK (sexo IN (1, 2, 3)),
+    "sexo"                              INTEGER             NOT NULL CHECK (sexo IN (1, 2, 3)) DEFAULT 2,
     "id_classificacao_contato"          BIGINT                       REFERENCES "contatos_classificacao"("id_bling"),
 );
 COMMENT ON COLUMN
