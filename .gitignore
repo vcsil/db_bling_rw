@@ -90,3 +90,6 @@ typings/
 # Spyder project
 .spyproject/
 __pycache__/
+
+# Arquivo log
+*_log.txt
