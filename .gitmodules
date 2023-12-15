@@ -1,0 +1,3 @@
+[submodule "db_criacao/configura_banco_de_dados_rapido/preencher/bling_api_v3_oauth"]
+	path = db_criacao/configura_banco_de_dados_rapido/preencher/bling_api_v3_oauth
+	url = https://github.com/vcsil/bling_api_v3_oauth.git
