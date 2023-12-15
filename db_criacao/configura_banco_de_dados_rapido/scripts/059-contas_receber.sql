@@ -8,10 +8,10 @@ CREATE TABLE "contas_receber"(
     "saldo"                 INTEGER             NOT NULL,
     "data_emissao"          DATE                NOT NULL,
     "vencimento_original"   DATE                NOT NULL,
-    "numero_documento"      VARCHAR(63)         NOT NULL,
+    "numero_documento"      VARCHAR(63)         NOT NULL CHECK ("numero_documento" <> ''),
     "competencia"           DATE                NOT NULL,
     "historico"             TEXT                NOT NULL,
-    "numero_banco"          VARCHAR(63)         NOT NULL,
+    "numero_banco"          VARCHAR(63)         NOT NULL CHECK ("numero_banco" <> ''),
     "id_portador"           BIGINT              NOT NULL REFERENCES "contas_contabeis"("id")
 );
 COMMENT ON COLUMN

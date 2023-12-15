@@ -1,6 +1,6 @@
 CREATE TABLE "transporte_frete_por_conta_de"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(63)         NOT NULL
+    "nome"  VARCHAR(63)         NOT NULL CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
     "transporte_frete_por_conta_de"."nome" IS '`0` Contratação do Frete por conta do Remetente (CIF)

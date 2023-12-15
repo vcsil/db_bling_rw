@@ -1,6 +1,6 @@
 CREATE TABLE "categorias_receitas_despesas"(
     "id_bling"      BIGINT PRIMARY KEY  NOT NULL,
-    "nome"          VARCHAR(45)         NOT NULL,
+    "nome"          VARCHAR(45)         NOT NULL CHECK ("nome" <> ''),
     "tipo"          INTEGER             NOT NULL
 );
 COMMENT ON COLUMN

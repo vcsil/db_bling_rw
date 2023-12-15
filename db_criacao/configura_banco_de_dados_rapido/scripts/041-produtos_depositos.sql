@@ -1,6 +1,6 @@
 CREATE TABLE "produtos_depositos"(
     "id_bling"              BIGINT PRIMARY KEY  NOT NULL,
-    "descricao"             VARCHAR(45)         NOT NULL,
+    "descricao"             VARCHAR(45)         NOT NULL  CHECK ("descricao" <> ''),
     "situacao"              BOOLEAN             NOT NULL DEFAULT TRUE,
     "padrao"                BOOLEAN             NOT NULL DEFAULT TRUE,
     "desconsiderar_saldo"   BOOLEAN             NOT NULL DEFAULT FALSE

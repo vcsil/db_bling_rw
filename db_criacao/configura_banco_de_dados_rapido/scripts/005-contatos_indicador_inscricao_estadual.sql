@@ -1,6 +1,6 @@
 CREATE TABLE "contatos_indicador_inscricao_estadual"(
     "id"    INTEGER PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(63)         NOT NULL UNIQUE
+    "nome"  VARCHAR(63)         NOT NULL UNIQUE CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
     "contatos_indicador_inscricao_estadual"."nome" IS 'Indicador de inscrição estadual
