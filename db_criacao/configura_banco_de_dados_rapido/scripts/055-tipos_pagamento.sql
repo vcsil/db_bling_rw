@@ -1,6 +1,6 @@
 CREATE TABLE "tipos_pagamento"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(63)         NOT NULL
+    "nome"  VARCHAR(63)         NOT NULL  CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
     "tipos_pagamento"."nome" IS '`1` Dinheiro

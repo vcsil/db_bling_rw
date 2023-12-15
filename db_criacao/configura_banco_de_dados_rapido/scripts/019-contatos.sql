@@ -1,6 +1,6 @@
 CREATE TABLE "contatos"(
     "id_bling"                          BIGINT PRIMARY KEY  NOT NULL,
-    "nome"                              VARCHAR(120)        NOT NULL,
+    "nome"                              VARCHAR(120)        NOT NULL CHECK ("nome" <> ''),
     "sobrenome"                         VARCHAR(255)        NOT NULL,
     "codigo"                            VARCHAR(45),
     "id_situacao_contato"               INTEGER             NOT NULL REFERENCES "contatos_situacao"("id"),
@@ -15,8 +15,9 @@ CREATE TABLE "contatos"(
     "orgao_emissor"                     VARCHAR(55),
     "email"                             VARCHAR(255),
     "data_nascimento"                   DATE,
-    "sexo"                              INTEGER             NOT NULL CHECK (sexo IN (1, 2, 3)),
-    "id_classificacao_contato"          BIGINT                       REFERENCES "contatos_classificacao"("id_bling")
+    "sexo"                              INTEGER             NOT NULL CHECK (sexo IN (1, 2, 3)) DEFAULT 2,
+    "id_classificacao_contato"          BIGINT                       REFERENCES "contatos_classificacao"("id_bling"),
+    "cliente_desde"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp
 );
 COMMENT ON COLUMN
     "contatos"."numero_documento" IS 'CPF ou CNPJ do contato';

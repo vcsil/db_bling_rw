@@ -1,6 +1,6 @@
 CREATE TABLE "formas_pagamento"(
     "id_bling"          BIGINT PRIMARY KEY  NOT NULL,
-    "nome"              VARCHAR(45)         NOT NULL,
+    "nome"              VARCHAR(45)         NOT NULL  CHECK ("nome" <> ''),
     "id_tipo_pagamento" INTEGER             NOT NULL REFERENCES "tipos_pagamento"("id"),
     "situacao"          BOOLEAN             NOT NULL,
     "fixa"              BOOLEAN             NOT NULL,

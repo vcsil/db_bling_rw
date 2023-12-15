@@ -1,6 +1,6 @@
 CREATE TABLE "endereco_municipios"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(63)         NOT NULL,
+    "nome"  VARCHAR(63),
     "id_uf" INTEGER             NOT NULL REFERENCES "endereco_unidade_federativa"("id")
     
     , CONSTRAINT uq_municipio_iduf UNIQUE ("nome", "id_uf")
