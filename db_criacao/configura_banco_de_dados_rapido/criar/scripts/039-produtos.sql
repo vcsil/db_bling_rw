@@ -28,7 +28,7 @@ CREATE TABLE "produtos"(
     "estoque_crossdocking"      INTEGER             NOT NULL DEFAULT 0,
     "estoque_localizacao"       VARCHAR(45),
     "id_dimensoes"              INTEGER             NOT NULL REFERENCES "dimensoes"("id"),
-    "id_midia_principal"        INTEGER             NOT NULL REFERENCES "produtos_midias"("id")
+    "id_midia_principal"        INTEGER             REFERENCES "produtos_midias"("id")
 
     , CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo")
 );
