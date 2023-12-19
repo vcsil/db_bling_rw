@@ -63,7 +63,7 @@ class EnvValores():
             oauth_blingV3(save_env=True, save_txt=False)
 
     def env_db(self) -> Dict[str, str]:
-        """Filtra as variáveis usadas na conexão com a API."""
+        """Filtra as variáveis usadas na conexão com o banco de dados."""
         self._check_credencial_api()
 
         env = self.pega_variaveis_ambiente()
