@@ -20,9 +20,22 @@ class PreencherPrdutos(ConectaDB):
     def __init__(self, tabelas_colunas):
         self.tabelas_colunas = tabelas_colunas
 
-    def preencher_produtos_tipos(self):
+    def preencher_produtos_tipos(self, tabela: str, conn):
         """Preenche a tabela produtos_tipos da database."""
-        pass
+        colunas = self.tabelas_colunas[tabela][:]
+        colunas.remove('id')
+
+        valores = [
+            {"nome": 'Serviço', "sigla": 'S'},
+            {"nome": 'Produto', "sigla": 'P'},
+            {"nome": 'Serviço 06 21 22', "sigla": 'N'},
+        ]
+
+        log.info("Insere tipos de contatos")
+        self.insert_many_in_db(
+            tabela=tabela, colunas=colunas, valores=valores,
+            valores_placeholder=colunas, conn=conn)
+        log.info("Fim")
 
     def preencher_produtos_formatos(self):
         """Preenche a tabela produtos_formatos da database."""
