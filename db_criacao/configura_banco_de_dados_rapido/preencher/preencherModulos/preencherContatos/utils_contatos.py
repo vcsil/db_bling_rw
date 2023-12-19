@@ -7,9 +7,8 @@ Created on Thu Dec 14 11:11:39 2023.
 """
 from config.conexao_db import ConectaDB
 
-from typing import List, Dict, Union
+from typing import Dict, Union
 from datetime import datetime
-from tqdm import tqdm
 import logging
 
 log = logging.getLogger(__name__)
@@ -17,40 +16,6 @@ log = logging.getLogger(__name__)
 
 class UtilsContatos(ConectaDB):
     """Funções utéis para preencher contatos."""
-
-    def _pega_id_contatos(self, api) -> List[int]:
-        """
-        Pega todos o ID de todos os contatos no Bling.
-
-        Returns
-        -------
-        List[int]
-            Lista com o ids de cada contato.
-
-        """
-        list_ids = []  # Vai armazenar as ids
-        tem_contatos = True  # Verifica se tem contatos na página
-        pagina = 0
-
-        log.info("Pega os id's de todos os contatos")
-        barra_carregamento = tqdm(desc='Paginas de contatos')
-        while tem_contatos:
-            pagina += 1
-            ROTA = f'/contatos?pagina={pagina}&criterio=1&limite=100'
-
-            contatos_reduzido = api.solicita_na_api(ROTA)['data']
-
-            if (len(contatos_reduzido)) > 0:
-                for contato in contatos_reduzido:
-                    list_ids.append(contato['id'])
-
-                barra_carregamento.update(1)
-            else:
-                tem_contatos = False
-            # tem_contatos = False  # <<<<<<<<<<<<<<<<<
-
-        log.info("Fim")
-        return list_ids[::-1]
 
     def _manipula_dados_contatos(self, contato: dict, fuso,
                                  conn, tabelas_colunas):
