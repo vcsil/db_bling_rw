@@ -37,9 +37,22 @@ class PreencherPrdutos(ConectaDB):
             valores_placeholder=colunas, conn=conn)
         log.info("Fim")
 
-    def preencher_produtos_formatos(self):
+    def preencher_produtos_formatos(self, tabela: str, conn):
         """Preenche a tabela produtos_formatos da database."""
-        pass
+        colunas = self.tabelas_colunas[tabela][:]
+        colunas.remove('id')
+
+        valores = [
+            {"nome": 'Simples', "sigla": 'S'},
+            {"nome": 'Com variações', "sigla": 'V'},
+            {"nome": 'Com composição', "sigla": 'E'},
+        ]
+
+        log.info("Insere formatos de produtos")
+        self.insert_many_in_db(
+            tabela=tabela, colunas=colunas, valores=valores,
+            valores_placeholder=colunas, conn=conn)
+        log.info("Fim")
 
     def preencher_produtos_tipo_producao(self):
         """Preenche a tabela produtos_formatos da database."""
