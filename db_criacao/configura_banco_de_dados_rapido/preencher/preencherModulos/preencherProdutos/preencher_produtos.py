@@ -70,9 +70,21 @@ class PreencherPrdutos(ConectaDB):
             valores_placeholder=colunas, conn=conn)
         log.info("Fim")
 
-    def preencher_produtos_condicao(self):
+    def preencher_produtos_condicao(self, tabela: str, conn):
         """Preenche a tabela produtos_formatos da database."""
-        pass
+        colunas = self.tabelas_colunas[tabela][:]
+
+        valores = [
+            {"id": '0', "nome": 'Não especificado'},
+            {"id": '1', "nome": 'Novo'},
+            {"id": '2', "nome": 'Usado'},
+        ]
+
+        log.info("Insere condicao de produtos")
+        self.insert_many_in_db(
+            tabela=tabela, colunas=colunas, valores=valores,
+            valores_placeholder=colunas, conn=conn)
+        log.info("Fim")
 
     def preencher_produtos_categorias(self):
         """Preenche a tabela produtos_formatos da database."""
