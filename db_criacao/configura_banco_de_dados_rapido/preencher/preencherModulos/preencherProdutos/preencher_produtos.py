@@ -7,6 +7,10 @@ Created on Sun Dec 17 13:06:07 2023.
 """
 from config.conexao_db import ConectaDB
 
+import logging
+
+log = logging.getLogger(__name__)
+
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
 
 
