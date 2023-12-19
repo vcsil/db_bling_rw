@@ -26,13 +26,9 @@ class PreencherContatos(ConectaDB):
     def __init__(self, tabelas_colunas):
         self.tabelas_colunas = tabelas_colunas
 
-    def preencher_contatos_situacao(
-            self,
-            tabela: str,
-            conn
-    ):
+    def preencher_contatos_situacao(self, tabela: str, conn):
         """Preenche a tabela contatos_situacao da database."""
-        colunas = self.tabelas_colunas['contatos_situacao'][:]
+        colunas = self.tabelas_colunas[tabela][:]
         colunas.remove('id')
 
         valores = [
@@ -48,13 +44,9 @@ class PreencherContatos(ConectaDB):
             valores_placeholder=colunas, conn=conn)
         log.info("Fim")
 
-    def preencher_contatos_tipo(
-            self,
-            tabela: str,
-            conn
-    ):
+    def preencher_contatos_tipo(self, tabela: str, conn):
         """Preenche a tabela contatos_tipo da database."""
-        colunas = self.tabelas_colunas['contatos_tipo'][:]
+        colunas = self.tabelas_colunas[tabela][:]
         colunas.remove('id')
 
         valores = [
@@ -69,14 +61,11 @@ class PreencherContatos(ConectaDB):
             valores_placeholder=colunas, conn=conn)
         log.info("Fim")
 
-    def preencher_contatos_indicador_inscricao_estadual(
-            self,
-            tabela: str,
-            conn
-    ):
+    def preencher_contatos_indicador_inscricao_estadual(self, tabela: str,
+                                                        conn):
         """Preenche a tabela contatos_indicador_inscricao_estadual do db."""
         colunas = (
-            self.tabelas_colunas['contatos_indicador_inscricao_estadual'][:])
+            self.tabelas_colunas[tabela][:])
         nome2 = 'Contribuinte isento de Inscrição no cadastro de Contribuintes'
         valores = [
             {"id": 1, "nome": 'Contribuinte ICMS'},
@@ -90,13 +79,9 @@ class PreencherContatos(ConectaDB):
             valores_placeholder=colunas, conn=conn)
         log.info("Fim")
 
-    def preencher_contatos_classificacao(
-            self,
-            tabela: str,
-            conn, api
-    ):
+    def preencher_contatos_classificacao(self, tabela: str, conn, api):
         """Preenche a tabela contatos_classificacao da database."""
-        colunas = self.tabelas_colunas['contatos_classificacao'][:]
+        colunas = self.tabelas_colunas[tabela][:]
 
         ROTA = '/contatos/tipos'
         log.info("Busca classificacao de contatos na API")
@@ -110,13 +95,9 @@ class PreencherContatos(ConectaDB):
             valores_placeholder=valores[0].keys(), conn=conn)
         log.info("Fim")
 
-    def preencher_contatos(
-            self,
-            tabela: str,
-            conn, api, fuso
-    ):
+    def preencher_contatos(self, tabela: str, conn, api, fuso):
         """Preenche a tabela contatos da database."""
-        colunas = self.tabelas_colunas['contatos'][:]
+        colunas = self.tabelas_colunas[tabela][:]
         id_contatos = Utils()._pega_todos_id(api, '/contatos?criterio=1')
 
         ROTA = '/contatos/'
