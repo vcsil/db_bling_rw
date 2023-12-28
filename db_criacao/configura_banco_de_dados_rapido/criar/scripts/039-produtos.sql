@@ -1,6 +1,6 @@
 CREATE TABLE "produtos"(
     "id_bling"                  BIGINT PRIMARY KEY  NOT NULL,
-    "nome"                      VARCHAR(120)        NOT NULL UNIQUE CHECK ("nome" <> ''),
+    "nome"                      VARCHAR(120)        NOT NULL CHECK ("nome" <> ''), --UNIQUE
     "codigo"                    VARCHAR(120)        NOT NULL UNIQUE CHECK ("codigo" <> ''),
     "preco"                     INTEGER             NOT NULL,
     "id_tipo_produto"           INTEGER             NOT NULL DEFAULT 2 REFERENCES "produtos_tipos"("id"),
