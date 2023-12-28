@@ -28,6 +28,8 @@ CREATE TABLE "produtos"(
     "estoque_crossdocking"      INTEGER             NOT NULL DEFAULT 0,
     "estoque_localizacao"       VARCHAR(45),
     "id_dimensoes"              INTEGER             NOT NULL REFERENCES "dimensoes"("id"),
+    "ncm"           		VARCHAR(10)         NOT NULL DEFAULT '7113.20.00' CHECK ("ncm" <> ''),
+    "cest"          		VARCHAR(10)         NOT NULL DEFAULT '28.058.00' CHECK ("cest" <> ''),
     "id_midia_principal"        INTEGER             REFERENCES "produtos_midias"("id")
 
     , CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo")
