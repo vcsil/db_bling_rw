@@ -6,9 +6,10 @@ CREATE TABLE "produtos"(
     "id_tipo_produto"           INTEGER             NOT NULL DEFAULT 2 REFERENCES "produtos_tipos"("id"),
     "situacao_produto"          BOOLEAN             NOT NULL DEFAULT TRUE,
     "id_formato_produto"        INTEGER             NOT NULL REFERENCES "produtos_formatos"("id"),
+    "id_produto_pai"		BIGINT		    DEFAULT NULL REFERENCES "produtos"("id_bling"),
     "descricao_curta"           TEXT,
     "data_validade"             DATE,
-    "unidade"                   VARCHAR(6)          NOT NULL DEFAULT 'UN'  CHECK ("unidade" <> ''),
+    "unidade"                   VARCHAR(6)          DEFAULT 'UN'  CHECK ("unidade" <> ''),
     "peso_liquido"              INTEGER             NOT NULL DEFAULT 1,
     "peso_bruto"                INTEGER             NOT NULL DEFAULT 1,
     "volumes"                   INTEGER             NOT NULL DEFAULT 1,
@@ -28,9 +29,9 @@ CREATE TABLE "produtos"(
     "estoque_crossdocking"      INTEGER             NOT NULL DEFAULT 0,
     "estoque_localizacao"       VARCHAR(45),
     "id_dimensoes"              INTEGER             NOT NULL REFERENCES "dimensoes"("id"),
-    "ncm"           		VARCHAR(10)         NOT NULL DEFAULT '7113.20.00' CHECK ("ncm" <> ''),
-    "cest"          		VARCHAR(10)         NOT NULL DEFAULT '28.058.00' CHECK ("cest" <> ''),
-    "id_midia_principal"        INTEGER             REFERENCES "produtos_midias"("id")
+    "ncm"           		VARCHAR(10)         DEFAULT '7113.20.00' CHECK ("ncm" <> ''),
+    "cest"          		VARCHAR(9)          DEFAULT '28.058.00' CHECK ("cest" <> ''),
+    "id_midia_principal"        INTEGER             REFERENCES "produtos_midias"("id"),
     "criado_em"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp
 
     , CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo")
