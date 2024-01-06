@@ -7,6 +7,8 @@ Created on Wed Dec 13 17:09:21 2023.
 """
 from preencherModulos.preencherContatos.preencher_contatos import (
     PreencherContatos)
+from preencherModulos.preencherProdutos.preencher_produtos import (
+    PreencherProdutos)
 from config.conexao_db import ConectaDB
 from config.conexao_api import ConectaAPI
 
@@ -21,10 +23,10 @@ def preencher_modulos():
     fuso = pytz.timezone("America/Sao_Paulo")
 
     log.info("Configura conexão com API")
-    api = ConectaAPI()
+    api = ConectaAPI()  # Carrega as variáveis de ambiente necessárias
 
     log.info("Configura conexão com banco de dados")
-    db = ConectaDB()
+    db = ConectaDB()  # Carrega as variáveis de ambiente necessárias
 
     log.info("Obtem nome de todas tabelas")
     tabelas_colunas = db.cria_dict_tabelas_colunas()
@@ -33,8 +35,12 @@ def preencher_modulos():
     log.info('Inicia preencimento')
     with db.conectar_ao_banco() as conn:
 
-        PreencherContatos(tabelas_colunas).preencher_modulo_contatos(conn,
+        # PreencherContatos(tabelas_colunas).preencher_modulo_contatos(conn,
+        #                                                            api, fuso)
+
+        PreencherProdutos(tabelas_colunas).preencher_modulo_produtos(conn,
                                                                      api, fuso)
+        print('Foi')
 
 
 if __name__ == "__main__":

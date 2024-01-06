@@ -6,10 +6,12 @@ Created on Tue Dec 12 11:36:38 2023.
 @author: vcsil
 """
 
-from preencherModulos.preencherContatos.utils_contatos import (UtilsContatos
-                                                               as ut_contatos)
-from preencherModulos.utils import Utils
-from config.conexao_db import ConectaDB
+from preencherModulos.preencherContatos.utils_contatos import (
+    manipula_dados_contatos, regra_pais,
+    possui_informacao, manipula_dados_endereco)
+from preencherModulos.utils import (
+    db_inserir_varias_linhas, pega_todos_id,
+    db_inserir_uma_linha, verifica_preenche_valor)
 
 from typing import Dict, Union
 from tqdm import tqdm
@@ -20,7 +22,7 @@ log = logging.getLogger(__name__)
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
 
 
-class PreencherContatos(ConectaDB):
+class PreencherContatos():
     """Preenche módulo de contatos."""
 
     def __init__(self, tabelas_colunas):
@@ -39,9 +41,8 @@ class PreencherContatos(ConectaDB):
         ]
 
         log.info("Insere situacao de contatos")
-        self.insert_many_in_db(
-            tabela=tabela, colunas=colunas, valores=valores,
-            valores_placeholder=colunas, conn=conn)
+        db_inserir_varias_linhas(
+            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
         log.info("Fim")
 
     def preencher_contatos_tipo(self, tabela: str, conn):
@@ -56,16 +57,14 @@ class PreencherContatos(ConectaDB):
         ]
 
         log.info("Insere tipos de contatos")
-        self.insert_many_in_db(
-            tabela=tabela, colunas=colunas, valores=valores,
-            valores_placeholder=colunas, conn=conn)
+        db_inserir_varias_linhas(
+            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
         log.info("Fim")
 
     def preencher_contatos_indicador_inscricao_estadual(self, tabela: str,
                                                         conn):
         """Preenche a tabela contatos_indicador_inscricao_estadual do db."""
-        colunas = (
-            self.tabelas_colunas[tabela][:])
+        colunas = self.tabelas_colunas[tabela][:]
         nome2 = 'Contribuinte isento de Inscrição no cadastro de Contribuintes'
         valores = [
             {"id": 1, "nome": 'Contribuinte ICMS'},
@@ -74,9 +73,8 @@ class PreencherContatos(ConectaDB):
         ]
 
         log.info("Insere indicador inscricao ie de contatos")
-        self.insert_many_in_db(
-            tabela=tabela, colunas=colunas, valores=valores,
-            valores_placeholder=colunas, conn=conn)
+        db_inserir_varias_linhas(
+            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
         log.info("Fim")
 
     def preencher_contatos_classificacao(self, tabela: str, conn, api):
@@ -90,26 +88,24 @@ class PreencherContatos(ConectaDB):
         valores = contatos_classificacao['data']
 
         log.info("Insere classificacao de contatos")
-        self.insert_many_in_db(
-            tabela=tabela, colunas=colunas, valores=valores,
-            valores_placeholder=valores[0].keys(), conn=conn)
+        db_inserir_varias_linhas(
+            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
         log.info("Fim")
 
     def preencher_contatos(self, tabela: str, conn, api, fuso):
         """Preenche a tabela contatos da database."""
         colunas = self.tabelas_colunas[tabela][:]
-        id_contatos = Utils()._pega_todos_id(api, '/contatos?criterio=1')
+        id_contatos = pega_todos_id(api, '/contatos?criterio=1&')
 
         ROTA = '/contatos/'
         log.info(f"Passará por {len(id_contatos)} contatos")
-        repeticoes = 1
         for idContato in tqdm(id_contatos):
-            log.info(f"Solicita dados do contato {repeticoes} na API")
+            log.info(f"Solicita dados do contato {idContato} na API")
             contato = api.solicita_na_api(ROTA+f"{idContato}")['data']
             # Pegando informações sobre o contato
             log.info("Manipula dados dos contatos")
-            contato_info = ut_contatos()._manipula_dados_contatos(
-                contato, fuso, conn, self.tabelas_colunas)
+            contato_info = manipula_dados_contatos(contato, fuso, conn,
+                                                   self.tabelas_colunas)
 
             # Pegando informações referente ao endereço
             contato_endereco = {
@@ -120,11 +116,10 @@ class PreencherContatos(ConectaDB):
             }
 
             log.info("Insere contato")
-            self.insert_one_in_db(
+            db_inserir_uma_linha(
                 tabela='contatos', colunas=colunas, valores=contato_info,
-                valores_placeholder=colunas, conn=conn)
+                conn=conn)
             self.preencher_endereco(conn=conn, dict_endereco=contato_endereco)
-            repeticoes += 1
 
         log.info("Fim")
 
@@ -142,8 +137,8 @@ class PreencherContatos(ConectaDB):
         colunas = self.tabelas_colunas['enderecos'][:]
         colunas.remove('id')
 
-        pais = ut_contatos()._regra_pais(tipo_contato=dict_endereco['tipo'],
-                                         pais=dict_endereco['pais']['nome'])
+        pais = regra_pais(tipo_contato=dict_endereco['tipo'],
+                          pais=dict_endereco['pais']['nome'])
 
         for tipo_endereco in dict_endereco['endereco'].keys():
             endereco = dict_endereco['endereco'][tipo_endereco]
@@ -152,18 +147,19 @@ class PreencherContatos(ConectaDB):
             elif tipo_endereco == 'cobranca':
                 id_tipo_endereco = 1
 
-            if ut_contatos()._possui_informacao(endereco):
-                id_pais = ut_contatos()._preencher_campos_endereco(
-                    tabela='endereco_paises', campo='nome', campo_nome=pais,
-                    conn=conn, tabelas_colunas=self.tabelas_colunas)
+            if possui_informacao(endereco):
+                id_pais = verifica_preenche_valor(
+                    tabela_busca='endereco_paises', coluna_busca='nome',
+                    valor_busca=pais, conn=conn,
+                    list_colunas=self.tabelas_colunas["endereco_paises"])
 
-                endereco = ut_contatos()._manipula_dados_endereco(
+                endereco = manipula_dados_endereco(
                     endereco, id_pais, conn, self.tabelas_colunas)
 
                 # Inserir na tabela enderecos
-                endereco_inserido = self.insert_one_in_db(
+                endereco_inserido = db_inserir_uma_linha(
                     tabela='enderecos', colunas=colunas, valores=endereco,
-                    valores_placeholder=colunas, conn=conn)
+                    conn=conn)
                 id_endereco = endereco_inserido['id']
 
                 colunas_enderecos_inserido = (
@@ -175,10 +171,9 @@ class PreencherContatos(ConectaDB):
                     'tipo_endereco': id_tipo_endereco
                 }
                 # Inserir na tabela contatos_enderecos
-                self.insert_one_in_db(
+                db_inserir_uma_linha(
                     tabela='contatos_enderecos', valores=valores,
-                    colunas=colunas_enderecos_inserido, conn=conn,
-                    valores_placeholder=colunas_enderecos_inserido)
+                    colunas=colunas_enderecos_inserido, conn=conn)
 
         log.info("Fim")
 
@@ -217,7 +212,7 @@ class PreencherContatos(ConectaDB):
         self.preencher_contatos(tabela='contatos', conn=conn,
                                 api=api, fuso=fuso)
 
-        log.info("Fim")
+        log.info("Fim contatos")
 
 
 if __name__ == "__main__":

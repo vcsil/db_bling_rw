@@ -131,7 +131,7 @@ class ConectaAPI():
 
             except UnauthorizedError as e:
                 log.error('Credenciais expiradas')
-                print(f'UnauthorizedError: {e}')
+                print(f'\nUnauthorizedError: {e}\n')
 
                 # Solicita novas credenciais de acesso
                 self._atualiza_token(self._env['OAUTH_REFRESH_TOKEN'])

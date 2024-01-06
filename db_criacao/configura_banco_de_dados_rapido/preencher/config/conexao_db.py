@@ -121,7 +121,8 @@ class ConectaDB():
         tabela : str
             Nome da tabela.
         colunas : Union[str, List[str]]
-            Nome da coluna ou um array com o nome das colunas .
+            Nome da coluna ou um array com o nome das colunas que serão
+            retornadas.
         conn : Connection
             Conexão com banco de dados.
         filtro : Tuple[str, Tuple[Union[str, int]]], optional
@@ -173,10 +174,9 @@ class ConectaDB():
             )
         )
         if filtro:
-            query = sql.SQL("{query_fixa} {fltr} {tabela}").format(
+            query = sql.SQL("{query_fixa} {fltr}").format(
                 query_fixa=query,
-                fltr=sql.SQL(filtro[0]),
-                tabela=sql.Literal(filtro[1])
+                fltr=sql.SQL(filtro[0])
             )
         return query
 
@@ -185,7 +185,6 @@ class ConectaDB():
             tabela: str,
             colunas: Union[str, List[str]],
             valores: List[Dict[str, Union[str, int]]],
-            valores_placeholder: List[str],
             conn
     ):
         """
@@ -194,15 +193,11 @@ class ConectaDB():
         Parameters
         ----------
         tabela : str
-            Nome da tabela.
+            Nome da tabela que recebera o valor.
         colunas : Union[str, List[str]]
-            Nome da coluna.
+            Nome das colunas que receberam os valores.
         valores : List[Dict[str, Union[str, int]]]
-            Uma lista com os valores a serem inseridos em tupla.
-            Nome da coluna.
-        valores_placeholder : List[str]
-            Lista utilizada para nomear cada coluna que vai receber o valor.
-            Nome da coluna.
+            Um dict com os valores a serem inseridos, as chaves são as colunas.
         conn : Connection
             Conexão com banco de dados.
 
@@ -222,7 +217,7 @@ class ConectaDB():
                         map(sql.Identifier, colunas)
                 ),
                 values=sql.SQL(', ').join(
-                        map(sql.Placeholder, valores_placeholder)
+                        map(sql.Placeholder, colunas)
                 )
             )
         )
@@ -248,7 +243,6 @@ class ConectaDB():
             tabela: str,
             colunas: Union[str, List[str]],
             valores: Dict[str, Union[str, int]],
-            valores_placeholder: List[str],
             conn
     ):
         """
@@ -257,15 +251,11 @@ class ConectaDB():
         Parameters
         ----------
         tabela : str
-            Nome da tabela.
+            Nome da tabela que recebera o valor.
         colunas : Union[str, List[str]]
-            Nome da coluna.
+            Nome das colunas que receberam os valores.
         valores : Dict[str, Union[str, int]]
-            Uma lista com os valores a serem inseridos em tupla.
-            Nome da coluna.
-        valores_placeholder : List[str]
-            Lista utilizada para nomear cada coluna que vai receber o valor.
-            Nome da coluna.
+            Um dict com os valores a serem inseridos, as chaves são as colunas.
         conn : Connection
             Conexão com banco de dados.
 
@@ -281,7 +271,7 @@ class ConectaDB():
                 map(sql.Identifier, colunas)
                 ),
             values=sql.SQL(', ').join(
-                map(sql.Placeholder, valores_placeholder)
+                map(sql.Placeholder, colunas)
                 )
             )
         )
@@ -316,7 +306,7 @@ class ConectaDB():
             nome_tabelas = self.select_all_from_db(
                 tabela=('"information_schema"."tables"'),
                 colunas="table_name",
-                filtro=("WHERE table_schema =", 'public'),
+                filtro=("WHERE table_schema = 'public'",),
                 conn=conn
                 )
         # Tirar valores de dentro do dict e colocar na list
@@ -341,8 +331,8 @@ class ConectaDB():
         with self.conectar_ao_banco() as conn:
             nome_colunas = self.select_all_from_db(
                 tabela='"information_schema"."columns"',
-                colunas="column_name", filtro=("WHERE table_name =", tabela),
-                conn=conn)
+                colunas="column_name", filtro=(f"WHERE table_name='{tabela}'",)
+                , conn=conn)
 
         # Tirar os valores do dict e deixar dentro de uma array
         nome_colunas = [coluna['column_name'] for coluna in nome_colunas]
