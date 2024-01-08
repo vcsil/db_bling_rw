@@ -6,10 +6,11 @@ Created on Sun Dec 17 13:06:07 2023.
 @author: vcsil
 """
 from preencherModulos.preencherProdutos.utils_produtos import (
-    solicita_categeoria, solicita_deposito, solicita_produto,
-    solicita_estoque_fornecedor, solicita_variacao)
+    solicita_categeoria, solicita_deposito, produto_insere_saldo_estoque,
+    solicita_insere_variacao, solicita_produto, solicita_ids_produtos,
+    insere_segunda_tentativa)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, pega_todos_id, db_inserir_uma_linha)
+    db_inserir_varias_linhas, api_pega_todos_id, db_inserir_uma_linha)
 
 from tqdm import tqdm
 import logging
@@ -22,8 +23,9 @@ log = logging.getLogger(__name__)
 class PreencherProdutos():
     """Preenche módulo de produtos."""
 
-    def __init__(self, tabelas_colunas):
+    def __init__(self, tabelas_colunas, db):
         self.tabelas_colunas = tabelas_colunas
+        self.db = db
 
     def preencher_produtos_tipos(self, tabela: str, conn):
         """Preenche a tabela produtos_tipos da database."""
@@ -38,7 +40,8 @@ class PreencherProdutos():
 
         log.info("Insere tipos de contatos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
         log.info("Fim")
 
     def preencher_produtos_formatos(self, tabela: str, conn):
@@ -54,7 +57,8 @@ class PreencherProdutos():
 
         log.info("Insere formatos de produtos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
         log.info("Fim")
 
     def preencher_produtos_tipo_producao(self, tabela: str, conn):
@@ -69,7 +73,8 @@ class PreencherProdutos():
 
         log.info("Insere tipos de produção de produtos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
         log.info("Fim")
 
     def preencher_produtos_condicao(self, tabela: str, conn):
@@ -84,13 +89,14 @@ class PreencherProdutos():
 
         log.info("Insere condicao de produtos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
         log.info("Fim")
 
     def preencher_produtos_categorias(self, tabela: str, conn, api):
         """Preenche a tabela produtos_formatos da database."""
         colunas = self.tabelas_colunas[tabela][:]
-        ids_categorias = pega_todos_id(api, '/categorias/produtos?')
+        ids_categorias = api_pega_todos_id(api, '/categorias/produtos?')
         ids_categorias += [6071256]
 
         ROTA = '/categorias/produtos/'
@@ -107,7 +113,8 @@ class PreencherProdutos():
 
             log.info("Insere categoria")
             db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=categoria, conn=conn)
+                tabela=tabela, colunas=colunas, valores=categoria,
+                db=self.db, conn=conn)
 
         log.info("Insere relacoes das categorias")
         colunas_relacao = (self
@@ -115,14 +122,14 @@ class PreencherProdutos():
         colunas_relacao.remove("id")
         db_inserir_varias_linhas(tabela="produtos_categorias_relacao",
                                  colunas=colunas_relacao, conn=conn,
-                                 valores=list_relacao_categoria)
+                                 db=self.db, valores=list_relacao_categoria)
 
         log.info("Fim")
 
     def preencher_produtos_depositos(self, tabela: str, conn, api):
         """Preenche a tabela produtos_depositos da database."""
         colunas = self.tabelas_colunas[tabela][:]
-        ids_depositos = pega_todos_id(api, '/depositos?')
+        ids_depositos = api_pega_todos_id(api, '/depositos?')
 
         ROTA = '/depositos/'
         log.info(f"Passará por {len(ids_depositos)} depositos")
@@ -132,82 +139,52 @@ class PreencherProdutos():
 
             log.info("Insere deposito")
             db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=deposito, conn=conn)
+                tabela=tabela, colunas=colunas, valores=deposito,
+                db=self.db,  conn=conn)
 
         log.info("Fim")
 
     def preencher_produtos(self, tabela: str, conn, api, fuso):
         """Preenche a tabela produtos da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        # Pega todos os produtos Pai e Simples
+        ids_produtos = solicita_ids_produtos(api)
+        produtos_nao_incluidos = []
 
-        colunas_produto_variacao = self.tabelas_colunas["produto_variacao"][:]
-        colunas_produto_variacao.remove('id')
-
-        colunas_produto_estoques = self.tabelas_colunas["produtos_estoques"][:]
-        colunas_produto_estoques.remove('id')
-
-        colunas_produto_forncdr = self.tabelas_colunas["produto_fornecedor"][:]
-
-        ids_produtos = pega_todos_id(api, '/produtos?criterio=5&tipo=T&')
-        ids_produtos.sort()
-        # [15965567236, 16184005002, 16184005009, 16184005011]
-        # If formato == f
-        ROTA = "/produtos/"
         log.info(f"Passará por {len(ids_produtos)} produtos")
         for idProduto in tqdm(ids_produtos, desc="Busca produtos"):
             log.info(f"Solicita dados do produto {idProduto} na API")
             variacoes, produto = solicita_produto(
-               rota=ROTA+f"{idProduto}", api=api, conn=conn, fuso=fuso)
+                idProduto=idProduto, api=api, db=self.db, conn=conn,
+                tabelas_colunas=self.tabelas_colunas, fuso=fuso,
+                inserir_produto=True)
 
+            # Se o produto não for Pai, será resolvido depois.
             if not produto:
-                log.info(f"Produto {idProduto} pulado pois é uma variação")
+                produtos_nao_incluidos.append(variacoes)
+                log.info(f"Produto {idProduto} não incluido de primeira.")
                 continue
 
-            log.info(f"Insere produto {idProduto} no banco de dados")
-            db_inserir_uma_linha(tabela="produtos", colunas=colunas,
-                                 valores=produto, conn=conn)
+            # Lida com as variações do produto Pai
             if variacoes:
                 for variacao in variacoes:
-                    log.info(f"Insere variacao {variacao}")
-                    log.info(f"Remove produto {variacao} da lista")
-                    ids_produtos.remove(variacao["id"])
-                    produto_variacao, produto = solicita_variacao(
-                        variacao=variacao, fuso=fuso, conn=conn,
-                        id_pai=idProduto)
+                    solicita_insere_variacao(
+                        dict_variacao=variacao, fuso=fuso, id_Pai=idProduto,
+                        tabelas_colunas=self.tabelas_colunas, db=self.db,
+                        conn=conn)
 
-                    log.info(f"Insere produto {variacao} no banco de dados")
-                    db_inserir_uma_linha(tabela="produtos", colunas=colunas,
-                                         valores=produto, conn=conn)
-
-                    log.info("Insere produto_variacao")  # Outra tabela
-                    db_inserir_uma_linha(
-                        tabela="produto_variacao", valores=produto_variacao,
-                        colunas=colunas_produto_variacao, conn=conn)
-
-                    log.info("Insere saldos de estoque e fornecedor")
-                    produto_fornecedor, produtos_estoques = (
-                        solicita_estoque_fornecedor(id_produto=variacao["id"],
-                                                    api=api))
-                    db_inserir_varias_linhas(
-                        tabela="produtos_estoques", conn=conn,
-                        colunas=colunas_produto_estoques,
-                        valores=produtos_estoques)
-                    db_inserir_varias_linhas(
-                        tabela="produto_fornecedor", conn=conn,
-                        colunas=colunas_produto_forncdr,
-                        valores=produto_fornecedor)
+                    produto_insere_saldo_estoque(
+                        tabelas_colunas=self.tabelas_colunas, api=api,
+                        id_produto=variacao["id"], db=self.db, conn=conn)
             else:
-                log.info("Insere saldos de estoque e fornecedor")
-                produto_fornecedor, produtos_estoques = (
-                    solicita_estoque_fornecedor(id_produto=idProduto, api=api))
-                db_inserir_varias_linhas(
-                    tabela="produtos_estoques", conn=conn,
-                    colunas=colunas_produto_estoques,
-                    valores=produtos_estoques)
-                db_inserir_varias_linhas(
-                    tabela="produto_fornecedor", conn=conn,
-                    colunas=colunas_produto_forncdr,
-                    valores=produto_fornecedor)
+                produto_insere_saldo_estoque(
+                    tabelas_colunas=self.tabelas_colunas, id_produto=idProduto,
+                    api=api, db=self.db, conn=conn)
+
+        log.info(f"Passará por {len(produtos_nao_incluidos)} produtos, novame")
+        for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca"):
+            insere_segunda_tentativa(tabelas_colunas=self.tabelas_colunas,
+                                     produto=prod_variacao, fuso=fuso, api=api,
+                                     db=self.db, conn=conn)
 
     def preencher_modulo_produtos(self, conn, api, fuso):
         """Preencher módulo de produtos."""

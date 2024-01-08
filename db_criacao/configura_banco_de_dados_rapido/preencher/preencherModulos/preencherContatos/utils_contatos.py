@@ -17,7 +17,7 @@ log = logging.getLogger(__name__)
 """Funções utéis para preencher contatos."""
 
 
-def manipula_dados_contatos(contato: dict, fuso, conn, tabelas_colunas):
+def manipula_dados_contatos(contato: dict, fuso, db, conn, tabelas_colunas):
     """
     Manipula as informações obtidas pela API e adequa para o banco de dados.
 
@@ -46,7 +46,7 @@ def manipula_dados_contatos(contato: dict, fuso, conn, tabelas_colunas):
         'id_situacao_contato': db_pega_um_elemento(
             tabela_busca="contatos_situacao", coluna_busca="sigla",
             valor_busca=contato['situacao'], colunas_retorno=["id"],
-            conn=conn)["id"],
+            db=db, conn=conn)["id"],
         'numero_documento': contato['numeroDocumento'],
         'telefone': _formata_numero_telcel(contato['telefone']),
         'celular': _formata_numero_telcel(contato['celular']),
@@ -54,7 +54,7 @@ def manipula_dados_contatos(contato: dict, fuso, conn, tabelas_colunas):
         'id_tipo_contato': db_pega_um_elemento(
             tabela_busca="contatos_tipo", coluna_busca="sigla",
             valor_busca=contato['tipo'], colunas_retorno=["id"],
-            conn=conn)["id"],
+            db=db, conn=conn)["id"],
         'id_indicador_inscricao_estadual': contato['indicadorIe'],
         'inscricao_estadual': contato['ie'],
         'rg': contato['rg'],
@@ -159,6 +159,7 @@ def possui_informacao(dict_dados: Dict[str, Union[str, int, None]]) -> bool:
 def manipula_dados_endereco(
         dict_endereco: Dict[str, str],
         id_pais: int,
+        db,
         conn,
         tabelas_colunas
 ) -> Dict[str, Union[str, int]]:
@@ -185,18 +186,18 @@ def manipula_dados_endereco(
     uf = ''.join(dict_endereco['uf'].split()).upper()
     id_uf = verifica_preenche_valor(
         tabela_busca='endereco_unidade_federativa', coluna_busca='nome',
-        valor_busca=uf, relacao_externa={'id_pais': id_pais}, conn=conn,
+        valor_busca=uf, relacao_externa={'id_pais': id_pais}, conn=conn, db=db,
         list_colunas=tabelas_colunas['endereco_unidade_federativa'][:])
 
     municipio = ' '.join(dict_endereco['municipio'].split()).title()
     id_municipio = verifica_preenche_valor(
-        tabela_busca='endereco_municipios', coluna_busca='nome',
+        tabela_busca='endereco_municipios', coluna_busca='nome', db=db,
         valor_busca=municipio, relacao_externa={'id_uf': id_uf}, conn=conn,
         list_colunas=tabelas_colunas['endereco_municipios'][:])
 
     bairro = ' '.join(dict_endereco['bairro'].split()).title()
     id_bairro = verifica_preenche_valor(
-        tabela_busca='endereco_bairros', coluna_busca='nome',
+        tabela_busca='endereco_bairros', coluna_busca='nome', db=db,
         valor_busca=bairro, relacao_externa={'id_municipio': id_municipio},
         conn=conn, list_colunas=tabelas_colunas['endereco_bairros'][:])
 

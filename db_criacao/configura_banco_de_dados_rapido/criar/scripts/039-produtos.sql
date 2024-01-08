@@ -1,10 +1,10 @@
 CREATE TABLE "produtos"(
     "id_bling"                  BIGINT PRIMARY KEY  NOT NULL,
     "nome"                      VARCHAR(120)        NOT NULL CHECK ("nome" <> ''), --UNIQUE
-    "codigo"                    VARCHAR(120)        NOT NULL UNIQUE CHECK ("codigo" <> ''),
+    "codigo"                    VARCHAR(120)        NOT NULL CHECK ("codigo" <> ''),
     "preco"                     INTEGER             NOT NULL,
     "id_tipo_produto"           INTEGER             NOT NULL DEFAULT 2 REFERENCES "produtos_tipos"("id"),
-    "situacao_produto"          BOOLEAN             NOT NULL DEFAULT TRUE,
+    "situacao_produto"          VARCHAR(10)         NOT NULL DEFAULT "Ativo",
     "id_formato_produto"        INTEGER             NOT NULL REFERENCES "produtos_formatos"("id"),
     "id_produto_pai"		BIGINT		    DEFAULT NULL REFERENCES "produtos"("id_bling"),
     "descricao_curta"           TEXT,
@@ -34,7 +34,7 @@ CREATE TABLE "produtos"(
     "id_midia_principal"        INTEGER             REFERENCES "produtos_midias"("id"),
     "criado_em"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp
 
-    , CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo")
+    --, CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo", situacao_produto)
 );
 COMMENT ON COLUMN
     "produtos"."situacao_produto" IS 'Situação do produto

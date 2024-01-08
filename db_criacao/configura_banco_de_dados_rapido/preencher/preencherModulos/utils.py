@@ -6,7 +6,6 @@ Created on Sun Dec 17 12:43:57 2023.
 @author: vcsil
 """
 from config.erros.erros import EsqueceuPassarID
-from config.conexao_db import ConectaDB
 
 from typing import List, Dict, Union
 from datetime import datetime
@@ -21,6 +20,7 @@ def db_inserir_varias_linhas(
     tabela: str,
     colunas: Union[str, List[str]],
     valores: List[Dict[str, Union[str, int]]],
+    db,
     conn
 ):
     """
@@ -43,7 +43,7 @@ def db_inserir_varias_linhas(
     None.
 
     """
-    ConectaDB().insert_many_in_db(
+    db.insert_many_in_db(
         tabela=tabela, colunas=colunas, valores=valores, conn=conn)
 
 
@@ -51,6 +51,7 @@ def db_inserir_uma_linha(
     tabela: str,
     colunas: Union[str, List[str]],
     valores: List[Dict[str, Union[str, int]]],
+    db,
     conn
 ):
     """
@@ -73,7 +74,7 @@ def db_inserir_uma_linha(
     None.
 
     """
-    return ConectaDB().insert_one_in_db(
+    return db.insert_one_in_db(
         tabela=tabela, colunas=colunas, valores=valores, conn=conn)
 
 
@@ -82,6 +83,7 @@ def db_pega_um_elemento(
         coluna_busca: Union[str, List[str]],
         valor_busca: Union[str, list],
         colunas_retorno: list,
+        db,
         conn
 ) -> dict:
     """
@@ -117,24 +119,20 @@ def db_pega_um_elemento(
     valor_busca = [valor_busca] if isinstance(valor_busca, str) else (
         valor_busca)
 
-    filtro = "WHERE "
-    filtro += " AND ".join(f"{col}='{val}'" for col, val in zip(
-        coluna_busca, valor_busca))
-
     try:
-        elemento_dict = ConectaDB().select_one_from_db(
+        elemento_dict = db.select_one_from_db(
             tabela=tabela_busca, colunas=colunas_retorno, conn=conn,
-            filtro=(filtro, ))
+            filtro=(coluna_busca, valor_busca))
 
         return elemento_dict
     # Erro vai ser chamado ao tentar buscar uma elemento que não existe
     except AttributeError as e:
-        print(f"O elemento '{valor_busca}' não existe ", end="")
-        print(f"na tabela '{tabela_busca}'")
-        print(f"nem na coluna '{tabela_busca}.{coluna_busca}'. : {e}'")
+        log.info(f"O elemento '{valor_busca}' não existe ", end="")
+        log.info(f"na tabela '{tabela_busca}'")
+        log.info(f"nem na coluna '{tabela_busca}.{coluna_busca}'. : {e}'")
 
 
-def pega_todos_id(api, param: str) -> List[int]:
+def api_pega_todos_id(api, param: str) -> List[int]:
     """
     Pega todos o ID de de um determinado canal da API.
 
@@ -184,6 +182,7 @@ def verifica_preenche_valor(
         coluna_busca: Union[str, List[str]],
         valor_busca: Union[str, List[str]],
         list_colunas,
+        db,
         conn,
         relacao_externa: Dict[str, int] = None
 ) -> int:
@@ -219,7 +218,7 @@ def verifica_preenche_valor(
     # Procura ID do campo
     try:
         campo_ja_existe = db_pega_um_elemento(
-            tabela_busca=tabela_busca, coluna_busca=coluna_busca,
+            tabela_busca=tabela_busca, coluna_busca=coluna_busca, db=db,
             valor_busca=valor_busca, colunas_retorno=list_colunas, conn=conn)
 
         id_campo = _pega_valor_id_do_dict(campo_ja_existe)
@@ -240,7 +239,7 @@ def verifica_preenche_valor(
 
         dados_inseridos = db_inserir_uma_linha(
             tabela=tabela_busca, colunas=valores.keys(), valores=valores,
-            conn=conn)
+            db=db, conn=conn)
 
         id_campo = _pega_valor_id_do_dict(dados_inseridos)
         return id_campo

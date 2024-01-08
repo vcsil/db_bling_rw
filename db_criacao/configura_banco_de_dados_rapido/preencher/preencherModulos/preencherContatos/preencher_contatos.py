@@ -10,7 +10,7 @@ from preencherModulos.preencherContatos.utils_contatos import (
     manipula_dados_contatos, regra_pais,
     possui_informacao, manipula_dados_endereco)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, pega_todos_id,
+    db_inserir_varias_linhas, api_pega_todos_id,
     db_inserir_uma_linha, verifica_preenche_valor)
 
 from typing import Dict, Union
@@ -25,8 +25,9 @@ log = logging.getLogger(__name__)
 class PreencherContatos():
     """Preenche módulo de contatos."""
 
-    def __init__(self, tabelas_colunas):
+    def __init__(self, tabelas_colunas, db):
         self.tabelas_colunas = tabelas_colunas
+        self.db = db
 
     def preencher_contatos_situacao(self, tabela: str, conn):
         """Preenche a tabela contatos_situacao da database."""
@@ -40,10 +41,11 @@ class PreencherContatos():
             {"nome": 'Sem movimentação', "sigla": 'S'},
         ]
 
-        log.info("Insere situacao de contatos")
+        log.info("Insere situação de contatos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
-        log.info("Fim")
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
+        log.info("Situações de contatos inseridas")
 
     def preencher_contatos_tipo(self, tabela: str, conn):
         """Preenche a tabela contatos_tipo da database."""
@@ -58,8 +60,9 @@ class PreencherContatos():
 
         log.info("Insere tipos de contatos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
-        log.info("Fim")
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
+        log.info("Tipos de contatos inseridos")
 
     def preencher_contatos_indicador_inscricao_estadual(self, tabela: str,
                                                         conn):
@@ -74,8 +77,9 @@ class PreencherContatos():
 
         log.info("Insere indicador inscricao ie de contatos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
-        log.info("Fim")
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
+        log.info("Indicadores de inscrição de ie inseridos")
 
     def preencher_contatos_classificacao(self, tabela: str, conn, api):
         """Preenche a tabela contatos_classificacao da database."""
@@ -86,16 +90,19 @@ class PreencherContatos():
         contatos_classificacao = api.solicita_na_api(ROTA)
 
         valores = contatos_classificacao['data']
+        valores = [{"id_bling": classi["id"], "nome": classi["descricao"]}
+                   for classi in valores]
 
         log.info("Insere classificacao de contatos")
         db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores, conn=conn)
-        log.info("Fim")
+            tabela=tabela, colunas=colunas, valores=valores,
+            db=self.db, conn=conn)
+        log.info("Classificação de contatos inseridos")
 
     def preencher_contatos(self, tabela: str, conn, api, fuso):
         """Preenche a tabela contatos da database."""
         colunas = self.tabelas_colunas[tabela][:]
-        id_contatos = pega_todos_id(api, '/contatos?criterio=1&')
+        id_contatos = api_pega_todos_id(api, '/contatos?criterio=1&')
 
         ROTA = '/contatos/'
         log.info(f"Passará por {len(id_contatos)} contatos")
@@ -104,8 +111,8 @@ class PreencherContatos():
             contato = api.solicita_na_api(ROTA+f"{idContato}")['data']
             # Pegando informações sobre o contato
             log.info("Manipula dados dos contatos")
-            contato_info = manipula_dados_contatos(contato, fuso, conn,
-                                                   self.tabelas_colunas)
+            contato_info = manipula_dados_contatos(contato, fuso, self.db,
+                                                   conn, self.tabelas_colunas)
 
             # Pegando informações referente ao endereço
             contato_endereco = {
@@ -118,10 +125,10 @@ class PreencherContatos():
             log.info("Insere contato")
             db_inserir_uma_linha(
                 tabela='contatos', colunas=colunas, valores=contato_info,
-                conn=conn)
+                db=self.db, conn=conn)
             self.preencher_endereco(conn=conn, dict_endereco=contato_endereco)
 
-        log.info("Fim")
+        log.info("Todos contatos inseridos")
 
     def preencher_endereco(
             self,
@@ -150,16 +157,16 @@ class PreencherContatos():
             if possui_informacao(endereco):
                 id_pais = verifica_preenche_valor(
                     tabela_busca='endereco_paises', coluna_busca='nome',
-                    valor_busca=pais, conn=conn,
+                    valor_busca=pais, db=self.db, conn=conn,
                     list_colunas=self.tabelas_colunas["endereco_paises"])
 
                 endereco = manipula_dados_endereco(
-                    endereco, id_pais, conn, self.tabelas_colunas)
+                    endereco, id_pais, self.db, conn, self.tabelas_colunas)
 
                 # Inserir na tabela enderecos
                 endereco_inserido = db_inserir_uma_linha(
                     tabela='enderecos', colunas=colunas, valores=endereco,
-                    conn=conn)
+                    db=self.db, conn=conn)
                 id_endereco = endereco_inserido['id']
 
                 colunas_enderecos_inserido = (
@@ -172,10 +179,10 @@ class PreencherContatos():
                 }
                 # Inserir na tabela contatos_enderecos
                 db_inserir_uma_linha(
-                    tabela='contatos_enderecos', valores=valores,
+                    tabela='contatos_enderecos', valores=valores, db=self.db,
                     colunas=colunas_enderecos_inserido, conn=conn)
 
-        log.info("Fim")
+        log.info("Endereço inserido")
 
     def preencher_modulo_contatos(self, conn, api, fuso):
         """
@@ -190,27 +197,25 @@ class PreencherContatos():
         fuso : TYPE
             Fuso horário do sistema.
         """
-        log.info("Inicio")
+        log.info("Começa preencher contatos.")
         # with conn.transaction():
-        log.info("Inicio preencher contatos_situacao")
-        self.preencher_contatos_situacao(tabela='contatos_situacao',
-                                         conn=conn)
+        log.info("Preencher contatos_situacao")
+        self.preencher_contatos_situacao(tabela='contatos_situacao', conn=conn)
 
-        log.info("Inicio preencher contatos_tipo")
-        self.preencher_contatos_tipo(tabela='contatos_tipo',
-                                     conn=conn)
+        log.info("Preencher contatos_tipo")
+        self.preencher_contatos_tipo(tabela='contatos_tipo', conn=conn)
 
-        log.info("Inicio preencher contatos_indicador_inscricao")
+        log.info("Preencher contatos_indicador_inscricao")
         self.preencher_contatos_indicador_inscricao_estadual(
             tabela='contatos_indicador_inscricao_estadual', conn=conn)
 
-        log.info("Inicio preencher contatos_classificacao")
+        log.info("Preencher contatos_classificacao")
         self.preencher_contatos_classificacao(
             tabela='contatos_classificacao', conn=conn, api=api)
 
-        log.info("Inicio preencher contatos")
-        self.preencher_contatos(tabela='contatos', conn=conn,
-                                api=api, fuso=fuso)
+        log.info("Preencher contatos")
+        self.preencher_contatos(tabela='contatos', conn=conn, api=api,
+                                fuso=fuso)
 
         log.info("Fim contatos")
 

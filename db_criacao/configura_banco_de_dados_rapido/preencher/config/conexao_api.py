@@ -24,8 +24,8 @@ log = logging.getLogger(__name__)
 class ConectaAPI():
     """Controla conexão com API."""
 
-    def __init__(self):
-        self._env = EnvValores().env_api()
+    def __init__(self, env_api):
+        self._env = env_api
         self.rota = self._env['OAUTH_BASEURL']
         self.header = self.cria_header_http(self._env['OAUTH_ACCESS_TOKEN'])
 
