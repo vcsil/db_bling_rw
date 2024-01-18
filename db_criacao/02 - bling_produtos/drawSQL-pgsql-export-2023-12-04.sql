@@ -3,8 +3,8 @@
 
 CREATE TABLE "produtos_tipos"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(15)         NOT NULL UNIQUE,
-    "sigla" CHAR(1)             NOT NULL UNIQUE
+    "nome"  VARCHAR(20)         NOT NULL UNIQUE CHECK ("nome" <> ''),
+    "sigla" CHAR(1)             NOT NULL UNIQUE CHECK ("sigla" <> '')
 );
 COMMENT ON COLUMN
     "produtos_tipos"."nome" IS 'Tipo do produto
@@ -16,8 +16,8 @@ COMMENT ON COLUMN
 
 CREATE TABLE "produtos_formatos"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(15)         NOT NULL UNIQUE,
-    "sigla" CHAR(1)             NOT NULL UNIQUE
+    "nome"  VARCHAR(15)         NOT NULL UNIQUE CHECK ("nome" <> ''),
+    "sigla" CHAR(1)             NOT NULL UNIQUE CHECK ("sigla" <> '')
 );
 COMMENT ON COLUMN
     "produtos_formatos"."nome" IS 'Formato do produto
@@ -29,8 +29,8 @@ COMMENT ON COLUMN
 
 CREATE TABLE "produtos_tipo_producao"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(10)         NOT NULL UNIQUE,
-    "sigla" CHAR(1)             NOT NULL UNIQUE
+    "nome"  VARCHAR(10)         NOT NULL UNIQUE CHECK ("nome" <> ''),
+    "sigla" CHAR(1)             NOT NULL UNIQUE CHECK ("sigla" <> '')
 );
 COMMENT ON COLUMN
     "produtos_tipo_producao"."nome" IS 'Tipo da produção
@@ -41,7 +41,7 @@ COMMENT ON COLUMN
 
 CREATE TABLE "produtos_condicao"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(17)         NOT NULL
+    "nome"  VARCHAR(17)         NOT NULL CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
     "produtos_condicao"."nome" IS 'Condição do produto
@@ -53,25 +53,25 @@ COMMENT ON COLUMN
 
 CREATE TABLE "produtos_categorias"(
     "id_bling"  BIGINT PRIMARY KEY  NOT NULL,
-    "nome"      VARCHAR(120)        NOT NULL
+    "nome"      VARCHAR(120)        NOT NULL CHECK ("nome" <> '')
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_categorias_relacao"(
-    "id"                SERIAL PRIMARY KEY  NOT NULL,
-    "categoria_pai"     BIGINT              NOT NULL REFERENCES "produtos_categorias"("id_bling"),
-    "categoria_filho"   BIGINT              NOT NULL UNIQUE REFERENCES "produtos_categorias"("id_bling")
+    "id"                    SERIAL PRIMARY KEY  NOT NULL,
+    "id_categoria_pai"      BIGINT              NOT NULL REFERENCES "produtos_categorias"("id_bling"),
+    "id_categoria_filho"    BIGINT              NOT NULL UNIQUE REFERENCES "produtos_categorias"("id_bling")
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "dimensoes"(
     "id"                SERIAL PRIMARY KEY  NOT NULL,
-    "largura"           SMALLINT            NOT NULL,
-    "altura"            SMALLINT            NOT NULL,
-    "profundidade"      SMALLINT            NOT NULL,
-    "unidade_medida"    SMALLINT            NOT NULL
+    "largura"           INTEGER             NOT NULL,
+    "altura"            INTEGER             NOT NULL,
+    "profundidade"      INTEGER             NOT NULL,
+    "unidade_medida"    INTEGER             NOT NULL
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -79,7 +79,7 @@ CREATE TABLE "dimensoes"(
 CREATE TABLE "produtos_midias"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
     "tipo"  BOOLEAN             NOT NULL,
-    "url"   TEXT                NOT NULL
+    "url"   TEXT                NOT NULL CHECK ("url" <> '')
 );
 COMMENT ON COLUMN
     "produtos_midias"."tipo" IS 'True: Foto
@@ -89,17 +89,18 @@ COMMENT ON COLUMN
 
 CREATE TABLE "produtos"(
     "id_bling"                  BIGINT PRIMARY KEY  NOT NULL,
-    "nome"                      VARCHAR(120)        NOT NULL UNIQUE,
-    "codigo"                    VARCHAR(120)        NOT NULL UNIQUE,
+    "nome"                      VARCHAR(120)        NOT NULL CHECK ("nome" <> ''), --UNIQUE
+    "codigo"                    VARCHAR(120)        NOT NULL CHECK ("codigo" <> ''),
     "preco"                     INTEGER             NOT NULL,
     "id_tipo_produto"           INTEGER             NOT NULL DEFAULT 2 REFERENCES "produtos_tipos"("id"),
-    "situacao_produto"          BOOLEAN             NOT NULL DEFAULT TRUE,
+    "situacao_produto"          VARCHAR(10)         NOT NULL DEFAULT "Ativo",
     "id_formato_produto"        INTEGER             NOT NULL REFERENCES "produtos_formatos"("id"),
+    "id_produto_pai"		BIGINT		    DEFAULT NULL REFERENCES "produtos"("id_bling"),
     "descricao_curta"           TEXT,
     "data_validade"             DATE,
-    "unidade"                   VARCHAR(6)          NOT NULL DEFAULT 'UN',
-    "peso_liquido"              INTEGER             NOT NULL DEFAULT 0,
-    "peso_bruto"                INTEGER             NOT NULL DEFAULT 0,
+    "unidade"                   VARCHAR(6)          DEFAULT 'UN'  CHECK ("unidade" <> ''),
+    "peso_liquido"              INTEGER             NOT NULL DEFAULT 1,
+    "peso_bruto"                INTEGER             NOT NULL DEFAULT 1,
     "volumes"                   INTEGER             NOT NULL DEFAULT 1,
     "itens_por_caixa"           INTEGER             NOT NULL DEFAULT 1,
     "gtin"                      VARCHAR(14),
@@ -107,7 +108,7 @@ CREATE TABLE "produtos"(
     "id_tipo_producao"          INTEGER             NOT NULL DEFAULT 1 REFERENCES "produtos_tipo_producao"("id"),
     "id_condicao_producao"      INTEGER             NOT NULL REFERENCES "produtos_condicao"("id"),
     "frete_gratis"              BOOLEAN             NOT NULL DEFAULT FALSE,
-    "marca"                     VARCHAR(45)         NOT NULL DEFAULT 'RW',
+    "marca"                     VARCHAR(45)         NOT NULL DEFAULT 'RW'  CHECK ("marca" <> ''),
     "descricao_complementar"    TEXT,
     "link_externo"              TEXT,
     "observacoes"               TEXT,
@@ -117,9 +118,13 @@ CREATE TABLE "produtos"(
     "estoque_crossdocking"      INTEGER             NOT NULL DEFAULT 0,
     "estoque_localizacao"       VARCHAR(45),
     "id_dimensoes"              INTEGER             NOT NULL REFERENCES "dimensoes"("id"),
-    "id_midia_principal"        INTEGER             NOT NULL REFERENCES "produtos_midias"("id")
+    "ncm"           		VARCHAR(10)         DEFAULT '7113.20.00' CHECK ("ncm" <> ''),
+    "cest"          		VARCHAR(9)          DEFAULT '28.058.00' CHECK ("cest" <> ''),
+    "id_midia_principal"        INTEGER             REFERENCES "produtos_midias"("id"),
+    "criado_em"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp,
+    "alterado_em"		TIMESTAMPTZ	    DEFAULT NULL
 
-    , CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo")
+    --, CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo", situacao_produto)
 );
 COMMENT ON COLUMN
     "produtos"."situacao_produto" IS 'Situação do produto
@@ -145,7 +150,7 @@ COMMENT ON COLUMN
 
 CREATE TABLE "produtos_depositos"(
     "id_bling"              BIGINT PRIMARY KEY  NOT NULL,
-    "descricao"             VARCHAR(45)         NOT NULL,
+    "descricao"             VARCHAR(45)         NOT NULL  CHECK ("descricao" <> ''),
     "situacao"              BOOLEAN             NOT NULL DEFAULT TRUE,
     "padrao"                BOOLEAN             NOT NULL DEFAULT TRUE,
     "desconsiderar_saldo"   BOOLEAN             NOT NULL DEFAULT FALSE
@@ -161,19 +166,20 @@ CREATE TABLE "produtos_estoques"(
     "id_produto"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling"),
     "id_deposito"   BIGINT              NOT NULL REFERENCES "produtos_depositos"("id_bling"),
     "saldo_fisico"  INTEGER             NOT NULL,
-    "saldo_virtual" INTEGER             NOT NULL,
-    "id_fornecedor" BIGINT              NOT NULL REFERENCES "contatos"("id_bling"),
-    "preco_custo"   INTEGER             NOT NULL,
-    "preco_compra"  INTEGER             NOT NULL
+    "saldo_virtual" INTEGER             NOT NULL
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-CREATE TABLE "produtos_tributacao"(
-    "id"            SERIAL PRIMARY KEY  NOT NULL,
+CREATE TABLE "produto_fornecedor"(
+    "id_bling"      BIGINT PRIMARY KEY  NOT NULL,
+    "descricao"     VARCHAR(150),
+    "codigo"        VARCHAR(20),
+    "preco_custo"   INTEGER             NOT NULL,
+    "preco_compra"  INTEGER             NOT NULL,
+    "padrao"        BOOLEAN             NOT NULL,
     "id_produto"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling"),
-    "ncm"           VARCHAR(10)         NOT NULL DEFAULT '7113.20.00',
-    "cest"          VARCHAR(10)         NOT NULL DEFAULT '28.058.00'
+    "id_fornecedor" BIGINT              REFERENCES "contatos"("id_bling")
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -182,7 +188,7 @@ CREATE TABLE "produto_variacao"(
     "id"                SERIAL PRIMARY KEY  NOT NULL,
     "id_produto_pai"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling"),
     "id_produto_filho"  BIGINT              NOT NULL UNIQUE REFERENCES "produtos"("id_bling"),
-    "nome"              VARCHAR(120)        NOT NULL,
+    "nome"              VARCHAR(120)        NOT NULL CHECK ("nome" <> ''),
     "ordem"             INTEGER             NOT NULL,
     "clone_pai"         BOOLEAN             NOT NULL
 );
