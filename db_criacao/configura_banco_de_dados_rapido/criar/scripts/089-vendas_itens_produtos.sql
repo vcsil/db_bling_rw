@@ -1,5 +1,5 @@
 CREATE TABLE "vendas_itens_produtos"(
-    "id"            SERIAL PRIMARY KEY  NOT NULL,
+    "id_bling"      BIGINT PRIMARY KEY  NOT NULL,
     "id_venda"      BIGINT              NOT NULL REFERENCES "vendas"("id_bling"),
     "id_produto"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling"),
     "desconto"      INTEGER             NOT NULL,

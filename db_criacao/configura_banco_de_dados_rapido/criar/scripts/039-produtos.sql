@@ -32,7 +32,8 @@ CREATE TABLE "produtos"(
     "ncm"           		VARCHAR(10)         DEFAULT '7113.20.00' CHECK ("ncm" <> ''),
     "cest"          		VARCHAR(9)          DEFAULT '28.058.00' CHECK ("cest" <> ''),
     "id_midia_principal"        INTEGER             REFERENCES "produtos_midias"("id"),
-    "criado_em"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp
+    "criado_em"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp,
+    "alterado_em"		TIMESTAMPTZ	    DEFAULT NULL
 
     --, CONSTRAINT uq_nome_codigo UNIQUE ("nome", "codigo", situacao_produto)
 );
