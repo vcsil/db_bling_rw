@@ -3,25 +3,24 @@
 
 CREATE TABLE "modulos"(
     "id_bling"          BIGINT PRIMARY KEY  NOT NULL,
-    "nome"              VARCHAR(45)         NOT NULL,
-    "descricao"         VARCHAR(120)        NOT NULL,
+    "nome"              VARCHAR(45)         NOT NULL CHECK ("nome" <> ''),
+    "descricao"         VARCHAR(120)        NOT NULL CHECK ("descricao" <> ''),
     "criar_situacoes"   BOOLEAN             NOT NULL
 );
-
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "situacoes"(
     "id_bling"  BIGINT PRIMARY KEY  NOT NULL,
     "id_modulo" BIGINT              NOT NULL REFERENCES "modulos"("id_bling"),
-    "nome"      VARCHAR(45)         NOT NULL,
-    "cor"       VARCHAR(7)          NOT NULL
+    "nome"      VARCHAR(45)         NOT NULL CHECK ("nome" <> ''),
+    "cor"       VARCHAR(7)          NOT NULL CHECK ("cor" <> '')
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "transporte_frete_por_conta_de"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(63)         NOT NULL
+    "nome"  VARCHAR(63)         NOT NULL CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
     "transporte_frete_por_conta_de"."nome" IS '`0` Contratação do Frete por conta do Remetente (CIF)
@@ -34,80 +33,42 @@ COMMENT ON COLUMN
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "transporte_etiqueta"(
-    "id_bling"      BIGINT PRIMARY KEY  NOT NULL,
-    "nome"          VARCHAR(63)         NOT NULL,
+    "id"      	    SERIAL PRIMARY KEY  NOT NULL,
+    "nome"          VARCHAR(63),
     "id_endereco"   INTEGER             NOT NULL REFERENCES "enderecos"("id")
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
-CREATE TABLE "transporte_volumes"(
-    "id_bling"              BIGINT PRIMARY KEY  NOT NULL,
-    "servico"               VARCHAR(45)         NOT NULL,
-    "codigo_rastreamento"   VARCHAR(45)         NOT NULL
-);
-
----*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-CREATE TABLE "transporte"(
-    "id"                    SERIAL PRIMARY KEY  NOT NULL,
-    "id_frete_por_conta"    INTEGER             NOT NULL REFERENCES "transporte_frete_por_conta_de"("id"),
-    "valor_frete"           INTEGER             NOT NULL,
-    "quantidade_volumes"    INTEGER,
-    "peso_bruto"            INTEGER,
-    "prazo_entrega"         INTEGER             NOT NULL,
-    "id_contato"            INTEGER             NOT NULL REFERENCES "contatos"("id_bling"),
-    "id_etiqueta"           BIGINT              NOT NULL REFERENCES "transporte_etiqueta"("id_bling"),
-    "id_volumes"            BIGINT              NOT NULL REFERENCES "transporte_volumes"("id_bling")
-);
-COMMENT ON COLUMN
-    "transporte"."id_contato" IS 'transportador';
-
----*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-CREATE TABLE "categorias_receitas_despesas"(
-    "id_bling"      BIGINT PRIMARY KEY  NOT NULL,
-    "nome"          VARCHAR(45)         NOT NULL,
-    "tipo"          INTEGER             NOT NULL
-);
-COMMENT ON COLUMN
-    "categorias_receitas_despesas"."tipo" IS '`1` Despesa
-    `2` Receita
-    `3` Receita e despesa';
-
----*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
-CREATE TABLE "categorias_receitas_despesas_relacao"(
-    "id"                    SERIAL PRIMARY KEY  NOT NULL,
-    "id_categoria_pai"      BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
-    "id_categoria_filho"    BIGINT              NOT NULL UNIQUE REFERENCES "categorias_receitas_despesas"("id_bling")
-);
-
----*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-
 CREATE TABLE "vendas"(
-    "id_bling"              BIGINT PRIMARY KEY  NOT NULL,
-    "numero"                INTEGER             NOT NULL,
-    "numero_loja"           VARCHAR(45),
-    "data"                  DATE                NOT NULL DEFAULT 'NOW()',
-    "data_saida"            DATE                NOT NULL DEFAULT 'NOW()',
-    "data_prevista"         DATE                NOT NULL,
-    "id_contato"            BIGINT              NOT NULL REFERENCES "contatos"("id_bling"),
-    "id_situacao"           BIGINT              NOT NULL REFERENCES "situacoes"("id_bling"),
-    "situacao_valor"        INTEGER             NOT NULL,
-    "loja"                  INTEGER             NOT NULL,
-    "numero_pedido_compra"  VARCHAR(45),
-    "outras_despesas"       INTEGER             NOT NULL,
-    "observacoes"           TEXT,
-    "observacoes_internas"  TEXT,
-    "desconto"              INTEGER             NOT NULL,
-    "desconto_unidade"      INTEGER             NOT NULL,
-    "id_categoria"          BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
-    "id_nota_fiscal"        BIGINT,
-    "total_icms"            INTEGER,
-    "total_ipi"             INTEGER,
-    "id_transporte"         INTEGER             NOT NULL REFERENCES "transporte"("id"),
-    "id_vendedor"           BIGINT              NOT NULL REFERENCES "contatos"("id_bling")
+    "id_bling"                      BIGINT PRIMARY KEY  NOT NULL,
+    "numero"                        INTEGER             NOT NULL,
+    "numero_loja"                   VARCHAR(45),
+    "data"                          TIMESTAMPTZ         NOT NULL DEFAULT current_timestamp,
+    "data_saida"                    DATE                DEFAULT NOW(),
+    "data_prevista"                 DATE,
+    "id_contato"                    BIGINT              NOT NULL REFERENCES "contatos"("id_bling"),
+    "id_situacao"                   BIGINT              NOT NULL REFERENCES "situacoes"("id_bling"),
+    "situacao_valor"                INTEGER             NOT NULL,
+    "id_loja"                       INTEGER             NOT NULL,
+    "numero_pedido_compra"          VARCHAR(45),
+    "outras_despesas"               INTEGER             NOT NULL,
+    "observacoes"                   TEXT,
+    "observacoes_internas"          TEXT,
+    "desconto"                      INTEGER             NOT NULL,
+    "desconto_unidade"              VARCHAR(12)             NOT NULL,
+    "id_categoria"                  BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
+    "id_nota_fiscal"                BIGINT,
+    "total_icms"                    INTEGER,
+    "total_ipi"                     INTEGER,
+    "id_vendedor"                   BIGINT              NOT NULL REFERENCES "vendedores"("id_bling"),
+    "transporte_id_frete_por_conta" INTEGER             NOT NULL REFERENCES "transporte_frete_por_conta_de"("id"),
+    "transporte_valor_frete"        INTEGER             NOT NULL,
+    "transporte_quantidade_volumes" INTEGER,
+    "transporte_peso_bruto"         INTEGER,
+    "transporte_prazo_entrega"      INTEGER,
+    "transporte_id_contato"         INTEGER             REFERENCES "contatos"("id_bling"),
+    "transporte_id_etiqueta"        BIGINT              REFERENCES "transporte_etiqueta"("id")
 );
 COMMENT ON COLUMN
     "vendas"."data" IS 'Valor obrigatório caso parâmetro de geração de parcelas seja este';
@@ -119,11 +80,23 @@ COMMENT ON COLUMN
     "vendas"."numero_pedido_compra" IS 'Número da ordem de compra do pedido.';
 COMMENT ON COLUMN
     "vendas"."desconto_unidade" IS '0 - Real 1 - Percentual';
+COMMENT ON COLUMN
+    "vendas"."transporte_id_contato" IS 'transportador';
+
+
+---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+CREATE TABLE "transporte_volumes"(
+    "id_bling"              BIGINT PRIMARY KEY  NOT NULL,
+    "id_venda"         	    BIGINT              NOT NULL REFERENCES "vendas"("id_bling"),
+    "servico"               VARCHAR(45),
+    "codigo_rastreamento"   VARCHAR(45)
+);
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "vendas_itens_produtos"(
-    "id"            SERIAL PRIMARY KEY  NOT NULL,
+    "id_bling"      BIGINT PRIMARY KEY  NOT NULL,
     "id_venda"      BIGINT              NOT NULL REFERENCES "vendas"("id_bling"),
     "id_produto"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling"),
     "desconto"      INTEGER             NOT NULL,
@@ -140,11 +113,13 @@ COMMENT ON COLUMN
 CREATE TABLE "parcelas"(
     "id_bling"              BIGINT PRIMARY KEY  NOT NULL,
     "id_venda"              BIGINT              NOT NULL REFERENCES "vendas"("id_bling"),
-    "data_vencimento"       DATE                NOT NULL DEFAULT 'NOW()',
+    "data_vencimento"       DATE                NOT NULL DEFAULT NOW(),
     "valor"                 INTEGER             NOT NULL,
-    "observacoes"           VARCHAR(120)        NOT NULL,
+    "observacoes"           VARCHAR(120)        CHECK ("observacoes" <> ''),
     "id_forma_pagamento"    BIGINT              NOT NULL REFERENCES "formas_pagamento"("id_bling"),
-    "id_conta_receber"      BIGINT              NOT NULL REFERENCES "contas_receber"("id_bling")
+    "id_conta_receber"      BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
 );
 COMMENT ON COLUMN
     "parcelas"."id_bling" IS 'id contas a receber';
+
+
