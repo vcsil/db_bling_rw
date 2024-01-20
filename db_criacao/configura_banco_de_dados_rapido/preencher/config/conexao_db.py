@@ -5,8 +5,6 @@ Created on Tue Dec 12 11:13:16 2023.
 
 @author: vcsil
 """
-from config.env_valores import EnvValores
-
 from typing import List, Tuple, Dict, Union
 from psycopg import sql, connect, Error
 from psycopg.rows import dict_row
@@ -22,8 +20,8 @@ log = logging.getLogger(__name__)
 class ConectaDB():
     """Controla conexão com o banco de dados."""
 
-    def __init__(self):
-        self._env = EnvValores().env_db()
+    def __init__(self, env_db):
+        self._env = env_db
 
     def conectar_ao_banco(self):
         """
@@ -43,7 +41,7 @@ class ConectaDB():
             port={self._env["POSTGRES_PORT"]}
         """
         try:
-            log.info('Inicia')
+            log.info('Inicia conexão com banco de dados')
             conn = connect(conn_string, row_factory=dict_row)
             return conn
         except Error as e:
@@ -87,12 +85,71 @@ class ConectaDB():
         query = self._constroi_query_busca(tabela, colunas, filtro)
 
         try:
-            log.info('Inicio')
+            log.info(f"Solicita varios: {query.as_string(conn)}")
             # with conn.transaction():
             # print(query.as_string(conn))
             array_dados = conn.execute(query).fetchall()
 
-            log.info('Final')
+            log.info("Sucesso na solicitação")
+            return array_dados
+        except Error as e:
+            _, _, traceback_obj = sys.exc_info()
+            print(f"SQLState: {e.sqlstate}")
+            print(f"Erro no banco de dados: {e}\n{type(e)}")
+            print(f"{traceback_obj}\n")
+            log.error(f"{query.as_string(conn)}")
+            log.error(f"SQLState: {e.sqlstate} {e}")
+            conn.rollback()
+            sys.exit()
+
+    def select_all_from_db_like_as(
+            self,
+            tabela: str,
+            colunas: Union[str, List[str]],
+            conn,
+            filtro: str
+    ) -> List[Tuple[int]]:
+        """
+        Faz um SELECT no banco de dados podendo digitar o filtro.
+
+        É possivel definir a tabela, as colunas
+
+        Parameters
+        ----------
+        tabela : str
+            Nome da tabela.
+        colunas : Union[str, List[str]]
+            Nome da coluna ou um array com o nome das colunas .
+        conn : Connection
+            Conexão com banco de dados.
+        filtro : Tuple[str, Tuple[Union[str, int]]], optional
+            Uma tupla com o Filtro seguindo por uma tupla com o valor do
+            filtro. The default is None.
+
+        Returns
+        -------
+        List[Tuple[int]]
+            Uma lista com as linhas em forma de tupla com os dados.
+
+        """
+        query = (
+            sql.SQL("SELECT {columns} FROM {table} {fltr}")
+            .format(
+                columns=sql.SQL(',').join(
+                    map(sql.Identifier, colunas)
+                ),
+                table=sql.SQL(tabela),
+                fltr=sql.SQL(filtro)
+            )
+        )
+
+        try:
+            log.info(f"Solicita varios: {query.as_string(conn)}")
+            # with conn.transaction():
+            # print(query.as_string(conn))
+            array_dados = conn.execute(query).fetchall()
+
+            log.info("Sucesso na solicitação")
             return array_dados
         except Error as e:
             _, _, traceback_obj = sys.exc_info()
@@ -121,7 +178,8 @@ class ConectaDB():
         tabela : str
             Nome da tabela.
         colunas : Union[str, List[str]]
-            Nome da coluna ou um array com o nome das colunas .
+            Nome da coluna ou um array com o nome das colunas que serão
+            retornadas.
         conn : Connection
             Conexão com banco de dados.
         filtro : Tuple[str, Tuple[Union[str, int]]], optional
@@ -137,12 +195,12 @@ class ConectaDB():
         query = self._constroi_query_busca(tabela, colunas, filtro)
 
         try:
-            log.info('Inicio')
+            log.info(f"Solicita um: {query.as_string(conn)}")
             # with conn.transaction():
             # print(query.as_string(conn))
             array_dados = conn.execute(query).fetchone()
 
-            log.info('Final')
+            log.info("Sucesso na solicitação")
             return array_dados
         except Error as e:
             _, _, traceback_obj = sys.exc_info()
@@ -167,16 +225,20 @@ class ConectaDB():
             sql.SQL("SELECT {columns} FROM {table}")
             .format(
                 columns=sql.SQL(',').join(
-                        map(sql.Identifier, colunas)
+                    map(sql.Identifier, colunas)
                 ),
                 table=sql.SQL(tabela)
             )
         )
         if filtro:
-            query = sql.SQL("{query_fixa} {fltr} {tabela}").format(
+            query = sql.SQL("{query_fixa} WHERE {fltr}").format(
                 query_fixa=query,
-                fltr=sql.SQL(filtro[0]),
-                tabela=sql.Literal(filtro[1])
+                fltr=sql.SQL(" AND ").join(
+                    sql.SQL("{coluna}={valor}").format(
+                        coluna=sql.Identifier(col),
+                        valor=sql.Literal(val)
+                    ) for col, val in zip(filtro[0], filtro[1])
+                )
             )
         return query
 
@@ -185,7 +247,6 @@ class ConectaDB():
             tabela: str,
             colunas: Union[str, List[str]],
             valores: List[Dict[str, Union[str, int]]],
-            valores_placeholder: List[str],
             conn
     ):
         """
@@ -194,15 +255,11 @@ class ConectaDB():
         Parameters
         ----------
         tabela : str
-            Nome da tabela.
+            Nome da tabela que recebera o valor.
         colunas : Union[str, List[str]]
-            Nome da coluna.
+            Nome das colunas que receberam os valores.
         valores : List[Dict[str, Union[str, int]]]
-            Uma lista com os valores a serem inseridos em tupla.
-            Nome da coluna.
-        valores_placeholder : List[str]
-            Lista utilizada para nomear cada coluna que vai receber o valor.
-            Nome da coluna.
+            Um dict com os valores a serem inseridos, as chaves são as colunas.
         conn : Connection
             Conexão com banco de dados.
 
@@ -222,17 +279,17 @@ class ConectaDB():
                         map(sql.Identifier, colunas)
                 ),
                 values=sql.SQL(', ').join(
-                        map(sql.Placeholder, valores_placeholder)
+                        map(sql.Placeholder, colunas)
                 )
             )
         )
         try:
-            log.info("Inicio")
+            log.info(f"Insere varios na tabela {tabela}")
             # with conn.transaction():
             # print(query.as_string(conn))
             with conn.cursor() as cur:
                 cur.executemany(query, valores)
-            log.info("Final")
+            log.info("Sucesso na inserção")
         except Error as e:
             _, _, traceback_obj = sys.exc_info()
             print(f"SQLState: {e.sqlstate}")
@@ -248,7 +305,6 @@ class ConectaDB():
             tabela: str,
             colunas: Union[str, List[str]],
             valores: Dict[str, Union[str, int]],
-            valores_placeholder: List[str],
             conn
     ):
         """
@@ -257,15 +313,11 @@ class ConectaDB():
         Parameters
         ----------
         tabela : str
-            Nome da tabela.
+            Nome da tabela que recebera o valor.
         colunas : Union[str, List[str]]
-            Nome da coluna.
+            Nome das colunas que receberam os valores.
         valores : Dict[str, Union[str, int]]
-            Uma lista com os valores a serem inseridos em tupla.
-            Nome da coluna.
-        valores_placeholder : List[str]
-            Lista utilizada para nomear cada coluna que vai receber o valor.
-            Nome da coluna.
+            Um dict com os valores a serem inseridos, as chaves são as colunas.
         conn : Connection
             Conexão com banco de dados.
 
@@ -281,16 +333,16 @@ class ConectaDB():
                 map(sql.Identifier, colunas)
                 ),
             values=sql.SQL(', ').join(
-                map(sql.Placeholder, valores_placeholder)
+                map(sql.Placeholder, colunas)
                 )
             )
         )
         try:
-            log.info("Inicio")
+            log.info(f"Insere um na tabela {tabela}")
             # with conn.transaction():
             # print(query.as_string(conn))
             dados_inseridos = conn.execute(query, valores).fetchone()
-            log.info("Final")
+            log.info("Sucesso na inserção")
             return dados_inseridos
         except Error as e:
             _, _, traceback_obj = sys.exc_info()
@@ -314,11 +366,8 @@ class ConectaDB():
         """
         with self.conectar_ao_banco() as conn:
             nome_tabelas = self.select_all_from_db(
-                tabela=('"information_schema"."tables"'),
-                colunas="table_name",
-                filtro=("WHERE table_schema =", 'public'),
-                conn=conn
-                )
+                tabela=('"information_schema"."tables"'), conn=conn,
+                colunas="table_name", filtro=(["table_schema"], ['public']))
         # Tirar valores de dentro do dict e colocar na list
         nome_tabelas = [tabela['table_name'] for tabela in nome_tabelas]
         return nome_tabelas
@@ -341,7 +390,7 @@ class ConectaDB():
         with self.conectar_ao_banco() as conn:
             nome_colunas = self.select_all_from_db(
                 tabela='"information_schema"."columns"',
-                colunas="column_name", filtro=("WHERE table_name =", tabela),
+                colunas="column_name", filtro=(["table_name"], [tabela]),
                 conn=conn)
 
         # Tirar os valores do dict e deixar dentro de uma array
@@ -352,10 +401,12 @@ class ConectaDB():
     def cria_dict_tabelas_colunas(self):
         """Usada para gerar um dict com o nome das colunas de cada tabela."""
         tabelas_colunas = {}
+        log.info("Pega nome de todas as tabelas")
         db_tabelas = self.pega_nome_tabelas()
 
         texto_barra_carregar = "Pegando nome das colunas das tabelas"
         for tabela in tqdm(db_tabelas, desc=texto_barra_carregar):
+            log.info(f"Pegando nome das colunas da tabela: {tabela}")
             tabelas_colunas[tabela] = self.pega_nome_colunas(tabela)
 
         return tabelas_colunas

@@ -1,4 +1,4 @@
 CREATE TABLE "contas_contabeis"(
-    "id"        BIGINT PRIMARY KEY  NOT NULL,
-    "descricao" VARCHAR(45)         NOT NULL  CHECK ("descricao" <> '')
+    "id_bling"  BIGINT PRIMARY KEY  NOT NULL,
+    "nome"      VARCHAR(45)         NOT NULL  CHECK ("descricao" <> '')
 );

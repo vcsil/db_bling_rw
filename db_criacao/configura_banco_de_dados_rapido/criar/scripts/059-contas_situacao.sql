@@ -1,4 +1,4 @@
-CREATE TABLE "contas_receber_situacao"(
+CREATE TABLE "contas_situacao"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
     "nome"  VARCHAR(45)         NOT NULL  CHECK ("nome" <> '')
 );

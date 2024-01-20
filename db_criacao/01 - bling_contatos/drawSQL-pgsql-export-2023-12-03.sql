@@ -127,7 +127,8 @@ CREATE TABLE "contatos"(
     "data_nascimento"                   DATE,
     "sexo"                              INTEGER             NOT NULL CHECK (sexo IN (1, 2, 3)) DEFAULT 2,
     "id_classificacao_contato"          BIGINT                       REFERENCES "contatos_classificacao"("id_bling"),
-    "cliente_desde"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp
+    "cliente_desde"			TIMESTAMPTZ	    NOT NULL DEFAULT current_timestamp,
+    "alterado_em"			TIMESTAMPTZ	    DEFAULT NULL
 );
 COMMENT ON COLUMN
     "contatos"."numero_documento" IS 'CPF ou CNPJ do contato';
