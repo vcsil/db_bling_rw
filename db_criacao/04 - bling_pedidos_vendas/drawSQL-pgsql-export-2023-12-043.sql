@@ -57,11 +57,11 @@ CREATE TABLE "vendas"(
     "observacoes_internas"          TEXT,
     "desconto"                      INTEGER             NOT NULL,
     "desconto_unidade"              VARCHAR(12)             NOT NULL,
-    "id_categoria"                  BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
+    "id_categoria"                  BIGINT              REFERENCES "categorias_receitas_despesas"("id_bling"),
     "id_nota_fiscal"                BIGINT,
     "total_icms"                    INTEGER,
     "total_ipi"                     INTEGER,
-    "id_vendedor"                   BIGINT              NOT NULL REFERENCES "vendedores"("id_bling"),
+    "id_vendedor"                   BIGINT              REFERENCES "vendedores"("id_bling"),
     "transporte_id_frete_por_conta" INTEGER             NOT NULL REFERENCES "transporte_frete_por_conta_de"("id"),
     "transporte_valor_frete"        INTEGER             NOT NULL,
     "transporte_quantidade_volumes" INTEGER,
@@ -98,7 +98,7 @@ CREATE TABLE "transporte_volumes"(
 CREATE TABLE "vendas_itens_produtos"(
     "id_bling"      BIGINT PRIMARY KEY  NOT NULL,
     "id_venda"      BIGINT              NOT NULL REFERENCES "vendas"("id_bling"),
-    "id_produto"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling"),
+    "id_produto"    BIGINT              REFERENCES "produtos"("id_bling"),
     "desconto"      INTEGER             NOT NULL,
     "valor"         INTEGER             NOT NULL,
     "quantidade"    INTEGER             NOT NULL
@@ -117,7 +117,7 @@ CREATE TABLE "parcelas"(
     "valor"                 INTEGER             NOT NULL,
     "observacoes"           VARCHAR(120)        CHECK ("observacoes" <> ''),
     "id_forma_pagamento"    BIGINT              NOT NULL REFERENCES "formas_pagamento"("id_bling"),
-    "id_conta_receber"      BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
+    "id_conta_receber"      BIGINT              REFERENCES "contas_receitas_despesas"("id_bling")
 );
 COMMENT ON COLUMN
     "parcelas"."id_bling" IS 'id contas a receber';

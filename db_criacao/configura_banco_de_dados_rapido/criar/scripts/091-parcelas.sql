@@ -5,7 +5,7 @@ CREATE TABLE "parcelas"(
     "valor"                 INTEGER             NOT NULL,
     "observacoes"           VARCHAR(120)        CHECK ("observacoes" <> ''),
     "id_forma_pagamento"    BIGINT              NOT NULL REFERENCES "formas_pagamento"("id_bling"),
-    "id_conta_receber"      BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
+    "id_conta_receber"      BIGINT              REFERENCES "contas_receitas_despesas"("id_bling")
 );
 COMMENT ON COLUMN
     "parcelas"."id_bling" IS 'id contas a receber';
