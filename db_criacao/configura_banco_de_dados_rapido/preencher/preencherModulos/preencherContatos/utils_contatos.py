@@ -63,7 +63,8 @@ def manipula_dados_contatos(contato: dict, fuso, db, conn, tabelas_colunas):
         'sexo': _formata_sexo(contato['dadosAdicionais']['sexo']),
         'id_classificacao_contato': _formata_classificacao(
             contato['tiposContato']),
-        'cliente_desde': datetime.now(fuso)
+        'cliente_desde': datetime.now(fuso),
+        'alterado_em': None
     }
     for chave, valor in contato_info.items():
         if (valor == ''):

@@ -154,7 +154,8 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
         "id_midia_principal": _formata_midia(
             url_midia=produto["midia"]["imagens"]["externas"],
             db=db, conn=conn),
-        "criado_em": datetime.now(fuso)
+        "criado_em": datetime.now(fuso),
+        "alterado_em": None
     }
     for chave, valor in valores_produto.items():
         if (valor == ''):
