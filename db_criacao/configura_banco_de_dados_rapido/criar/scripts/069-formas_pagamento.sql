@@ -10,7 +10,7 @@ CREATE TABLE "formas_pagamento"(
     "id_finalidade"     INTEGER             NOT NULL REFERENCES "formas_pagamento_finalidade"("id"),
     "taxas_aliquota"    INTEGER             NOT NULL,
     "taxas_valor"       INTEGER             NOT NULL,
-    "taxas_prazo"       INTEGER             NOT NULL,
+    "taxas_prazo"       INTEGER             NOT NULL
 );
 COMMENT ON COLUMN
     "formas_pagamento"."situacao" IS '`0` Inativa

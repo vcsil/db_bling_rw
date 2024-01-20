@@ -4,7 +4,7 @@ CREATE TABLE "produtos"(
     "codigo"                    VARCHAR(120)        NOT NULL CHECK ("codigo" <> ''),
     "preco"                     INTEGER             NOT NULL,
     "id_tipo_produto"           INTEGER             NOT NULL DEFAULT 2 REFERENCES "produtos_tipos"("id"),
-    "situacao_produto"          VARCHAR(10)         NOT NULL DEFAULT "Ativo",
+    "situacao_produto"          VARCHAR(10)         NOT NULL DEFAULT 'Ativo',
     "id_formato_produto"        INTEGER             NOT NULL REFERENCES "produtos_formatos"("id"),
     "id_produto_pai"		BIGINT		    DEFAULT NULL REFERENCES "produtos"("id_bling"),
     "descricao_curta"           TEXT,

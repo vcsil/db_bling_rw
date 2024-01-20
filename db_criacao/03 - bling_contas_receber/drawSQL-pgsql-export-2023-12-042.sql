@@ -26,7 +26,7 @@ CREATE TABLE "categorias_receitas_despesas"(
     "situacao"	    BOOLEAN		NOT NULL
 );
 COMMENT ON COLUMN
-    "categorias_receitas_despesas"."tipo" IS '`1` Despesa
+    "categorias_receitas_despesas"."id_tipo" IS '`1` Despesa
     `2` Receita
     `3` Receita e despesa';
 
@@ -45,7 +45,7 @@ CREATE TABLE "contas_situacao"(
     "nome"  VARCHAR(45)         NOT NULL  CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
-    "contas_receber_situacao"."nome" IS '`1` Em aberto
+    "contas_situacao"."nome" IS '`1` Em aberto
     `2` Recebido
     `3` Parcialmente recebido
     `4` Devolvido
@@ -123,7 +123,7 @@ CREATE TABLE "formas_pagamento"(
     "id_finalidade"     INTEGER             NOT NULL REFERENCES "formas_pagamento_finalidade"("id"),
     "taxas_aliquota"    INTEGER             NOT NULL,
     "taxas_valor"       INTEGER             NOT NULL,
-    "taxas_prazo"       INTEGER             NOT NULL,
+    "taxas_prazo"       INTEGER             NOT NULL
 );
 COMMENT ON COLUMN
     "formas_pagamento"."situacao" IS '`0` Inativa
