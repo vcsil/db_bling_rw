@@ -189,13 +189,13 @@ CREATE TABLE "contas_receitas_despesas"(
 
 );
 COMMENT ON COLUMN
-    "contas_receber"."saldo" IS 'É calculado subtraindo os valores dos recebimentos do valor da conta';
+    "contas_receitas_despesas"."saldo" IS 'É calculado subtraindo os valores dos recebimentos do valor da conta';
 COMMENT ON COLUMN
-    "contas_receber"."numero_documento" IS '"Número para controle interno da empresa"';
+    "contas_receitas_despesas"."numero_documento" IS '"Número para controle interno da empresa"';
 COMMENT ON COLUMN
-    "contas_receber"."historico" IS '"Descriçao da conta para controle interno da empresa"';
+    "contas_receitas_despesas"."historico" IS '"Descriçao da conta para controle interno da empresa"';
 COMMENT ON COLUMN
-    "contas_receber"."numero_banco" IS '"Adicionado automaticamente com o número preenchido no cadastro do banco"';
+    "contas_receitas_despesas"."numero_banco" IS '"Adicionado automaticamente com o número preenchido no cadastro do banco"';
 COMMENT ON COLUMN
-    "contas_receber"."tipo_ocorrencia" IS '`1` Única `2` Parcelada `3` Mensal `4` Bimestral `5` Trimestral `6` Semestral `7` Anual `8` Quinzenal `9` Semanal';
+    "contas_receitas_despesas"."tipo_ocorrencia" IS '`1` Única `2` Parcelada `3` Mensal `4` Bimestral `5` Trimestral `6` Semestral `7` Anual `8` Quinzenal `9` Semanal';
 
