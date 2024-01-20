@@ -5,10 +5,8 @@ Created on Thu Dec 14 11:11:39 2023.
 
 @author: vcsil
 """
-from preencherModulos.utils import (db_pega_um_elemento, formata_data,
-                                    verifica_preenche_valor)
+from preencherModulos.utils import (db_pega_um_elemento, formata_data)
 
-from typing import Dict, Union
 from datetime import datetime
 import logging
 
@@ -143,76 +141,6 @@ def regra_pais(tipo_contato: str, pais: str) -> str:
     pais = ' '.join(pais.split()).title()
 
     return pais
-
-
-def possui_informacao(dict_dados: Dict[str, Union[str, int, None]]) -> bool:
-    """Verifica se dict contém alguma informação."""
-    for valor in dict_dados.values():
-        if isinstance(valor, str):
-            if len(valor) > 0:
-                return True
-        else:
-            return True
-    return False
-
-
-def manipula_dados_endereco(
-        dict_endereco: Dict[str, str],
-        id_pais: int,
-        db,
-        conn,
-        tabelas_colunas
-) -> Dict[str, Union[str, int]]:
-    """
-    Adequa os dados do endereço ao formato do banco de dados.
-
-    Parameters
-    ----------
-    dict_endereco : Dict[str, str]
-        Dicionário de endereço.
-    id_pais : int
-        Referente ao país de endereço.
-        Dicionário de endereço.
-    conn :
-        Connection.
-
-    Returns
-    -------
-    Dict[str, Union[str, int]]
-        DESCRIPTION.
-
-    """
-    log.info("Manipula dados contatos")
-    uf = ''.join(dict_endereco['uf'].split()).upper()
-    id_uf = verifica_preenche_valor(
-        tabela_busca='endereco_unidade_federativa', coluna_busca='nome',
-        valor_busca=uf, relacao_externa={'id_pais': id_pais}, conn=conn, db=db,
-        list_colunas=tabelas_colunas['endereco_unidade_federativa'][:])
-
-    municipio = ' '.join(dict_endereco['municipio'].split()).title()
-    id_municipio = verifica_preenche_valor(
-        tabela_busca='endereco_municipios', coluna_busca='nome', db=db,
-        valor_busca=municipio, relacao_externa={'id_uf': id_uf}, conn=conn,
-        list_colunas=tabelas_colunas['endereco_municipios'][:])
-
-    bairro = ' '.join(dict_endereco['bairro'].split()).title()
-    id_bairro = verifica_preenche_valor(
-        tabela_busca='endereco_bairros', coluna_busca='nome', db=db,
-        valor_busca=bairro, relacao_externa={'id_municipio': id_municipio},
-        conn=conn, list_colunas=tabelas_colunas['endereco_bairros'][:])
-
-    endereco = {
-        'endereco': ' '.join(dict_endereco['endereco'].split()).title(),
-        'cep': dict_endereco['cep'],
-        'id_bairro': id_bairro,
-        'id_municipio': id_municipio,
-        'id_uf': id_uf,
-        'id_pais': id_pais,
-        'numero': dict_endereco['numero'],
-        'complemento': ' '.join(dict_endereco['complemento']
-                                .split()).title()
-    }
-    return endereco
 
 
 if __name__ == "__main__":

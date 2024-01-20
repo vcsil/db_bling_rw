@@ -7,11 +7,10 @@ Created on Tue Dec 12 11:36:38 2023.
 """
 
 from preencherModulos.preencherContatos.utils_contatos import (
-    manipula_dados_contatos, regra_pais,
-    possui_informacao, manipula_dados_endereco)
+    manipula_dados_contatos, regra_pais)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, api_pega_todos_id,
-    db_inserir_uma_linha, verifica_preenche_valor)
+    db_inserir_varias_linhas, api_pega_todos_id, possui_informacao,
+    db_inserir_uma_linha, verifica_preenche_valor, manipula_dados_endereco)
 
 from typing import Dict, Union
 from tqdm import tqdm
@@ -103,6 +102,7 @@ class PreencherContatos():
         """Preenche a tabela contatos da database."""
         colunas = self.tabelas_colunas[tabela][:]
         id_contatos = api_pega_todos_id(api, '/contatos?criterio=1&')
+        id_contatos.sort()
 
         ROTA = '/contatos/'
         log.info(f"Passará por {len(id_contatos)} contatos")
@@ -164,10 +164,11 @@ class PreencherContatos():
                     endereco, id_pais, self.db, conn, self.tabelas_colunas)
 
                 # Inserir na tabela enderecos
-                endereco_inserido = db_inserir_uma_linha(
-                    tabela='enderecos', colunas=colunas, valores=endereco,
-                    db=self.db, conn=conn)
-                id_endereco = endereco_inserido['id']
+                valores = list(endereco.values())
+                id_endereco = verifica_preenche_valor(
+                    tabela_busca="enderecos", coluna_busca=colunas,
+                    valor_busca=valores, db=self.db, conn=conn,
+                    list_colunas=["id"]+colunas)
 
                 colunas_enderecos_inserido = (
                     self.tabelas_colunas['contatos_enderecos'][:])

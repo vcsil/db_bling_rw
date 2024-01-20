@@ -9,6 +9,10 @@ from preencherModulos.preencherContatos.preencher_contatos import (
     PreencherContatos)
 from preencherModulos.preencherProdutos.preencher_produtos import (
     PreencherProdutos)
+from preencherModulos.preencherContas.preencher_contas import (
+    PreencherContas)
+from preencherModulos.preencherPedidosVendas.preencher_vendas import (
+    PreencherVendas)
 from config.env_valores import EnvValores
 from config.conexao_api import ConectaAPI
 from config.conexao_db import ConectaDB
@@ -38,6 +42,7 @@ def preencher_modulos():
     log.info('Inicia preenchimento')
     with db.conectar_ao_banco() as conn:
 
+        log.info("Começa preencher contatos.")
         PreencherContatos(tabelas_colunas, db).preencher_modulo_contatos(conn,
                                                                          api,
                                                                          fuso)
@@ -48,6 +53,18 @@ def preencher_modulos():
                                                                          api,
                                                                          fuso)
         log.info("Comita produtos")
+        conn.commit()
+
+        log.info("Começa preencher contas a receber.")
+        PreencherContas(tabelas_colunas, db).preencher_modulo_contas(conn, api,
+                                                                     fuso)
+        log.info("Comita contas a receber")
+        conn.commit()
+
+        log.info("Começa preencher pedidos de venda.")
+        PreencherVendas(tabelas_colunas, db).preencher_modulo_vendas(conn, api,
+                                                                     fuso)
+        log.info("Comita vendas")
         conn.commit()
         print('Foi')
 

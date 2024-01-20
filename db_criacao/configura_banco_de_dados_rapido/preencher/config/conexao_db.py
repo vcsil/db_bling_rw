@@ -102,6 +102,65 @@ class ConectaDB():
             conn.rollback()
             sys.exit()
 
+    def select_all_from_db_like_as(
+            self,
+            tabela: str,
+            colunas: Union[str, List[str]],
+            conn,
+            filtro: str
+    ) -> List[Tuple[int]]:
+        """
+        Faz um SELECT no banco de dados podendo digitar o filtro.
+
+        É possivel definir a tabela, as colunas
+
+        Parameters
+        ----------
+        tabela : str
+            Nome da tabela.
+        colunas : Union[str, List[str]]
+            Nome da coluna ou um array com o nome das colunas .
+        conn : Connection
+            Conexão com banco de dados.
+        filtro : Tuple[str, Tuple[Union[str, int]]], optional
+            Uma tupla com o Filtro seguindo por uma tupla com o valor do
+            filtro. The default is None.
+
+        Returns
+        -------
+        List[Tuple[int]]
+            Uma lista com as linhas em forma de tupla com os dados.
+
+        """
+        query = (
+            sql.SQL("SELECT {columns} FROM {table} {fltr}")
+            .format(
+                columns=sql.SQL(',').join(
+                    map(sql.Identifier, colunas)
+                ),
+                table=sql.SQL(tabela),
+                fltr=sql.SQL(filtro)
+            )
+        )
+
+        try:
+            log.info(f"Solicita varios: {query.as_string(conn)}")
+            # with conn.transaction():
+            # print(query.as_string(conn))
+            array_dados = conn.execute(query).fetchall()
+
+            log.info("Sucesso na solicitação")
+            return array_dados
+        except Error as e:
+            _, _, traceback_obj = sys.exc_info()
+            print(f"SQLState: {e.sqlstate}")
+            print(f"Erro no banco de dados: {e}\n{type(e)}")
+            print(f"{traceback_obj}\n")
+            log.error(f"{query.as_string(conn)}")
+            log.error(f"SQLState: {e.sqlstate} {e}")
+            conn.rollback()
+            sys.exit()
+
     def select_one_from_db(
             self,
             tabela: str,

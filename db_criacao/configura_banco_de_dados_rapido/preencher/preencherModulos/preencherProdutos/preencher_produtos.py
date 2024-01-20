@@ -17,7 +17,7 @@ import logging
 
 log = logging.getLogger(__name__)
 
-# =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
+# =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Produtos =-=-=-=-=-=-=-=-=-=-=-=-=
 
 
 class PreencherProdutos():
@@ -42,7 +42,7 @@ class PreencherProdutos():
         db_inserir_varias_linhas(
             tabela=tabela, colunas=colunas, valores=valores,
             db=self.db, conn=conn)
-        log.info("Fim")
+        log.info("Fim de preencher produtos tipos")
 
     def preencher_produtos_formatos(self, tabela: str, conn):
         """Preenche a tabela produtos_formatos da database."""
@@ -59,7 +59,7 @@ class PreencherProdutos():
         db_inserir_varias_linhas(
             tabela=tabela, colunas=colunas, valores=valores,
             db=self.db, conn=conn)
-        log.info("Fim")
+        log.info("Fim de preencher produtos formatos")
 
     def preencher_produtos_tipo_producao(self, tabela: str, conn):
         """Preenche a tabela produtos_formatos da database."""
@@ -75,7 +75,7 @@ class PreencherProdutos():
         db_inserir_varias_linhas(
             tabela=tabela, colunas=colunas, valores=valores,
             db=self.db, conn=conn)
-        log.info("Fim")
+        log.info("Fim de preencher produtos tipo producão")
 
     def preencher_produtos_condicao(self, tabela: str, conn):
         """Preenche a tabela produtos_formatos da database."""
@@ -91,13 +91,14 @@ class PreencherProdutos():
         db_inserir_varias_linhas(
             tabela=tabela, colunas=colunas, valores=valores,
             db=self.db, conn=conn)
-        log.info("Fim")
+        log.info("Fim de preencher produtos condição")
 
     def preencher_produtos_categorias(self, tabela: str, conn, api):
         """Preenche a tabela produtos_formatos da database."""
         colunas = self.tabelas_colunas[tabela][:]
         ids_categorias = api_pega_todos_id(api, '/categorias/produtos?')
         ids_categorias += [6071256]
+        ids_categorias.sort()
 
         ROTA = '/categorias/produtos/'
         log.info(f"Passará por {len(ids_categorias)} categorias")
@@ -107,14 +108,14 @@ class PreencherProdutos():
             rel, categoria = solicita_categeoria(rota=ROTA+f"{idCategoria}",
                                                  api=api)
 
-            # Pegando informações sobre relação da categoria
-            if rel:
-                list_relacao_categoria.append(rel)
-
             log.info("Insere categoria")
             db_inserir_uma_linha(
                 tabela=tabela, colunas=colunas, valores=categoria,
                 db=self.db, conn=conn)
+
+            # Pegando informações sobre relação da categoria
+            if rel:
+                list_relacao_categoria.append(rel)
 
         log.info("Insere relacoes das categorias")
         colunas_relacao = (self
@@ -124,12 +125,13 @@ class PreencherProdutos():
                                  colunas=colunas_relacao, conn=conn,
                                  db=self.db, valores=list_relacao_categoria)
 
-        log.info("Fim")
+        log.info("Fim de preencher categorias dos produtos")
 
     def preencher_produtos_depositos(self, tabela: str, conn, api):
         """Preenche a tabela produtos_depositos da database."""
         colunas = self.tabelas_colunas[tabela][:]
         ids_depositos = api_pega_todos_id(api, '/depositos?')
+        ids_depositos.sort()
 
         ROTA = '/depositos/'
         log.info(f"Passará por {len(ids_depositos)} depositos")
@@ -142,7 +144,7 @@ class PreencherProdutos():
                 tabela=tabela, colunas=colunas, valores=deposito,
                 db=self.db,  conn=conn)
 
-        log.info("Fim")
+        log.info("Fim de preencher produtos depositos")
 
     def preencher_produtos(self, tabela: str, conn, api, fuso):
         """Preenche a tabela produtos da database."""

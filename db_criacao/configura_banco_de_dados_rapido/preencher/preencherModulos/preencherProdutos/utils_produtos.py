@@ -27,8 +27,8 @@ def solicita_categeoria(rota: str, api):
     categoria_pai = categoria["categoriaPai"]["id"]
 
     if categoria_pai:
-        relacao = {"categoria_pai": categoria_pai,
-                   "categoria_filho": categoria["id"]}
+        relacao = {"id_categoria_pai": categoria_pai,
+                   "id_categoria_filho": categoria["id"]}
         return (relacao, valores_categoria)
     else:
         return (False, valores_categoria)
