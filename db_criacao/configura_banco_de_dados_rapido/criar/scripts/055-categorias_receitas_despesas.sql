@@ -5,6 +5,6 @@ CREATE TABLE "categorias_receitas_despesas"(
     "situacao"	    BOOLEAN		NOT NULL
 );
 COMMENT ON COLUMN
-    "categorias_receitas_despesas"."tipo" IS '`1` Despesa
+    "categorias_receitas_despesas"."id_tipo" IS '`1` Despesa
     `2` Receita
     `3` Receita e despesa';
