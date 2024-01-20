@@ -32,4 +32,4 @@ COMMENT ON COLUMN
 COMMENT ON COLUMN
     "contas_receitas_despesas"."numero_banco" IS '"Adicionado automaticamente com o número preenchido no cadastro do banco"';
 COMMENT ON COLUMN
-    "contas_receitas_despesas"."tipo_ocorrencia" IS '`1` Única `2` Parcelada `3` Mensal `4` Bimestral `5` Trimestral `6` Semestral `7` Anual `8` Quinzenal `9` Semanal';
+    "contas_receitas_despesas"."id_tipo_ocorrencia" IS '`1` Única `2` Parcelada `3` Mensal `4` Bimestral `5` Trimestral `6` Semestral `7` Anual `8` Quinzenal `9` Semanal';
