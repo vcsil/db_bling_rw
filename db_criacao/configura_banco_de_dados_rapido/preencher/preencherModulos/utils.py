@@ -359,7 +359,7 @@ def possui_informacao(dict_dados: Dict[str, Union[str, int, None]]) -> bool:
     """Verifica se dict contém alguma informação."""
     for valor in dict_dados.values():
         if isinstance(valor, str):
-            if len(valor) > 0:
+            if len(valor.split()) > 0:
                 return True
         else:
             return True
