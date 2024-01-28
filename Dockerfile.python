@@ -57,5 +57,5 @@ ENV VIRTUAL_ENV=/home/myuser/venv
 ENV PATH="/home/myuser/venv/bin:$PATH"
 
 
-# CMD ["python", "/home/myuser/code/db_criacao/configura_banco_de_dados_rapido/preencher/preencher_banco_de_dados.py"]
-CMD ["pwd"]
+CMD ["python", "/home/myuser/code/db_criacao/configura_banco_de_dados_rapido/preencher/preencher_banco_de_dados.py"]
+# CMD ["pwd"]
