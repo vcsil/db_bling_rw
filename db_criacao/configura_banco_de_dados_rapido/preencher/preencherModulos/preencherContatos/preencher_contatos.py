@@ -141,9 +141,6 @@ class PreencherContatos():
     ):
         """Preenche campos referentes ao endereço."""
         log.info("Insere endereco de contatos")
-        colunas = self.tabelas_colunas['enderecos'][:]
-        colunas.remove('id')
-
         pais = regra_pais(tipo_contato=dict_endereco['tipo'],
                           pais=dict_endereco['pais']['nome'])
 
@@ -165,6 +162,7 @@ class PreencherContatos():
 
                 # Inserir na tabela enderecos
                 valores = list(endereco.values())
+                colunas = list(endereco.keys())
                 id_endereco = verifica_preenche_valor(
                     tabela_busca="enderecos", coluna_busca=colunas,
                     valor_busca=valores, db=self.db, conn=conn,
