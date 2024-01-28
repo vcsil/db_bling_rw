@@ -210,7 +210,7 @@ def db_pega_varios_elementos_controi_filtro(
     conn: connection
         Connection DB
     db:
-        
+
 
     Returns
     -------
@@ -218,7 +218,6 @@ def db_pega_varios_elementos_controi_filtro(
         com as colunas de retorno passadas
 
     """
-
     try:
         elemento_dict = db.select_all_from_db_like_as(
             tabela=tabela_busca, colunas=colunas_retorno, conn=conn,
