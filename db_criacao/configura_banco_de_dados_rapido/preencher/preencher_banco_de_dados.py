@@ -22,7 +22,7 @@ def main():
                         format=log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j',
                         filemode='w')
     
-    time.sleep(10)
+    time.sleep(100)
 
     preencher_modulos()
 
