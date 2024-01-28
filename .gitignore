@@ -93,3 +93,8 @@ __pycache__/
 
 # Arquivo log
 *_log.txt
+
+# Docker vscode
+.devcontainer/
+.github
+.vscode
