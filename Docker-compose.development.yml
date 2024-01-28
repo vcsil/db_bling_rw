@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  rw_db:
+    image: postgres:14.10
+    container_name: rw_db
+    restart: always
+    ports:
+      - 2345:5432
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${POSTGRES_TZ}
+    volumes:
+      - ./db_criacao/configura_banco_de_dados_rapido/criar/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres:/var/lib/postgresql/data
+  
+  rw_python:
+    image: python:3.11
+    build:
+      context: .
+      dockerfile: Dockerfile.python
+    container_name: rw_python
+    env_file:
+      - .env
+    depends_on:
+      - rw_db
+    volumes:
+      - .:/home/myuser/code
+
+  
+volumes:
+  postgres:
