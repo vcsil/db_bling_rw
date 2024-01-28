@@ -80,9 +80,6 @@ def _modifica_insere_etiqueta(etiqueta: dict, tabelas_colunas, conn, db):
     log.info("Insere etiqueta de transporte da venda")
     etiqueta["nomePais"] = "Brasil"
     if possui_informacao(etiqueta):
-        colunas = tabelas_colunas['enderecos'][:]
-        colunas.remove('id')
-
         id_pais = verifica_preenche_valor(
             tabela_busca='endereco_paises', coluna_busca='nome',
             valor_busca=etiqueta["nomePais"], db=db, conn=conn,
@@ -92,6 +89,7 @@ def _modifica_insere_etiqueta(etiqueta: dict, tabelas_colunas, conn, db):
 
         # Inserir na tabela enderecos
         valores = list(endereco.values())
+        colunas = list(endereco.keys())
         id_endereco = verifica_preenche_valor(
             tabela_busca="enderecos", coluna_busca=colunas, db=db,
             valor_busca=valores, conn=conn, list_colunas=["id"]+colunas)

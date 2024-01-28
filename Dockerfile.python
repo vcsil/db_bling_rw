@@ -56,6 +56,6 @@ ENV PYTHONUNBUFFERED=1
 ENV VIRTUAL_ENV=/home/myuser/venv
 ENV PATH="/home/myuser/venv/bin:$PATH"
 
-CMD [ "pwd"  ]
-# CMD ["python", "/home/myuser/code/db_criacao/configura_banco_de_dados_rapido/preencher/rap.py"]
-# CMD ["bash", "/home/myuser/code/db_criacao/configura_banco_de_dados_rapido/criar/create-database"]
+
+CMD ["python", "/home/myuser/code/db_criacao/configura_banco_de_dados_rapido/preencher/preencher_banco_de_dados.py"]
+# CMD ["pwd"]

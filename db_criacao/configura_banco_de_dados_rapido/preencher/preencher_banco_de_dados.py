@@ -6,6 +6,7 @@ preencher_banco_de_dados.
 Script para pegar os dados do Bling e passar para o banco de dados
 """
 from preencherModulos.preencher_modulos import preencher_modulos
+import time
 import logging
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Modulo Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
@@ -20,6 +21,8 @@ def main():
     logging.basicConfig(filename='meu_log.txt', level=logging.DEBUG,
                         format=log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j',
                         filemode='w')
+    
+    time.sleep(10)
 
     preencher_modulos()
 
