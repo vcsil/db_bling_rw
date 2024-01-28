@@ -34,8 +34,8 @@ class ConectaDB():
 
         """
         conn_string = f"""
-            dbname={self._env["POSTGRES_DATABASE"]}
-            user={self._env["POSTGRES_USERNAME"]}
+            dbname={self._env["POSTGRES_DB"]}
+            user={self._env["POSTGRES_USER"]}
             password={self._env["POSTGRES_PASSWORD"]}
             host={self._env["POSTGRES_HOST"]}
             port={self._env["POSTGRES_PORT"]}

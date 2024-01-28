@@ -48,6 +48,7 @@ def preencher_modulos():
                                                                          fuso)
         log.info("Comita contatos")
         conn.commit()
+
         log.info("Começa preencher produtos.")
         PreencherProdutos(tabelas_colunas, db).preencher_modulo_produtos(conn,
                                                                          api,
