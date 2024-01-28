@@ -26,7 +26,7 @@ class PreencherContas():
         self.tabelas_colunas = tabelas_colunas
         self.db = db
 
-    def preencher_contas_receber_situacao(self, tabela: str, conn):
+    def preencher_contas_situacao(self, tabela: str, conn):
         """Preenche a tabela produtos_tipos da database."""
         colunas = self.tabelas_colunas[tabela][:]
 
@@ -285,9 +285,9 @@ class PreencherContas():
         """Preencher módulo de contas."""
         log.info("Inicio")
 
-        log.info("Inicio preencher contas_receber_situacao")
-        self.preencher_contas_receber_situacao(
-            tabela="contas_receber_situacao", conn=conn)
+        log.info("Inicio preencher contas_situacao")
+        self.preencher_contas_situacao(
+            tabela="contas_situacao", conn=conn)
 
         log.info("Inicio preencher tipos_pagamento")
         self.preencher_tipos_pagamento(tabela="tipos_pagamento", conn=conn)
