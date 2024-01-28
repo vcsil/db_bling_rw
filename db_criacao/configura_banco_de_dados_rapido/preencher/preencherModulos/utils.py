@@ -325,6 +325,7 @@ def verifica_preenche_valor(
 
         return id_campo
     except AttributeError:
+        # Verifica se é só um argumento ou um array de argumentos.
         if isinstance(coluna_busca, str):
             coluna_busca = [coluna_busca]
             valor_busca = [valor_busca]
@@ -410,6 +411,8 @@ def manipula_dados_endereco(
         valor_busca=bairro, relacao_externa={'id_municipio': id_municipio},
         conn=conn, list_colunas=tabelas_colunas['endereco_bairros'][:])
 
+    numero = dict_endereco['numero']
+    complemento = ' '.join(dict_endereco['complemento'].split()).title()
     endereco = {
         'endereco': ' '.join(dict_endereco['endereco'].split()).title(),
         'cep': dict_endereco['cep'],
@@ -417,9 +420,8 @@ def manipula_dados_endereco(
         'id_municipio': id_municipio,
         'id_uf': id_uf,
         'id_pais': id_pais,
-        'numero': dict_endereco['numero'],
-        'complemento': ' '.join(dict_endereco['complemento']
-                                .split()).title()
+        'numero': numero if numero else None,
+        'complemento': complemento if complemento else None
     }
     return endereco
 
