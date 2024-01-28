@@ -1,0 +1,8 @@
+psycopg==3.1.10
+psycopg-binary==3.1.10
+tqdm==4.65.0
+python-dotenv==1.0.0
+pytz==2023.3.post1
+Requests==2.31.0
+selenium==4.16.0
+webdriver-manager==4.0.1
