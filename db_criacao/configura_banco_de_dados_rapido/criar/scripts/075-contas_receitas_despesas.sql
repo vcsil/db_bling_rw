@@ -16,7 +16,7 @@ CREATE TABLE "contas_receitas_despesas"(
     "id_categoria_receita_despesa"  BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
     "id_vendedor"                   BIGINT              REFERENCES "vendedores"("id_bling"),
     "id_bordero"                    BIGINT,
-    "id_tipo_ocorrencia"            INTEGER             NOT NULL REFERENCES "contas_tipo_ocorrencia"("id"),
+    "id_tipo_ocorrencia"            INTEGER             REFERENCES "contas_tipo_ocorrencia"("id"),
     "considerar_dias_uteis"         BOOLEAN,
     "dia_vencimento"                DATE                DEFAULT NOW(),
     "numero_parcelas"               INTEGER,

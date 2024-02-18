@@ -26,7 +26,7 @@ class PreencherContas():
         self.tabelas_colunas = tabelas_colunas
         self.db = db
 
-    def preencher_contas_receber_situacao(self, tabela: str, conn):
+    def preencher_contas_situacao(self, tabela: str, conn):
         """Preenche a tabela produtos_tipos da database."""
         colunas = self.tabelas_colunas[tabela][:]
 
@@ -165,9 +165,12 @@ class PreencherContas():
         colunas = self.tabelas_colunas[tabela][:]
 
         valores = [
+            {"id": 0, "nome": "Unknow"},
             {"id": 1, "nome": "Despesa"},
             {"id": 2, "nome": "Receita"},
             {"id": 3, "nome": "Receita e despesa"},
+            {"id": 4, "nome": "Transferências de entrada"},
+            {"id": 5, "nome": "Transferências de saida"},
         ]
 
         log.info("Insere tipos de categorias")
@@ -285,9 +288,9 @@ class PreencherContas():
         """Preencher módulo de contas."""
         log.info("Inicio")
 
-        log.info("Inicio preencher contas_receber_situacao")
-        self.preencher_contas_receber_situacao(
-            tabela="contas_receber_situacao", conn=conn)
+        log.info("Inicio preencher contas_situacao")
+        self.preencher_contas_situacao(
+            tabela="contas_situacao", conn=conn)
 
         log.info("Inicio preencher tipos_pagamento")
         self.preencher_tipos_pagamento(tabela="tipos_pagamento", conn=conn)
@@ -314,7 +317,7 @@ class PreencherContas():
 
         log.info("Inicio preenche categorias_receitas_despesas_tipo")
         self.preencher_categorias_receitas_despesas_tipo(
-            tabela="preencher_categorias_receitas_despesas_tipo", conn=conn)
+            tabela="categorias_receitas_despesas_tipo", conn=conn)
 
         log.info("Inicio preencher categorias_receitas_despesas")
         self.preencher_categorias_receitas_despesas(
