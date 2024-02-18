@@ -165,9 +165,12 @@ class PreencherContas():
         colunas = self.tabelas_colunas[tabela][:]
 
         valores = [
+            {"id": 0, "nome": "Unknow"},
             {"id": 1, "nome": "Despesa"},
             {"id": 2, "nome": "Receita"},
             {"id": 3, "nome": "Receita e despesa"},
+            {"id": 4, "nome": "Transferências de entrada"},
+            {"id": 5, "nome": "Transferências de saida"},
         ]
 
         log.info("Insere tipos de categorias")
@@ -314,7 +317,7 @@ class PreencherContas():
 
         log.info("Inicio preenche categorias_receitas_despesas_tipo")
         self.preencher_categorias_receitas_despesas_tipo(
-            tabela="preencher_categorias_receitas_despesas_tipo", conn=conn)
+            tabela="categorias_receitas_despesas_tipo", conn=conn)
 
         log.info("Inicio preencher categorias_receitas_despesas")
         self.preencher_categorias_receitas_despesas(
