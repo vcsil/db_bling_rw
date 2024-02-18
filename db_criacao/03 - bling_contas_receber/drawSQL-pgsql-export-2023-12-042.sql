@@ -10,7 +10,7 @@ CREATE TABLE "contas_contabeis"(
 
 CREATE TABLE "categorias_receitas_despesas_tipo"(
     "id"    BIGINT PRIMARY KEY  NOT NULL,
-    "nome"  VARCHAR(18)         NOT NULL CHECK ("nome" <> '')
+    "nome"  VARCHAR(25)         NOT NULL CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
     "categorias_receitas_despesas_tipo"."nome" IS '`1` Despesa
@@ -118,7 +118,7 @@ CREATE TABLE "formas_pagamento"(
     "situacao"          BOOLEAN             NOT NULL,
     "fixa"              BOOLEAN             NOT NULL,
     "id_padrao"         INTEGER             NOT NULL REFERENCES "formas_pagamento_padrao"("id"),
-    "condicao"          VARCHAR(5)          NOT NULL  CHECK ("condicao" <> ''),
+    "condicao"          VARCHAR(5)          NOT NULL,
     "id_destino"        INTEGER             NOT NULL REFERENCES "formas_pagamento_destino"("id"),
     "id_finalidade"     INTEGER             NOT NULL REFERENCES "formas_pagamento_finalidade"("id"),
     "taxas_aliquota"    INTEGER             NOT NULL,
@@ -181,7 +181,7 @@ CREATE TABLE "contas_receitas_despesas"(
     "id_categoria_receita_despesa"  BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
     "id_vendedor"                   BIGINT              REFERENCES "vendedores"("id_bling"),
     "id_bordero"                    BIGINT,
-    "id_tipo_ocorrencia"            INTEGER             NOT NULL REFERENCES "contas_tipo_ocorrencia"("id"),
+    "id_tipo_ocorrencia"            INTEGER             REFERENCES "contas_tipo_ocorrencia"("id"),
     "considerar_dias_uteis"         BOOLEAN,
     "dia_vencimento"                DATE                DEFAULT NOW(),
     "numero_parcelas"               INTEGER,

@@ -5,7 +5,7 @@ CREATE TABLE "formas_pagamento"(
     "situacao"          BOOLEAN             NOT NULL,
     "fixa"              BOOLEAN             NOT NULL,
     "id_padrao"         INTEGER             NOT NULL REFERENCES "formas_pagamento_padrao"("id"),
-    "condicao"          VARCHAR(5)          NOT NULL  CHECK ("condicao" <> ''),
+    "condicao"          VARCHAR(5)          NOT NULL,
     "id_destino"        INTEGER             NOT NULL REFERENCES "formas_pagamento_destino"("id"),
     "id_finalidade"     INTEGER             NOT NULL REFERENCES "formas_pagamento_finalidade"("id"),
     "taxas_aliquota"    INTEGER             NOT NULL,
