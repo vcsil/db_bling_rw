@@ -51,7 +51,7 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, conn, db):
         "id_loja": venda["loja"]["id"],
         "numero_pedido_compra": (numeroPedidoCompra if numeroPedidoCompra
                                  else None),
-        "outras_despesas": venda["outrasDespesas"],
+        "outras_despesas": int(venda["outrasDespesas"]*100),
         "observacoes": observacoes if observacoes else None,
         "observacoes_internas": (observacoesInternas if observacoesInternas
                                  else None),
@@ -63,9 +63,9 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, conn, db):
         "total_ipi": venda["tributacao"]["totalIPI"],
         "id_vendedor": id_vendedor if id_vendedor else None,
         "transporte_id_frete_por_conta": transporte["fretePorConta"],
-        "transporte_valor_frete": transporte["frete"],
+        "transporte_valor_frete": int(transporte["frete"]*100),
         "transporte_quantidade_volumes": transporte["quantidadeVolumes"],
-        "transporte_peso_bruto": transporte["pesoBruto"],
+        "transporte_peso_bruto": int(transporte["pesoBruto"]*100),
         "transporte_prazo_entrega": transporte["prazoEntrega"],
         "transporte_id_contato": t_contato if bool(t_contato) else None,
         "transporte_id_etiqueta": _modifica_insere_etiqueta(
