@@ -79,7 +79,7 @@ def _modifica_valores_vendedor(vendedor: dict):
         "id_bling": vendedor["id"],
         "desconto_limite": vendedor["descontoLimite"],
         "id_loja": vendedor["loja"]["id"],
-        "comissoes_desconto_maximo": int(
+        "comissoes_desconto_maximo": round(
             vendedor["comissoes"][0]["descontoMaximo"]*100),
         "comissoes_aliquota": vendedor["comissoes"][0]["aliquota"],
         "id_contato": vendedor["contato"]["id"],
@@ -105,10 +105,10 @@ def _modifica_valores_conta(conta: dict):
         "id_bling": conta["id"],
         "id_situacao": conta["situacao"],
         "vencimento": conta["vencimento"],
-        "valor": int(conta["valor"]*100),
+        "valor": round(conta["valor"]*100),
         "id_contato": conta["contato"]["id"],
         "id_forma_pagamento": formaPagamento if formaPagamento else None,
-        "saldo": int(conta["saldo"]*100),
+        "saldo": round(conta["saldo"]*100),
         "data_emissao": conta["dataEmissao"],
         "vencimento_original": conta["vencimentoOriginal"],
         "numero_documento": numero_documento if numero_documento else None,

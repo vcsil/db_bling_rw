@@ -112,7 +112,7 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
         "id_bling": produto["id"],
         "nome": produto["nome"],
         "codigo": produto["codigo"],
-        "preco": int(produto["preco"]*100),
+        "preco": round(produto["preco"]*100),
         "id_tipo_produto": db_pega_um_elemento(
             tabela_busca="produtos_tipos", coluna_busca='sigla',
             valor_busca=produto["tipo"], colunas_retorno=["id"],
@@ -126,8 +126,8 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
         "descricao_curta": produto["descricaoCurta"],
         "data_validade": formata_data(produto["dataValidade"]),
         "unidade": produto["unidade"],
-        "peso_liquido": int(produto["pesoLiquido"]*100),
-        "peso_bruto": int(produto["pesoBruto"]*100),
+        "peso_liquido": round(produto["pesoLiquido"]*100),
+        "peso_bruto": round(produto["pesoBruto"]*100),
         "volumes": produto["volumes"],
         "itens_por_caixa": produto["itensPorCaixa"],
         "gtin": produto["gtin"],
@@ -177,7 +177,7 @@ def _formata_situacao_produto(situacao):
 def _formata_dimensoes(dimensoes_api, db, conn):
     for key in dimensoes_api.keys():
         if key != "unidadeMedida":
-            dimensoes_api[key] = int(dimensoes_api[key] * 100)
+            dimensoes_api[key] = round(dimensoes_api[key] * 100)
     colunas = list(dimensoes_api.keys())
     colunas[colunas.index("unidadeMedida")] = "unidade_medida"
     valores = list(dimensoes_api.values())
@@ -318,8 +318,8 @@ def _modifica_produto_fornecedor(fornecedor: dict):
             "id_bling": fornecedor[idx]["id"],
             "descricao": fornecedor[idx]["descricao"],
             "codigo": fornecedor[idx]["codigo"],
-            "preco_custo": int(fornecedor[idx]["precoCusto"]*100),
-            "preco_compra": int(fornecedor[idx]["precoCompra"]*100),
+            "preco_custo": round(fornecedor[idx]["precoCusto"]*100),
+            "preco_compra": round(fornecedor[idx]["precoCompra"]*100),
             "padrao": fornecedor[idx]["padrao"],
             "id_produto": fornecedor[idx]["produto"]["id"],
             "id_fornecedor": id_fornecedor

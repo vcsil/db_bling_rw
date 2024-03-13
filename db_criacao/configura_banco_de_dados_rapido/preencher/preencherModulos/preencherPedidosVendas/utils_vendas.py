@@ -51,11 +51,11 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, conn, db):
         "id_loja": venda["loja"]["id"],
         "numero_pedido_compra": (numeroPedidoCompra if numeroPedidoCompra
                                  else None),
-        "outras_despesas": int(venda["outrasDespesas"]*100),
+        "outras_despesas": round(venda["outrasDespesas"]*100),
         "observacoes": observacoes if observacoes else None,
         "observacoes_internas": (observacoesInternas if observacoesInternas
                                  else None),
-        "desconto": int(venda["desconto"]["valor"]*100),
+        "desconto": round(venda["desconto"]["valor"]*100),
         "desconto_unidade": venda["desconto"]["unidade"],
         "id_categoria": id_categoria if id_categoria else None,
         "id_nota_fiscal": venda["notaFiscal"]["id"],
@@ -63,9 +63,9 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, conn, db):
         "total_ipi": venda["tributacao"]["totalIPI"],
         "id_vendedor": id_vendedor if id_vendedor else None,
         "transporte_id_frete_por_conta": transporte["fretePorConta"],
-        "transporte_valor_frete": int(transporte["frete"]*100),
+        "transporte_valor_frete": round(transporte["frete"]*100),
         "transporte_quantidade_volumes": transporte["quantidadeVolumes"],
-        "transporte_peso_bruto": int(transporte["pesoBruto"]*100),
+        "transporte_peso_bruto": round(transporte["pesoBruto"]*100),
         "transporte_prazo_entrega": transporte["prazoEntrega"],
         "transporte_id_contato": t_contato if bool(t_contato) else None,
         "transporte_id_etiqueta": _modifica_insere_etiqueta(
@@ -140,8 +140,8 @@ def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int,
                 "id_bling": item["id"],
                 "id_venda": id_venda,
                 "id_produto": id_produto if id_produto else None,
-                "desconto": int(item["desconto"]*100),
-                "valor": int(item["valor"]*100),
+                "desconto": round(item["desconto"]*100),
+                "valor": round(item["valor"]*100),
                 "quantidade": item["quantidade"]
             }
             list_venda_itens.append(obj_item)
@@ -161,7 +161,7 @@ def _modifica_insere_parcelas(venda: dict, conn, db):
         id_venda = venda["id"]
         list_venda_parcelas = []
         for parcela in venda_parcelas:
-            valor = int(parcela["valor"]*100)
+            valor = round(parcela["valor"]*100)
             id_conta_receber = None
             if len(contas) > 0:
                 for conta in contas:
