@@ -87,8 +87,8 @@ class PreencherVendas():
             db=self.db, conn=conn)
         log.info("Termina de inserir transporte frete por conta de")
 
-    def preencher_pedidos_vendas(self, tabela: str, conn, api):
-        """Preenche a tabela contas_receitas_despesas da database."""
+    def preencher_pedidos_vendas(self, tabela: str, conn, api, fuso):
+        """Preenche a tabela vendas da database."""
         ids_vendas = api_pega_todos_id(api, "/pedidos/vendas?")
         ids_vendas.sort()
 
@@ -97,7 +97,7 @@ class PreencherVendas():
             log.info(f"Solicita dados da venda {idVenda} na API")
             solicita_preenche_venda(
                 rota=ROTA+f"{idVenda}", api=api, conn=conn, db=self.db,
-                tabelas_colunas=self.tabelas_colunas)
+                tabelas_colunas=self.tabelas_colunas, fuso=fuso)
 
         log.info("Fim de preencher pedido de venda")
 
@@ -117,7 +117,8 @@ class PreencherVendas():
             tabela="transporte_frete_por_conta_de", conn=conn)
 
         log.info("Inicio preencher vendas")
-        self.preencher_pedidos_vendas(tabela="vendas", conn=conn, api=api)
+        self.preencher_pedidos_vendas(tabela="vendas", conn=conn, api=api,
+                                      fuso=fuso)
 
         log.info("Fim produtos")
 

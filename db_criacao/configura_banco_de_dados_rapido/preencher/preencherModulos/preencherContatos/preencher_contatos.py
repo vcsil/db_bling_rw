@@ -98,11 +98,16 @@ class PreencherContatos():
             db=self.db, conn=conn)
         log.info("Classificação de contatos inseridos")
 
-    def preencher_contatos(self, tabela: str, conn, api, fuso):
+    def preencher_contatos(self, tabela: str, conn, api, fuso,
+                           unicoContatoNovo=[]):
         """Preenche a tabela contatos da database."""
+        if unicoContatoNovo:
+            id_contatos = unicoContatoNovo[:]
+        else:
+            id_contatos = api_pega_todos_id(api, '/contatos?criterio=1&')
+            id_contatos.sort()
+
         colunas = self.tabelas_colunas[tabela][:]
-        id_contatos = api_pega_todos_id(api, '/contatos?criterio=1&')
-        id_contatos.sort()
 
         ROTA = '/contatos/'
         log.info(f"Passará por {len(id_contatos)} contatos")

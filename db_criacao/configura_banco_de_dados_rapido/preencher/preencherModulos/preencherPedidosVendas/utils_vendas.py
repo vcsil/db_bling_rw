@@ -8,7 +8,9 @@ Created on Mon Jan  8 19:21:19 2024.
 from preencherModulos.utils import (
     possui_informacao, db_inserir_uma_linha, db_inserir_varias_linhas,
     manipula_dados_endereco, verifica_preenche_valor,
-    db_pega_varios_elementos_controi_filtro)
+    db_pega_varios_elementos_controi_filtro, db_pega_um_elemento)
+from preencherModulos.preencherContatos.preencher_contatos import (
+    PreencherContatos)
 import logging
 
 log = logging.getLogger(__name__)
@@ -16,18 +18,35 @@ log = logging.getLogger(__name__)
 # =-=-=-=-=-=-=-=-=- Funções utéis para preencher produtos. =-=-=-=-=-=-=-=-=-=
 
 
-def solicita_preenche_venda(rota: str, tabelas_colunas, api, conn, db):
+def solicita_preenche_venda(rota: str, tabelas_colunas, api, conn, db, fuso):
     """Solicita a conta e retorna os dados da conta manipulados."""
     venda = api.solicita_na_api(rota)['data']
     log.info("Manipula dados de venda")
-    _modifica_insere_valores_vendas(venda, tabelas_colunas, conn, db)
+    _verifica_contato(venda["contato"]["id"], tabelas_colunas,
+                      api, db, conn, fuso)
+    _modifica_insere_valores_vendas(venda, tabelas_colunas, conn, db, api)
 
     _modifica_insere_volumes(venda, conn, db)
     _modifica_insere_itens_produtos(venda["itens"], venda["id"], conn, db)
     _modifica_insere_parcelas(venda, conn, db)
 
 
-def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, conn, db):
+def _verifica_contato(id_contato, tabelas_colunas, api, db, conn, fuso):
+    contato_exite = db_pega_um_elemento(
+        tabela_busca="contatos", coluna_busca="id_bling", db=db,
+        valor_busca=[id_contato], colunas_retorno="id_bling", conn=conn)
+
+    if contato_exite:
+        return
+    else:
+        PreencherContatos(tabelas_colunas, db).preencher_contatos(
+            tabela='contatos', conn=conn, api=api, fuso=fuso,
+            unicoContatoNovo=[id_contato])
+        return
+
+
+def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas,
+                                    conn, db, api):
     dataPrevista = venda["dataPrevista"]
     numeroLoja = venda["numeroLoja"]
     numeroPedidoCompra = venda["numeroPedidoCompra"]
@@ -72,8 +91,9 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, conn, db):
             transporte["etiqueta"], tabelas_colunas, conn, db),
     }
     log.info("Insere pedido de venda")
-    db_inserir_uma_linha(tabela="vendas", colunas=list(valores_venda.keys()),
-                         db=db, conn=conn, valores=valores_venda)
+
+    db_inserir_uma_linha(tabela="vendas", valores=valores_venda, conn=conn,
+                         colunas=list(valores_venda.keys()), db=db)
 
 
 def _modifica_insere_etiqueta(etiqueta: dict, tabelas_colunas, conn, db):
