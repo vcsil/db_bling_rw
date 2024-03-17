@@ -22,7 +22,7 @@ class EnvValores():
     """Lida com os arquivo env do projeto."""
 
     def __init__(self) -> None:
-        self.env_path = ".env"
+        self.env_path = "./.env"  # "../../../.env"
 
     def pega_variaveis_ambiente(self) -> Dict[str, Optional[str]]:
         """
