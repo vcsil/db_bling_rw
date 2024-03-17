@@ -85,7 +85,7 @@ def db_pega_um_elemento(
         colunas_retorno: list,
         db,
         conn
-) -> dict:
+) -> Union[dict, None]:
     """
     Utilizado para buscar um elemento que já existe.
 
