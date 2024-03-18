@@ -7,8 +7,6 @@ Created on Sun Dec 17 12:43:57 2023.
 """
 from config.erros.erros import EsqueceuPassarID
 
-from preencherModulos.preencherContatos.preencher_contatos import (
-    PreencherContatos)
 from typing import List, Dict, Union
 from datetime import datetime
 from tqdm import tqdm
@@ -429,6 +427,8 @@ def manipula_dados_endereco(
 
 
 def _verifica_contato(id_contato, tabelas_colunas, api, db, conn, fuso):
+    from preencherModulos.preencherContatos.preencher_contatos import (
+        PreencherContatos)
     contato_exite = db_pega_um_elemento(
         tabela_busca="contatos", coluna_busca="id_bling", db=db,
         valor_busca=[id_contato], colunas_retorno="id_bling", conn=conn)
