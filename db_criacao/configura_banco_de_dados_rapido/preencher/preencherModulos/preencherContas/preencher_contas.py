@@ -202,6 +202,11 @@ class PreencherContas():
             if rel:
                 list_relacao_categoria.append(rel)
 
+        # Adiciona id 0
+        id0 = {'id_bling': 0, 'nome': 'Unknow', 'id_tipo': 0, 'situacao': True}
+        db_inserir_uma_linha(tabela=tabela, colunas=colunas, db=self.db,
+                             valores=id0, conn=conn)
+
         log.info(f"Insere {len(list_relacao_categoria)} relacoes de categoria")
         print(f"Insere {len(list_relacao_categoria)} relacoes de categoria")
         tab_relacao = "categorias_receitas_despesas_relacao"
