@@ -226,7 +226,7 @@ def _formata_midia(midias, id_produto, db, conn):
             if not (midia_principal):
                 midia_principal = id_foto
 
-    return midia_principal
+    return midia_principal if midia_principal else None
 
 
 def _insere_produto(produto: dict, colunas: list, db, conn):
