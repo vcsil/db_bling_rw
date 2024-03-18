@@ -225,8 +225,8 @@ CREATE TABLE "dimensoes"(
 CREATE TABLE "produtos_midias"(
     "id"    		SERIAL PRIMARY KEY  NOT NULL,
     "tipo"  		BOOLEAN             NOT NULL,
-    "url"   		TEXT
-    "url_miniatura" 	TEXT 
+    "url"   		TEXT,
+    "url_miniatura" 	TEXT,
     "validade" 		VARCHAR(50)	
 );
 COMMENT ON COLUMN
