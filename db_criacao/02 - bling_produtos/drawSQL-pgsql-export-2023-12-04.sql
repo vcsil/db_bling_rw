@@ -77,9 +77,11 @@ CREATE TABLE "dimensoes"(
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_midias"(
-    "id"    SERIAL PRIMARY KEY  NOT NULL,
-    "tipo"  BOOLEAN             NOT NULL,
-    "url"   TEXT                NOT NULL CHECK ("url" <> '')
+    "id"    		SERIAL PRIMARY KEY  NOT NULL,
+    "tipo"  		BOOLEAN             NOT NULL,
+    "url"   		TEXT
+    "urlMiniatura" 	TEXT 
+    "validade" 		VARCHAR(50)	
 );
 COMMENT ON COLUMN
     "produtos_midias"."tipo" IS 'True: Foto
