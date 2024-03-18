@@ -108,6 +108,8 @@ def solicita_produto(idProduto: int, tabelas_colunas: dict,
 
 
 def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
+    id_tipo_producao = _pega_tipo_producao(produto, db, conn)
+
     valores_produto = {
         "id_bling": produto["id"],
         "nome": produto["nome"],
@@ -132,7 +134,7 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
         "itens_por_caixa": produto["itensPorCaixa"],
         "gtin": produto["gtin"],
         "gtin_embalagem": produto["gtinEmbalagem"],
-        "id_tipo_producao": db_pega_um_elemento(
+        "id_tipo_producao": id_tipo_producao,
             tabela_busca="produtos_tipo_producao", coluna_busca='sigla',
             valor_busca=produto["tipoProducao"], colunas_retorno=["id"],
             db=db, conn=conn)["id"],
@@ -162,6 +164,16 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
             valores_produto[chave] = None
 
     return valores_produto
+
+
+def _pega_tipo_producao(produto, db, conn):
+    if "tipoProducao" in list(produto.keys()):
+        return db_pega_um_elemento(
+            tabela_busca="produtos_tipo_producao", coluna_busca='sigla',
+            valor_busca=produto["tipoProducao"], colunas_retorno=["id"],
+            db=db, conn=conn)["id"]
+    else:
+        return None
 
 
 def _formata_situacao_produto(situacao):
