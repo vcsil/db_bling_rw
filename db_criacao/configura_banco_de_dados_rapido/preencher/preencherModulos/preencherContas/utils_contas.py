@@ -5,6 +5,7 @@ Created on Thu Jan 11 00:48:45 2024.
 
 @author: vcsil
 """
+from preencherModulos.utils import _verifica_contato
 import logging
 
 log = logging.getLogger(__name__)
@@ -87,9 +88,11 @@ def _modifica_valores_vendedor(vendedor: dict):
     return valores_vendedor
 
 
-def solicita_conta(rota: str, api):
+def solicita_conta(rota: str, api, tabelas_colunas, conn, db, fuso):
     """Solicita a conta e retorna os dados da conta manipulados."""
     conta = api.solicita_na_api(rota)['data']
+    _verifica_contato(id_contato=conta["contato"]["id"], api=api, conn=conn,
+                      tabelas_colunas=tabelas_colunas, db=db, fuso=fuso)
     log.info("Manipula dados da forma de pagamento")
     valores_forma_pagamento = _modifica_valores_conta(conta)
 

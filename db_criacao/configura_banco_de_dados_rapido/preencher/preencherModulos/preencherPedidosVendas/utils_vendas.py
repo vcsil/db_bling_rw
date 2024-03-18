@@ -7,10 +7,9 @@ Created on Mon Jan  8 19:21:19 2024.
 """
 from preencherModulos.utils import (
     possui_informacao, db_inserir_uma_linha, db_inserir_varias_linhas,
-    manipula_dados_endereco, verifica_preenche_valor,
-    db_pega_varios_elementos_controi_filtro, db_pega_um_elemento)
-from preencherModulos.preencherContatos.preencher_contatos import (
-    PreencherContatos)
+    manipula_dados_endereco, verifica_preenche_valor, _verifica_contato,
+    db_pega_varios_elementos_controi_filtro)
+
 import logging
 
 log = logging.getLogger(__name__)
@@ -29,20 +28,6 @@ def solicita_preenche_venda(rota: str, tabelas_colunas, api, conn, db, fuso):
     _modifica_insere_volumes(venda, conn, db)
     _modifica_insere_itens_produtos(venda["itens"], venda["id"], conn, db)
     _modifica_insere_parcelas(venda, conn, db)
-
-
-def _verifica_contato(id_contato, tabelas_colunas, api, db, conn, fuso):
-    contato_exite = db_pega_um_elemento(
-        tabela_busca="contatos", coluna_busca="id_bling", db=db,
-        valor_busca=[id_contato], colunas_retorno="id_bling", conn=conn)
-
-    if contato_exite:
-        return
-    else:
-        PreencherContatos(tabelas_colunas, db).preencher_contatos(
-            tabela='contatos', conn=conn, api=api, fuso=fuso,
-            unicoContatoNovo=[id_contato])
-        return
 
 
 def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas,

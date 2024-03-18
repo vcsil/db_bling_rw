@@ -261,7 +261,7 @@ class PreencherContas():
 
         log.info("Fim de preencher contas receitas despesas")
 
-    def preencher_contas_receitas_despesas(self, tabela: str, conn, api):
+    def preencher_contas_receitas_despesas(self, tabela: str, conn, api, fuso):
         """Preenche a tabela contas_receitas_despesas da database."""
         colunas = self.tabelas_colunas[tabela][:]
         contas_receber = api_pega_todos_id(api, "/contas/receber?")
@@ -275,7 +275,9 @@ class PreencherContas():
             for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}",
                                 leave=True, position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
-                conta = solicita_conta(rota=ROTA[idx]+f"{idConta}", api=api)
+                conta = solicita_conta(rota=ROTA[idx]+f"{idConta}", api=api,
+                                       conn=conn, db=self.db, fuso=fuso,
+                                       tabelas_colunas=self.tabelas_colunas)
 
                 log.info("Insere conta")
                 db_inserir_uma_linha(
@@ -332,7 +334,7 @@ class PreencherContas():
 
         log.info("Inicio preencher contas_receitas_despesas")
         self.preencher_contas_receitas_despesas(
-            tabela="contas_receitas_despesas", conn=conn, api=api)
+            tabela="contas_receitas_despesas", conn=conn, api=api, fuso=fuso)
 
         log.info("Fim preencher contas")
 
