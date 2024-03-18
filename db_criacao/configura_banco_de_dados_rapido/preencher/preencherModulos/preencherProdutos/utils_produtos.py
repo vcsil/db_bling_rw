@@ -135,9 +135,6 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
         "gtin": produto["gtin"],
         "gtin_embalagem": produto["gtinEmbalagem"],
         "id_tipo_producao": id_tipo_producao,
-            tabela_busca="produtos_tipo_producao", coluna_busca='sigla',
-            valor_busca=produto["tipoProducao"], colunas_retorno=["id"],
-            db=db, conn=conn)["id"],
         "id_condicao_producao": produto["condicao"],
         "frete_gratis": produto["freteGratis"],
         "marca": produto["marca"] if produto["marca"] else "Marca",
@@ -154,7 +151,7 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
         "ncm": produto["tributacao"]["ncm"],
         "cest": produto["tributacao"]["cest"],
         "id_midia_principal": _formata_midia(
-            url_midia=produto["midia"]["imagens"]["externas"],
+            midias=produto["midia"], id_produto=produto["id"],
             db=db, conn=conn),
         "criado_em": datetime.now(fuso),
         "alterado_em": None
@@ -201,18 +198,35 @@ def _formata_dimensoes(dimensoes_api, db, conn):
     return id_dimensao
 
 
-def _formata_midia(url_midia, db, conn):
-    coluna = "url"
+def _formata_midia(midias, id_produto, db, conn):
+    colunas = ["tipo", "url", "url_miniatura", "validade"]
 
-    if len(url_midia) > 0:
-        valor = url_midia[0]
+    if midias["video"]["url"] != "":
+        video = midias["video"]
+        video = {"tipo": False, "url": video["url"], "url_miniatura": None,
+                 "validade": None}
+        db_inserir_uma_linha(tabela="produtos_midias", colunas=colunas,
+                             valores=[video], db=db, conn=conn)
 
-        id_midia = verifica_preenche_valor(
-            tabela_busca="produtos_midias", coluna_busca=coluna, db=db,
-            valor_busca=valor, list_colunas=["id", "tipo", "url"], conn=conn)
-        return id_midia
-    else:
-        return None
+    imagens = midias["imagens"]
+    midia_principal = False
+    for origem in list(imagens.keys()):  # Externa ou interna
+        for obj_imagem in imagens[origem]:  # dict da imagem
+            imagem = {"tipo": True, "url": obj_imagem["link"],
+                      "url_miniatura": obj_imagem["linkMiniatura"],
+                      "validade": obj_imagem["validade"]}
+            id_foto = db_inserir_uma_linha(
+                tabela="produtos_midias", colunas=colunas, valores=imagem,
+                db=db, conn=conn)["id"]
+
+            midia_relacao = {"id_produto": id_produto, "id_image": id_foto}
+            db_inserir_uma_linha(
+                tabela="produtos_midias_relacao", colunas=["id_produto", "id_image"],
+                valores=midia_relacao, db=db, conn=conn)
+            if not (midia_principal):
+                midia_principal = id_foto
+
+    return midia_principal
 
 
 def _insere_produto(produto: dict, colunas: list, db, conn):
