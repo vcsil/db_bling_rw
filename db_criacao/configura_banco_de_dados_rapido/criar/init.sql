@@ -509,7 +509,7 @@ CREATE TABLE "contas_receitas_despesas"(
     "vencimento"                    DATE                NOT NULL,
     "valor"                         INTEGER             NOT NULL,
     "id_contato"                    BIGINT              NOT NULL REFERENCES "contatos"("id_bling"),
-    "id_forma_pagamento"            BIGINT              NOT NULL REFERENCES "formas_pagamento"("id_bling"),
+    "id_forma_pagamento"            BIGINT              REFERENCES "formas_pagamento"("id_bling"),
     "saldo"                         INTEGER             NOT NULL,
     "data_emissao"                  DATE                NOT NULL DEFAULT NOW(),
     "vencimento_original"           DATE                NOT NULL DEFAULT NOW(),
