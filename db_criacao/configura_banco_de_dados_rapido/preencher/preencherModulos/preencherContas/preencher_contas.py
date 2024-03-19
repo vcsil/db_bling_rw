@@ -288,6 +288,7 @@ class PreencherContas():
                 db_inserir_uma_linha(
                     tabela=tabela, colunas=colunas, valores=conta,
                     db=self.db,  conn=conn)
+            conn.commit()
 
         log.info("Fim de preencher contas receitas despesas")
 
