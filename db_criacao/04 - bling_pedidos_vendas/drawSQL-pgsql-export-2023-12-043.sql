@@ -7,6 +7,7 @@ CREATE TABLE "modulos"(
     "descricao"         VARCHAR(120)        NOT NULL CHECK ("descricao" <> ''),
     "criar_situacoes"   BOOLEAN             NOT NULL
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "situacoes"(
@@ -83,7 +84,6 @@ COMMENT ON COLUMN
 COMMENT ON COLUMN
     "vendas"."transporte_id_contato" IS 'transportador';
 
-
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "transporte_volumes"(
@@ -121,5 +121,3 @@ CREATE TABLE "parcelas"(
 );
 COMMENT ON COLUMN
     "parcelas"."id_bling" IS 'id contas a receber';
-
-

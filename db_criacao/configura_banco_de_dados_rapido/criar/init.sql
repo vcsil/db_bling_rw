@@ -148,6 +148,7 @@ CREATE TABLE "contatos_enderecos"(
 );
 COMMENT ON TABLE
     "contatos_enderecos" IS '`0`: Geral \n `1`: Cobrança';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_tipos"(
@@ -173,6 +174,7 @@ COMMENT ON COLUMN
     `S` Simples
     `V` Com variações
     `E` Com composição';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_tipo_producao"(
@@ -184,6 +186,7 @@ COMMENT ON COLUMN
     "produtos_tipo_producao"."nome" IS 'Tipo da produção
     `P` Própria
     `T` Terceiros"';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_condicao"(
@@ -202,6 +205,7 @@ CREATE TABLE "produtos_categorias"(
     "id_bling"  BIGINT PRIMARY KEY  NOT NULL,
     "nome"      VARCHAR(120)        NOT NULL CHECK ("nome" <> '')
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_categorias_relacao"(
@@ -306,6 +310,7 @@ CREATE TABLE "produtos_depositos"(
 COMMENT ON COLUMN
     "produtos_depositos"."situacao" IS '`0` Inativo
     `1` Ativo';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_estoques"(
@@ -339,6 +344,7 @@ CREATE TABLE "produto_variacao"(
     "ordem"             INTEGER             NOT NULL,
     "clone_pai"         BOOLEAN             NOT NULL
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_midias_relacao"(
@@ -346,6 +352,7 @@ CREATE TABLE "produtos_midias_relacao"(
     "id_produto"    BIGINT              NOT NULL,
     "id_image"      INTEGER             NOT NULL REFERENCES "produtos_midias"("id")
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "contas_contabeis"(
@@ -384,6 +391,7 @@ CREATE TABLE "categorias_receitas_despesas_relacao"(
     "id_categoria_pai"      BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
     "id_categoria_filho"    BIGINT              NOT NULL UNIQUE REFERENCES "categorias_receitas_despesas"("id_bling")
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "contas_situacao"(
@@ -421,6 +429,7 @@ COMMENT ON COLUMN
     `19` Programa de Fidelidade, Cashback, Crédito Virtual
     `90` Sem pagamento
     `99` Outros';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "formas_pagamento_padrao"(
@@ -431,6 +440,7 @@ COMMENT ON COLUMN
     "formas_pagamento_padrao"."nome" IS '`1` Pagamentos
     `2` Recebimentos
     `3` Pagamentos e Recebimentos';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "formas_pagamento_destino"(
@@ -441,6 +451,7 @@ COMMENT ON COLUMN
     "formas_pagamento_destino"."nome" IS '`1` Conta a receber/pagar
     `2` Ficha financeira
     `3` Caixa e bancos';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "formas_pagamento_finalidade"(
@@ -451,6 +462,7 @@ COMMENT ON COLUMN
     "formas_pagamento_finalidade"."nome" IS '`1` Pagamentos
     `2` Recebimentos
     `3` Pagamentos e Recebimentos';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "formas_pagamento"(
@@ -483,14 +495,15 @@ CREATE TABLE contas_tipo_ocorrencia (
 );
 COMMENT ON COLUMN
     "contas_tipo_ocorrencia"."nome" IS '`1` Única 
-`2` Parcelada 
-`3` Mensal
-`4` Bimestral
-`5` Trimestral
-`6` Semestral
-`7` Anual
-`8` Quinzenal
-`9` Semanal';
+    `2` Parcelada 
+    `3` Mensal
+    `4` Bimestral
+    `5` Trimestral
+    `6` Semestral
+    `7` Anual
+    `8` Quinzenal
+    `9` Semanal';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "vendedores"(
@@ -501,6 +514,7 @@ CREATE TABLE "vendedores"(
     ,   "comissoes_aliquota"        INTEGER             NOT NULL
     ,   "id_contato"                BIGINT              NOT NULL REFERENCES "contatos"("id_bling")
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "contas_receitas_despesas"(
@@ -526,7 +540,6 @@ CREATE TABLE "contas_receitas_despesas"(
     "dia_vencimento"                DATE                DEFAULT NOW(),
     "numero_parcelas"               INTEGER,
     "data_limite"                   DATE                DEFAULT NOW()
-
 );
 COMMENT ON COLUMN
     "contas_receitas_despesas"."saldo" IS 'É calculado subtraindo os valores dos recebimentos do valor da conta';
@@ -547,6 +560,7 @@ CREATE TABLE "modulos"(
     "descricao"         VARCHAR(120)        NOT NULL CHECK ("descricao" <> ''),
     "criar_situacoes"   BOOLEAN             NOT NULL
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "situacoes"(
@@ -555,6 +569,7 @@ CREATE TABLE "situacoes"(
     "nome"      VARCHAR(45)         NOT NULL CHECK ("nome" <> ''),
     "cor"       VARCHAR(7)          NOT NULL CHECK ("cor" <> '')
 );
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "transporte_frete_por_conta_de"(
@@ -568,6 +583,7 @@ COMMENT ON COLUMN
     `3` Transporte Próprio por conta do Remetente
     `4` Transporte Próprio por conta do Destinatário
     `9` Sem Ocorrência de Transporte."';
+
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "transporte_etiqueta"(

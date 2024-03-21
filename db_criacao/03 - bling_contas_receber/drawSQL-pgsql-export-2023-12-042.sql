@@ -97,8 +97,7 @@ COMMENT ON COLUMN
     "formas_pagamento_destino"."nome" IS '`1` Conta a receber/pagar
     `2` Ficha financeira
     `3` Caixa e bancos';
-
----*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+,---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "formas_pagamento_finalidade"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
@@ -141,14 +140,14 @@ CREATE TABLE contas_tipo_ocorrencia (
 );
 COMMENT ON COLUMN
     "contas_tipo_ocorrencia"."nome" IS '`1` Única 
-`2` Parcelada 
-`3` Mensal
-`4` Bimestral
-`5` Trimestral
-`6` Semestral
-`7` Anual
-`8` Quinzenal
-`9` Semanal';
+    `2` Parcelada 
+    `3` Mensal
+    `4` Bimestral
+    `5` Trimestral
+    `6` Semestral
+    `7` Anual
+    `8` Quinzenal
+    `9` Semanal';
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -169,7 +168,7 @@ CREATE TABLE "contas_receitas_despesas"(
     "vencimento"                    DATE                NOT NULL,
     "valor"                         INTEGER             NOT NULL,
     "id_contato"                    BIGINT              NOT NULL REFERENCES "contatos"("id_bling"),
-    "id_forma_pagamento"            BIGINT              NOT NULL REFERENCES "formas_pagamento"("id_bling"),
+    "id_forma_pagamento"            BIGINT              REFERENCES "formas_pagamento"("id_bling"),
     "saldo"                         INTEGER             NOT NULL,
     "data_emissao"                  DATE                NOT NULL DEFAULT NOW(),
     "vencimento_original"           DATE                NOT NULL DEFAULT NOW(),
@@ -186,7 +185,6 @@ CREATE TABLE "contas_receitas_despesas"(
     "dia_vencimento"                DATE                DEFAULT NOW(),
     "numero_parcelas"               INTEGER,
     "data_limite"                   DATE                DEFAULT NOW()
-
 );
 COMMENT ON COLUMN
     "contas_receitas_despesas"."saldo" IS 'É calculado subtraindo os valores dos recebimentos do valor da conta';

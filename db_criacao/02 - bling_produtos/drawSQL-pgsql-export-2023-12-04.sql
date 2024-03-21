@@ -79,8 +79,8 @@ CREATE TABLE "dimensoes"(
 CREATE TABLE "produtos_midias"(
     "id"    		SERIAL PRIMARY KEY  NOT NULL,
     "tipo"  		BOOLEAN             NOT NULL,
-    "url"   		TEXT
-    "urlMiniatura" 	TEXT 
+    "url"   		TEXT,
+    "url_miniatura" 	TEXT,
     "validade" 		VARCHAR(50)	
 );
 COMMENT ON COLUMN
@@ -107,7 +107,7 @@ CREATE TABLE "produtos"(
     "itens_por_caixa"           INTEGER             NOT NULL DEFAULT 1,
     "gtin"                      VARCHAR(14),
     "gtin_embalagem"            VARCHAR(13),
-    "id_tipo_producao"          INTEGER             NOT NULL DEFAULT 1 REFERENCES "produtos_tipo_producao"("id"),
+    "id_tipo_producao"          INTEGER             DEFAULT 1 REFERENCES "produtos_tipo_producao"("id"),
     "id_condicao_producao"      INTEGER             NOT NULL REFERENCES "produtos_condicao"("id"),
     "frete_gratis"              BOOLEAN             NOT NULL DEFAULT FALSE,
     "marca"                     VARCHAR(45)         NOT NULL DEFAULT 'RW'  CHECK ("marca" <> ''),
@@ -199,6 +199,6 @@ CREATE TABLE "produto_variacao"(
 
 CREATE TABLE "produtos_midias_relacao"(
     "id"            SERIAL PRIMARY KEY  NOT NULL,
-    "id_produto"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling"),
+    "id_produto"    BIGINT              NOT NULL,
     "id_image"      INTEGER             NOT NULL REFERENCES "produtos_midias"("id")
 );
