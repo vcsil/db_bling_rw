@@ -134,8 +134,6 @@ def db_pega_um_elemento(
 
 def db_pega_varios_elementos(
         tabela_busca: str,
-        coluna_busca: Union[str, List[str]],
-        valor_busca: Union[str, list],
         colunas_retorno: list,
         db,
         conn,
@@ -433,8 +431,6 @@ def manipula_dados_endereco(
 
 
 def _verifica_contato(id_contato, tabelas_colunas, api, db, conn, fuso):
-    from preencherModulos.preencherContatos.preencher_contatos import (
-        PreencherContatos)
     contato_exite = db_pega_um_elemento(
         tabela_busca="contatos", coluna_busca="id_bling", db=db,
         valor_busca=[id_contato], colunas_retorno="id_bling", conn=conn)
@@ -442,6 +438,8 @@ def _verifica_contato(id_contato, tabelas_colunas, api, db, conn, fuso):
     if contato_exite:
         return
     else:
+        from preencherModulos.preencherContatos.preencher_contatos import (
+            PreencherContatos)
         PreencherContatos(tabelas_colunas, db).preencher_contatos(
             tabela="contatos", conn=conn, api=api, fuso=fuso,
             unicoContatoNovo=[id_contato])
