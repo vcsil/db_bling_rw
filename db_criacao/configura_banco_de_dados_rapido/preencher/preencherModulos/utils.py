@@ -138,10 +138,14 @@ def db_pega_varios_elementos(
         valor_busca: Union[str, list],
         colunas_retorno: list,
         db,
-        conn
+        conn,
+        coluna_busca: Union[str, List[str]] = None,
+        valor_busca: Union[str, list] = None,
 ) -> dict:
     """
     Utilizado para buscar varios elementos que já existem.
+
+    Retorne todos os elementos com ou sem filtro.
 
     Parameters
     ----------
@@ -172,11 +176,13 @@ def db_pega_varios_elementos(
         coluna_busca)
     valor_busca = [valor_busca] if isinstance(valor_busca, str) else (
         valor_busca)
+    filtro = ((coluna_busca, valor_busca) if coluna_busca and valor_busca
+              else None)
 
     try:
         elemento_dict = db.select_all_from_db(
             tabela=tabela_busca, colunas=colunas_retorno, conn=conn,
-            filtro=(coluna_busca, valor_busca))
+            filtro=filtro)
 
         return elemento_dict
     # Erro vai ser chamado ao tentar buscar uma elemento que não existe
