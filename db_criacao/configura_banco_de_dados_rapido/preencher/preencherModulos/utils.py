@@ -64,8 +64,8 @@ def db_inserir_uma_linha(
     colunas : Union[str, List[str]]
         Nome das colunas que vão receber os valores.
     valores : List[Dict[str, Union[str, int]]]
-        Valores que serão inseridos, devem estar dentro de uma list de dict
-        Exemplo: [{'id': 0, 'nome': 'a'}]
+        O valor inserido deve ser um dict
+        Exemplo: {'id': 0, 'nome': 'a'}
     conn : Connection
         Conexão com banco de dados.
 
