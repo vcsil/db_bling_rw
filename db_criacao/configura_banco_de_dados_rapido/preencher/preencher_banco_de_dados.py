@@ -6,9 +6,10 @@ preencher_banco_de_dados.
 Script para pegar os dados do Bling e passar para o banco de dados
 """
 from preencherModulos.preencher_modulos import preencher_modulos
+from logging.handlers import RotatingFileHandler
 from tqdm import tqdm
-import time
 import logging
+import time
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Modulo Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -19,9 +20,17 @@ def main():
     log_texto += '%(module)s; - %(funcName)s;'
     log_texto += '\t%(message)s;'
 
-    logging.basicConfig(filename='meu_log.txt', level=logging.DEBUG,
-                        format=log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j',
-                        filemode='w')
+    # Criando o RotatingFileHandler com tamanho máximo 2MB e mantendo até 3 arq
+    handler = RotatingFileHandler('meu_log_preencher.txt', maxBytes=2e6,
+                                  backupCount=3)
+    handler.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j')
+    handler.setFormatter(formatter)
+
+    # Obtendo o logger e adicionando o handler
+    logger = logging.getLogger()
+    logger.setLevel(logging.DEBUG)
+    logger.addHandler(handler)
 
     for sec in tqdm(range(99), desc="Esperando configurações do postgres"):
         time.sleep(1)
