@@ -7,8 +7,10 @@ Created on Thu Mar 21 16:12:39 2024.
 """
 from atualizarModulos.utils import api_pega_todos_id_verifica_db
 from preencherModulos.utils import (
-    db_inserir_uma_linha, _verifica_contato,
-    db_pega_varios_elementos)
+    db_inserir_uma_linha, db_pega_varios_elementos)
+
+from atualizarModulos.atualizarContatos.utils_contatos import (
+    _verifica_atualiza_contato)
 from tqdm import tqdm
 import logging
 
@@ -35,6 +37,7 @@ class AtualizarContatos():
         id_situacao = db_inserir_uma_linha(
             tabela=tabela, colunas=colunas, valores=valor,
             db=self.db, conn=conn)
+
         return id_situacao
 
     def _atualizar_contatos_tipo(self, tabela: str, sigla, conn):
@@ -81,16 +84,18 @@ class AtualizarContatos():
             api=api, db=self.db, param='/contatos?criterio=1&',
             tabela_busca="contatos", coluna_busca="id_bling",
             colunas_retorno="id_bling", conn=conn)
+
         ids_contatos_db = db_pega_varios_elementos(
             tabela_busca='contatos', colunas_retorno="id_bling",
             db=self.db, conn=conn)
         ids_contatos_db = [contato["id_bling"] for contato in ids_contatos_db]
+
         ids_contatos_novos = list(set(ids_contatos_api) - set(ids_contatos_db))
         ids_contatos_novos.sort()
 
         t_desc = f"Adciona {len(ids_contatos_novos)} contatos novos"
         for contato_novo in tqdm(ids_contatos_novos, desc=t_desc):
-            _verifica_contato(
+            _verifica_atualiza_contato(
                 id_contato=contato_novo, tabelas_colunas=self.tabelas_colunas,
                 api=api, db=self.db, conn=conn, fuso=fuso)
             conn.commit()
