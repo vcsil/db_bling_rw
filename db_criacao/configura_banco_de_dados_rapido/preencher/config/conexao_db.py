@@ -354,6 +354,73 @@ class ConectaDB():
             conn.rollback()
             sys.exit()
 
+    def update_one_in_db(
+            self,
+            tabela: str,
+            colunas: Union[str, List[str]],
+            valores: Dict[str, Union[str, int]],
+            coluna_filtro,
+            valor_filtro,
+            conn
+    ):
+        """
+        Faz um UPDATE de uma linha de dados no banco de dados.
+
+        Parameters
+        ----------
+        tabela : str
+            Nome da tabela que recebera o valor.
+        colunas : Union[str, List[str]]
+            Nome das colunas que receberam os valores.
+        valores : Dict[str, Union[str, int]]
+            Um dict com os valores a serem inseridos, as chaves são as colunas.
+        coluna_filtro:
+            Coluna para buscar valor.
+        valor_filtro:
+            Valor identificar linha que vai ser alterada.
+        conn : Connection
+            Conexão com banco de dados.
+
+        Returns
+        -------
+        None.
+
+        """
+        query = "UPDATE {table} SET ({columns}) = ({values}) "
+        query += "WHERE {filtr} RETURNING *"
+        query = (sql.SQL(query).format(
+            table=sql.Identifier(tabela),
+            columns=sql.SQL(',').join(
+                map(sql.Identifier, colunas)
+                ),
+            values=sql.SQL(', ').join(
+                map(sql.Placeholder, colunas)
+                ),
+            filtr=sql.SQL(" AND ").join(
+                sql.SQL("{coluna}={valor}").format(
+                    coluna=sql.Identifier(col),
+                    valor=sql.Literal(val)
+                ) for col, val in zip(coluna_filtro, valor_filtro)
+            )
+            )
+        )
+        try:
+            log.info(f"Atualiza um na tabela {tabela}")
+            # with conn.transaction():
+            # print(query.as_string(conn))
+            dados_inseridos = conn.execute(query, valores).fetchone()
+            log.info("Sucesso na atualização")
+            return dados_inseridos
+        except Error as e:
+            _, _, traceback_obj = sys.exc_info()
+            print(f"SQLState: {e.sqlstate}")
+            print(f"Erro no banco de dados: {e}\n{type(e)}")
+            print(f"{traceback_obj}\n")
+            log.error(f"SQLState: {e.sqlstate} {e}")
+            log.error(f"{query.as_string(conn)} [{valores}]")
+            conn.rollback()
+            sys.exit()
+
     def pega_nome_tabelas(self) -> List[str]:
         """
         Pega nome da todas as tabelas do banco de dados.
