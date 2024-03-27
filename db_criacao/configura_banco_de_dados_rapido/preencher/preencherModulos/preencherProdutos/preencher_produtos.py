@@ -97,7 +97,7 @@ class PreencherProdutos():
         """Preenche a tabela produtos_formatos da database."""
         colunas = self.tabelas_colunas[tabela][:]
         ids_categorias = api_pega_todos_id(api, '/categorias/produtos?')
-        ids_categorias += [6071256]
+        ids_categorias += [6071256]  # Categoria Padrão
         ids_categorias.sort()
 
         ROTA = '/categorias/produtos/'
