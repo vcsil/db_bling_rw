@@ -6,6 +6,7 @@ Created on Thu Mar 21 21:04:27 2024.
 @author: vcsil
 """
 from preencherModulos.utils import db_pega_um_elemento
+
 from tqdm import tqdm
 import logging
 
@@ -18,7 +19,7 @@ def api_pega_todos_id_verifica_db(api, db, param, tabela_busca,
     """
     Pega todos o ID de de um determinado canal da API.
 
-    Use o limite_pag para determinar até qual página ir.
+    Compara com as linha do banco de dados para realizar a parada.
 
     Returns
     -------
@@ -57,3 +58,87 @@ def api_pega_todos_id_verifica_db(api, db, param, tabela_busca,
 
     log.info("Fim")
     return list_ids  # Lista invertida = Ordem crescente de data
+
+
+def db_atualizar_uma_linha(
+    tabela,
+    colunas,
+    valores,
+    coluna_filtro,
+    valor_filtro,
+    db,
+    conn
+):
+    """
+    Faz um UPDATE de uma linha de dados no banco de dados.
+
+    Parameters
+    ----------
+    tabela : str
+        Nome da tabela que recebera o valor.
+    colunas : Union[str, List[str]]
+        Nome das colunas que receberam os valores.
+    valores : Dict[str, Union[str, int]]
+        Um dict com os valores a serem inseridos, as chaves são as colunas.
+    coluna_filtro:
+        Coluna para buscar valor.
+    valor_filtro:
+        Valor identificar linha que vai ser alterada.
+    conn : Connection
+        Conexão com banco de dados.
+
+    Returns
+    -------
+    None.
+
+    """
+    coluna_filtro = (coluna_filtro if isinstance(coluna_filtro, list)
+                     else [coluna_filtro])
+    valor_filtro = (valor_filtro if isinstance(valor_filtro, list)
+                    else [valor_filtro])
+
+    return db.update_one_in_db(
+        tabela=tabela, colunas=colunas, valores=valores, conn=conn,
+        coluna_filtro=coluna_filtro, valor_filtro=valor_filtro)
+
+
+def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca,
+                          colunas_retorno, conn, db):
+    """
+    Utilizado para verificar se um elemento já existe a partir do seu ID.
+
+    Parameters
+    ----------
+    tabela_busca : str
+        Em qual tabela do banco de dados deve ser feita a busca.
+        Exemplo: "contatos_tipo"
+    coluna_busca : Union[str, List[str]]
+        Em qual coluna da tabela deve-se procurar o valor declarado.
+        Se a busca considerar mais de uma coluna, deve ser uma list.
+        Exemplo: "sigla" ou ["largura", "altura"]
+    valor_busca : Union[str, list]
+        O elemento que será utilizado como referência para a busca.
+        Se a busca considerar mais de um valor, deve ser uma list.
+        Exemplo: "F" ou [10, 9]
+    colunas_retorno : str
+        As respectivas colunas do objeto que será retornado.
+        Exemplo: ["id", "nome", "sigla"].
+    conn: connection
+        Connection DB
+
+    Returns
+    -------
+    dict
+        com as colunas de retorno passadas
+
+    """
+    coluna_busca = (colunas_retorno if isinstance(colunas_retorno, list)
+                    else [colunas_retorno])
+    valor_busca = (valor_busca if isinstance(valor_busca, list)
+                   else [valor_busca])
+
+    linha = db_pega_um_elemento(
+        tabela_busca=tabela_busca, coluna_busca=coluna_busca, conn=conn,
+        valor_busca=valor_busca, colunas_retorno=colunas_retorno, db=db)
+
+    return bool(linha)
