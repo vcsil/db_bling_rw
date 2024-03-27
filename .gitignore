@@ -93,6 +93,7 @@ __pycache__/
 
 # Arquivo log
 *_log.txt
+*_log_atualizar.txt
 
 # Docker vscode
 .devcontainer/
