@@ -5,10 +5,11 @@ Created on Thu Mar 21 16:12:39 2024.
 
 @author: vcsil
 """
-from atualizarModulos.utils import api_pega_todos_id_verifica_db
 from preencherModulos.utils import (
     db_inserir_uma_linha, db_pega_varios_elementos)
 
+from atualizarModulos.utils import (api_pega_todos_id_verifica_db,
+                                    solicita_novos_ids)
 from atualizarModulos.atualizarContatos.utils_contatos import (
     _verifica_atualiza_contato)
 from tqdm import tqdm
@@ -80,18 +81,11 @@ class AtualizarContatos():
     def atualiza_contatos(self, tabela: str, conn, api, fuso):
         """Preenche a tabela contatos da database."""
         log.info("Insere novos contatos na API")
-        ids_contatos_api = api_pega_todos_id_verifica_db(
-            api=api, db=self.db, param='/contatos?criterio=1&',
-            tabela_busca="contatos", coluna_busca="id_bling",
-            colunas_retorno="id_bling", conn=conn)
 
-        ids_contatos_db = db_pega_varios_elementos(
-            tabela_busca='contatos', colunas_retorno="id_bling",
-            db=self.db, conn=conn)
-        ids_contatos_db = [contato["id_bling"] for contato in ids_contatos_db]
-
-        ids_contatos_novos = list(set(ids_contatos_api) - set(ids_contatos_db))
-        ids_contatos_novos.sort()
+        ids_contatos_novos = solicita_novos_ids(
+            param="/contatos?criterio=1&", tabela_busca="contatos",
+            coluna_busca="id_bling", coluna_retorno="id_bling", conn=conn,
+            api=api, db=self.db)
 
         t_desc = f"Adciona {len(ids_contatos_novos)} contatos novos"
         for contato_novo in tqdm(ids_contatos_novos, desc=t_desc):

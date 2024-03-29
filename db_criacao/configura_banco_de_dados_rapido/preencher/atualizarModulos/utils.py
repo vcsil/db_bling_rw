@@ -5,7 +5,8 @@ Created on Thu Mar 21 21:04:27 2024.
 
 @author: vcsil
 """
-from preencherModulos.utils import db_pega_um_elemento
+from preencherModulos.utils import (db_pega_um_elemento, api_pega_todos_id,
+                                    db_pega_varios_elementos)
 
 from tqdm import tqdm
 import logging
@@ -142,3 +143,20 @@ def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca,
         valor_busca=valor_busca, colunas_retorno=colunas_retorno, db=db)
 
     return bool(linha)
+
+
+def solicita_novos_ids(param, tabela_busca, coluna_busca, coluna_retorno,
+                       conn, api, db):
+    """Solicita ID a API, compara com os ids do banco de dados. Devolve new."""
+    ids_api = api_pega_todos_id_verifica_db(
+        api=api, db=db, param=param, tabela_busca=tabela_busca,
+        coluna_busca=coluna_busca, colunas_retorno=coluna_retorno, conn=conn)
+
+    ids_db = db_pega_varios_elementos(tabela_busca=tabela_busca, conn=conn,
+                                      colunas_retorno=coluna_retorno, db=db)
+    ids_db = [item[coluna_retorno] for item in ids_db]
+
+    ids = list(set(ids_api) - set(ids_db))
+    ids.sort()
+
+    return ids

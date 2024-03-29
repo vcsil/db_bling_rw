@@ -10,14 +10,12 @@ from preencherModulos.preencherProdutos.utils_produtos import (
     solicita_insere_variacao, solicita_produto, insere_segunda_tentativa,
     _solicita_variacao)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, db_inserir_uma_linha, db_pega_varios_elementos,
-    api_pega_todos_id)
+    db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id)
 
 from atualizarModulos.atualizarProdutos.utils_produtos import (
     atualizar_estoque_fornecedor, atualiza_variacao, cria_variacao)
 from atualizarModulos.utils import (
-    db_atualizar_uma_linha, db_verifica_se_existe,
-    api_pega_todos_id_verifica_db)
+    db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids)
 
 from datetime import date, timedelta, datetime
 from tqdm import tqdm
@@ -88,18 +86,10 @@ class AtualizarProdutos():
         log.info("Insere novas categorias de produtos.")
         colunas = self.tabelas_colunas[tabela][:]
 
-        ids_categorias_api = api_pega_todos_id_verifica_db(
-            api=api, db=self.db, param='/categorias/produtos?',
-            tabela_busca=tabela, coluna_busca="id_bling",
-            colunas_retorno="id_bling", conn=conn)
-        ids_categorias_api += [6071256]  # Categoria padrão
-
-        ids_categorias_db = db_pega_varios_elementos(
-            tabela_busca=tabela, colunas_retorno="id_bling",
-            db=self.db, conn=conn)
-        ids_categorias_db = [categ["id_bling"] for categ in ids_categorias_db]
-        ids_categorias = list(set(ids_categorias_api) - set(ids_categorias_db))
-        ids_categorias.sort()
+        ids_categorias = solicita_novos_ids(
+            param="/categorias/produtos?", tabela_busca=tabela,
+            coluna_busca="id_bling", coluna_retorno="id_bling",
+            conn=conn, api=api, db=self.db)
 
         ROTA = '/categorias/produtos/'
         log.info(f"Passará por {len(ids_categorias)} categorias")
@@ -132,17 +122,9 @@ class AtualizarProdutos():
         """Atualiza a tabela produtos_depositos da database."""
         colunas = self.tabelas_colunas[tabela][:]
 
-        ids_depositos_api = api_pega_todos_id_verifica_db(
-            api=api, db=self.db, param='/depositos?',
-            tabela_busca=tabela, coluna_busca="id_bling",
-            colunas_retorno="id_bling", conn=conn)
-
-        ids_depositos_db = db_pega_varios_elementos(
-            tabela_busca=tabela, colunas_retorno="id_bling",
-            db=self.db, conn=conn)
-        ids_depositos_db = [depos["id_bling"] for depos in ids_depositos_db]
-        ids_depositos = list(set(ids_depositos_api) - set(ids_depositos_db))
-        ids_depositos.sort()
+        ids_depositos = solicita_novos_ids(
+            param="/depositos?", tabela_busca=tabela, coluna_busca="id_bling",
+            coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
 
         ROTA = '/depositos/'
         log.info(f"Passará por {len(ids_depositos)} depositos")
@@ -155,22 +137,15 @@ class AtualizarProdutos():
                 tabela=tabela, colunas=colunas, valores=deposito,
                 db=self.db,  conn=conn)
 
-        log.info("Fim de preencher produtos depositos")
+        log.info("Fim de atualizar produtos depositos")
 
     def atualiza_lista_produtos(self, tabela: str, conn, api, fuso):
         """Pega produtos da API e compara com a tabela produtos da database."""
         # Pega todos os produtos Pai e Simples
-        ids_produtos_api = api_pega_todos_id_verifica_db(
-            api=api, db=self.db, param='/produtos?criterio=5&tipo=P&',
-            tabela_busca=tabela, coluna_busca="id_bling",
-            colunas_retorno="id_bling", conn=conn)
-
-        ids_produtos_db = db_pega_varios_elementos(
-            tabela_busca=tabela, colunas_retorno="id_bling",
-            db=self.db, conn=conn)
-        ids_produtos_db = [produto["id_bling"] for produto in ids_produtos_db]
-
-        ids_produtos = list(set(ids_produtos_api) - set(ids_produtos_db))[:1]
+        ids_produtos = solicita_novos_ids(
+            param="/produtos?criterio=5&tipo=P&", tabela_busca=tabela,
+            coluna_busca="id_bling", coluna_retorno="id_bling", conn=conn,
+            api=api, db=self.db)
         produtos_nao_incluidos = []
 
         log.info(f"Passará por {len(ids_produtos)} produtos")
@@ -215,7 +190,7 @@ class AtualizarProdutos():
         colunas = self.tabelas_colunas[tabela][:]
 
         # Pega os produtos alterados no dia de hoje
-        hoje = date.today() - timedelta(days=1)
+        hoje = date.today()  # - timedelta(days=1)
         param = "/produtos?criterio=1&tipo=P&"
         param += f"dataAlteracaoInicial={hoje}&dataAlteracaoFinal={hoje}&"
         ids_produtos_alterado = api_pega_todos_id(api=api, param=param)
