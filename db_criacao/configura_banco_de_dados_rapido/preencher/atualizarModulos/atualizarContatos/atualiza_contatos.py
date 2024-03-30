@@ -6,10 +6,9 @@ Created on Thu Mar 21 16:12:39 2024.
 @author: vcsil
 """
 from preencherModulos.utils import (
-    db_inserir_uma_linha, db_pega_varios_elementos)
+    db_inserir_uma_linha, db_inserir_varias_linhas)
 
-from atualizarModulos.utils import (api_pega_todos_id_verifica_db,
-                                    solicita_novos_ids)
+from atualizarModulos.utils import solicita_novos_ids, solicita_item_novos
 from atualizarModulos.atualizarContatos.utils_contatos import (
     _verifica_atualiza_contato)
 from tqdm import tqdm
@@ -65,18 +64,21 @@ class AtualizarContatos():
             tabela=tabela, colunas=colunas, valores=valor,
             db=self.db, conn=conn)
 
-    def _atualizar_contatos_classificacao(self, tabela: str,
-                                          dict_classificacao, conn, api):
+    def atualizar_contatos_classificacao(self, tabela: str, conn, api):
         """Atualiza a tabela contatos_classificacao da database."""
         log.info("Insere nova classificacao de contatos na API")
         colunas = self.tabelas_colunas[tabela][:]
 
-        valor = dict_classificacao
+        PARAM = "/contatos/tipos"
+        valores = solicita_item_novos(
+            param=PARAM, tabela=tabela, colunas_retorno="id_bling", conn=conn,
+            api=api, db=self.db)
+        valores = [{"id_bling": classi["id"], "nome": classi["descricao"]}
+                   for classi in valores]
 
-        id_classificacao = db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valor,
+        db_inserir_varias_linhas(
+            tabela=tabela, colunas=colunas, valores=valores,
             db=self.db, conn=conn)
-        return id_classificacao
 
     def atualiza_contatos(self, tabela: str, conn, api, fuso):
         """Preenche a tabela contatos da database."""
@@ -108,6 +110,10 @@ class AtualizarContatos():
             Fuso horário do sistema.
         """
         log.info("Começa atualizar contatos.")
+
+        log.info("Atualiza contatos_classificacao")
+        self.atualizar_contatos_classificacao(
+            tabela='contatos_classificacao', conn=conn, api=api)
 
         log.info("Atualiza contatos")
         self.atualiza_contatos(tabela='contatos', conn=conn, api=api,
