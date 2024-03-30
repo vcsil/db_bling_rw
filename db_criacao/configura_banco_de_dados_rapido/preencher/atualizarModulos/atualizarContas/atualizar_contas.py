@@ -13,7 +13,7 @@ from preencherModulos.utils import (
     db_inserir_varias_linhas, api_pega_todos_id, db_inserir_uma_linha,
     db_pega_varios_elementos)
 
-from atualizarModulos.utils import solicita_novos_ids
+from atualizarModulos.utils import solicita_novos_ids, solicita_item_novos
 
 from datetime import date
 from tqdm import tqdm
@@ -113,25 +113,11 @@ class AtualizarContas():
     def atualizar_contas_contabeis(self, tabela: str, conn, api):
         """Atualiza a tabela contas_contabeis da database."""
         colunas = self.tabelas_colunas[tabela][:]
-        contas_contabeis_api = api.solicita_na_api('/contas-contabeis')['data']
-        id_contas_contabeis_api = [item["id"] for item in contas_contabeis_api]
 
-        id_contas_contabeis_db = db_pega_varios_elementos(
-            tabela_busca=tabela, colunas_retorno="id_bling",
-            db=self.db, conn=conn)
-        id_contas_contabeis_db = [item["id_bling"] for item
-                                  in id_contas_contabeis_db]
-
-        id_contas_contabeis = list(
-            set(id_contas_contabeis_api) - set(id_contas_contabeis_db))
-
-        contas_contabeis = []
-        for id_procurado in id_contas_contabeis:
-            dict_encontrado = next(
-                (ccontabel for ccontabel in contas_contabeis_api
-                 if ccontabel["id"] == id_procurado), None)
-            if dict_encontrado:
-                contas_contabeis.append(dict_encontrado)
+        PARAM = "/contas-contabeis"
+        contas_contabeis = solicita_item_novos(
+            param=PARAM, tabela=tabela, colunas_retorno="id_bling", conn=conn,
+            api=api, db=self.db)
 
         log.info(f"Passará por {len(contas_contabeis)} contas banarias")
         for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis"):
@@ -243,8 +229,8 @@ class AtualizarContas():
 
         hoje = date.today()  # - timedelta(days=1)
 
-        PARAM = "/contas/receber?tipoFiltroData=E&"
-        PARAM += f"dataInicial={hoje}&dataFinal={hoje}&"
+        PARAM = "/contas/receber?"
+        PARAM += f"tipoFiltroData=E&dataInicial={hoje}&dataFinal={hoje}&"
         contas_receber = solicita_novos_ids(
             param=PARAM, tabela_busca=tabela, coluna_busca="id_bling",
             coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
@@ -278,13 +264,17 @@ class AtualizarContas():
         """Atualizar módulo de contas."""
         log.info("Inicio")
 
+        log.info("Inicio atualizar formas_pagamento")
+        self.atualizar_formas_pagamento(
+            tabela="formas_pagamento", conn=conn, api=api)
+
+        log.info("Inicio atualizar contas_contabeis")
+        self.atualizar_contas_contabeis(
+            tabela="contas_contabeis", conn=conn, api=api)
+
         log.info("Inicio atualizar categorias_receitas_despesas")
         self.atualizar_categorias_receitas_despesas(
             tabela="categorias_receitas_despesas", conn=conn, api=api)
-
-        log.info("Inicio atualizar contas_tipo_ocorrencia")
-        self.atualizar_contas_tipo_ocorrencia(tabela="contas_tipo_ocorrencia",
-                                              conn=conn)
 
         log.info("Inicio atualizar vendedores")
         self.atualizar_vendedores(tabela="vendedores", conn=conn, api=api)
