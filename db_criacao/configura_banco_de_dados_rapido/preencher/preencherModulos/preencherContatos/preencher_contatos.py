@@ -111,7 +111,7 @@ class PreencherContatos():
 
         ROTA = '/contatos/'
         log.info(f"Passará por {len(id_contatos)} contatos")
-        for idContato in tqdm(id_contatos):
+        for idContato in tqdm(id_contatos, desc="Inserindo contatos"):
             log.info(f"Solicita dados do contato {idContato} na API")
             contato = api.solicita_na_api(ROTA+f"{idContato}")['data']
             # Pegando informações sobre o contato
