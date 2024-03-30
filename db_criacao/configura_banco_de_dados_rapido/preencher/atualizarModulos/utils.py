@@ -160,3 +160,30 @@ def solicita_novos_ids(param, tabela_busca, coluna_busca, coluna_retorno,
     ids.sort()
 
     return ids
+
+
+def solicita_item_novos(param, tabela, colunas_retorno, conn, api, db):
+    """Solicita items novos fazendo comparação com o ID e retornando objeto."""
+    lista_objetos_api = api.solicita_na_api(param)['data']
+    ids_api = [item["id"] for item in lista_objetos_api]
+
+    ids_db = db_pega_varios_elementos(tabela_busca=tabela, conn=conn,
+                                      colunas_retorno=colunas_retorno, db=db)
+    ids_db = [item[colunas_retorno] for item in ids_db]
+
+    ids_novos = list(set(ids_api) - set(ids_db))
+    ids_novos.sort()
+
+    lista_objetos = []
+    for id_procurado in ids_novos:
+        dict_encontrado = next(
+            (obj for obj in lista_objetos_api if obj["id"] == id_procurado),
+            None)
+        if dict_encontrado:
+            lista_objetos.append(dict_encontrado)
+
+    return lista_objetos
+
+
+if __name__ == "__main__":
+    pass
