@@ -19,7 +19,7 @@ import logging
 
 log = logging.getLogger('root')
 
-# =-=-=-=-=-=-=-=-=- Funções utéis para preencher produtos. =-=-=-=-=-=-=-=-=-=
+# =-=-=-=-=-=-=-=-=- Funções utéis para preencher vendas. =-=-=-=-=-=-=-=-=-=
 
 
 def solicita_preenche_venda(rota: str, tabelas_colunas, api, conn, db, fuso):
@@ -95,7 +95,7 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, existe,
 
     if existe:
         db_atualizar_uma_linha(
-            tabela="produtos", colunas=tabelas_colunas["produtos"][:],
+            tabela="vendas", colunas=tabelas_colunas["vendas"][:],
             valores=valores_venda, coluna_filtro=["id_bling"],
             valor_filtro=valores_venda["id_bling"], db=db, conn=conn)
     else:
@@ -129,10 +129,11 @@ def _modifica_insere_etiqueta(etiqueta: dict, tabelas_colunas, existe,
         }
 
         if existe:
-            return db_pega_um_elemento(
-                tabela_busca="produtos", coluna_busca="id_bling",
-                valor_busca=id_venda, colunas_retorno="transporte_id_etiqueta",
-                db=db, conn=conn)
+            dict_transporte = db_pega_um_elemento(
+                tabela_busca="vendas", coluna_busca="id_bling",
+                valor_busca=[id_venda], db=db, conn=conn,
+                colunas_retorno="transporte_id_etiqueta")
+            return dict_transporte["transporte_id_etiqueta"]
         else:
             return db_inserir_uma_linha(
                 tabela="transporte_etiqueta", valores=valores_etiqueta,
@@ -187,7 +188,7 @@ def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int, existe,
                 db_atualizar_uma_linha(
                     tabela="vendas_itens_produtos",
                     colunas=list(obj_item.keys()), valores=obj_item, db=db,
-                    coluna_filtro="vendas_itens_produtos", conn=conn,
+                    coluna_filtro="id_bling", conn=conn,
                     valor_filtro=obj_item["id_bling"])
             else:
                 db_inserir_uma_linha(
