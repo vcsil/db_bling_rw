@@ -622,7 +622,8 @@ CREATE TABLE "vendas"(
     "transporte_peso_bruto"         INTEGER,
     "transporte_prazo_entrega"      INTEGER,
     "transporte_id_contato"         INTEGER             REFERENCES "contatos"("id_bling"),
-    "transporte_id_etiqueta"        BIGINT              REFERENCES "transporte_etiqueta"("id")
+    "transporte_id_etiqueta"        BIGINT              REFERENCES "transporte_etiqueta"("id"),
+    "alterado_em"                   TIMESTAMPTZ         DEFAULT current_timestamp
 );
 COMMENT ON COLUMN
     "vendas"."data" IS 'Valor obrigatório caso parâmetro de geração de parcelas seja este';
