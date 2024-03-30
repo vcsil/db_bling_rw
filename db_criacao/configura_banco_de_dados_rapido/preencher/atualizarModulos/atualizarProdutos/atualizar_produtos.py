@@ -17,7 +17,7 @@ from atualizarModulos.atualizarProdutos.utils_produtos import (
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids)
 
-from datetime import date, timedelta, datetime
+from datetime import date, datetime
 from tqdm import tqdm
 import logging
 
@@ -143,7 +143,7 @@ class AtualizarProdutos():
         """Pega produtos da API e compara com a tabela produtos da database."""
         # Pega todos os produtos Pai e Simples
         ids_produtos = solicita_novos_ids(
-            param="/produtos?criterio=5&tipo=P&", tabela_busca=tabela,
+            param="/produtos?criterio=5&tipo=T&", tabela_busca=tabela,
             coluna_busca="id_bling", coluna_retorno="id_bling", conn=conn,
             api=api, db=self.db)
         produtos_nao_incluidos = []
