@@ -6,10 +6,10 @@ Created on Thu Mar 21 14:14:32 2024.
 @author: vcsil
 """
 from atualizarModulos.atualizar_modulos import atualizar_modulos
+from temporizador_funcao import agendar_tarefa
 
 from logging.handlers import RotatingFileHandler
 import logging
-import time
 
 
 def main():
@@ -33,8 +33,7 @@ def main():
     atualiza = True
     while atualiza:
         try:
-            atualizar_modulos()
-            time.sleep(1800)  # Aguarda 30 minutos (1800 segundos)
+            agendar_tarefa(atualizar_modulos)
         except Exception as e:
             print(e)
             atualiza = False
