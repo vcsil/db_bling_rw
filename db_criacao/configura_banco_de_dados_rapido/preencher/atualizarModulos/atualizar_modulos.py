@@ -7,6 +7,13 @@ Created on Thu Mar 21 14:21:42 2024.
 """
 from atualizarModulos.atualizarContatos.atualiza_contatos import (
     AtualizarContatos)
+from atualizarModulos.atualizarProdutos.atualizar_produtos import (
+    AtualizarProdutos)
+from atualizarModulos.atualizarContas.atualizar_contas import (
+    AtualizarContas)
+from atualizarModulos.atualizarPedidosVendas.atualizar_vendas import (
+    AtualizarVendas)
+
 from config.env_valores import EnvValores
 from config.conexao_api import ConectaAPI
 from config.conexao_db import ConectaDB
@@ -43,26 +50,24 @@ def atualizar_modulos():
         log.info("Comita contatos")
         conn.commit()
 
-# =============================================================================
-#         log.info("Começa preencher produtos.")
-#         PreencherProdutos(tabelas_colunas, db).preencher_modulo_produtos(conn,
-#                                                                          api,
-#                                                                          fuso)
-#         log.info("Comita produtos")
-#         conn.commit()
-# 
-#         log.info("Começa preencher contas a receber.")
-#         PreencherContas(tabelas_colunas, db).preencher_modulo_contas(conn, api,
-#                                                                      fuso)
-#         log.info("Comita contas a receber")
-#         conn.commit()
-# 
-#         log.info("Começa preencher pedidos de venda.")
-#         PreencherVendas(tabelas_colunas, db).preencher_modulo_vendas(conn, api,
-#                                                                      fuso)
-#         log.info("Comita vendas")
-#         conn.commit()
-# =============================================================================
+        log.info("Começa a atualizar produtos.")
+        AtualizarProdutos(tabelas_colunas, db).atualizar_modulo_produtos(conn,
+                                                                         api,
+                                                                         fuso)
+        log.info("Comita produtos")
+        conn.commit()
+
+        log.info("Começa atualizar contas a receber.")
+        AtualizarContas(tabelas_colunas, db).atualizar_modulo_contas(conn, api,
+                                                                     fuso)
+        log.info("Comita contas a receber")
+        conn.commit()
+
+        log.info("Começa atualizar pedidos de venda.")
+        AtualizarVendas(tabelas_colunas, db).atualizar_modulo_vendas(conn, api,
+                                                                     fuso)
+        log.info("Comita vendas")
+        conn.commit()
         print('Foi')
 
 
