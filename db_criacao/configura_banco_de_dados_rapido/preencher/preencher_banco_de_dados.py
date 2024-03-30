@@ -6,6 +6,8 @@ preencher_banco_de_dados.
 Script para pegar os dados do Bling e passar para o banco de dados
 """
 from preencherModulos.preencher_modulos import preencher_modulos
+import atualizar_banco_de_dados
+
 from logging.handlers import RotatingFileHandler
 from tqdm import tqdm
 import logging
@@ -37,6 +39,8 @@ def main():
         print(sec)
 
     preencher_modulos()
+
+    atualizar_banco_de_dados.main()
 
 
 # Criar uma função para cada atribulo dos dicionários

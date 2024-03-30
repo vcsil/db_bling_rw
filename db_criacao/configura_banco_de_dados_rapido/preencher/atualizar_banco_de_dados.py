@@ -33,7 +33,7 @@ def main():
     while atualiza:
         try:
             atualizar_modulos()
-            time.sleep(1800) # Aguarda 30 minutos (1800 segundos)
+            time.sleep(1800)  # Aguarda 30 minutos (1800 segundos)
         except Exception as e:
             print(e)
             atualiza = False

@@ -18,6 +18,7 @@ from config.env_valores import EnvValores
 from config.conexao_api import ConectaAPI
 from config.conexao_db import ConectaDB
 
+from datetime import datetime
 import logging
 import pytz
 
@@ -68,7 +69,7 @@ def atualizar_modulos():
                                                                      fuso)
         log.info("Comita vendas")
         conn.commit()
-        print('Foi')
+        print(f'Atualizado {datetime.now(fuso)}')
 
 
 if __name__ == "__main__":
