@@ -16,7 +16,7 @@ import logging
 import random
 import time
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Configurando acesso a API =-=-=-=-=-=-=-=-=-=-=-=-=
 

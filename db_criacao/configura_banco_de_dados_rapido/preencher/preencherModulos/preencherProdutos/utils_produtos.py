@@ -13,7 +13,7 @@ from preencherModulos.utils import (formata_data, verifica_preenche_valor,
 from datetime import datetime
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 """Funções utéis para preencher produtos."""
 

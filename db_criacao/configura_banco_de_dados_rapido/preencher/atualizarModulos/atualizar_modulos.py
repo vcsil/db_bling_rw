@@ -22,7 +22,7 @@ from datetime import datetime
 import logging
 import pytz
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 
 def atualizar_modulos():
@@ -70,6 +70,7 @@ def atualizar_modulos():
         log.info("Comita vendas")
         conn.commit()
         print(f'Atualizado {datetime.now(fuso)}')
+        log.info(f"Atualizado {datetime.now(fuso)}")
 
 
 if __name__ == "__main__":

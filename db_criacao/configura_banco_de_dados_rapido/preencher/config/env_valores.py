@@ -13,7 +13,7 @@ from typing import Dict, Optional
 from pathlib import Path
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=-=-=-=- Carregando chaves de acesso =-=-=-=-=-=-=-=-=-=-=-=-
 

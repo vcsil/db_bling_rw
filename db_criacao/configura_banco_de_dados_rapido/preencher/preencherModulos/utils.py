@@ -12,7 +12,7 @@ from datetime import datetime
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 """Funções utéis para preencher os módulos."""
 
 

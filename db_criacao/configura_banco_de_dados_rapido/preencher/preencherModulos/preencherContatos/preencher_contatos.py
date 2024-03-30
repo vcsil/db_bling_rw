@@ -16,7 +16,7 @@ from typing import Dict, Union
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
 

@@ -8,7 +8,7 @@ Created on Thu Jan 11 00:48:45 2024.
 from preencherModulos.utils import _verifica_contato
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 """Funções utéis para preencher produtos."""
 

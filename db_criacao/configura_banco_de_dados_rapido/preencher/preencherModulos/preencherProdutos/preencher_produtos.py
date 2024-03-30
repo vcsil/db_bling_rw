@@ -15,7 +15,7 @@ from preencherModulos.utils import (
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Produtos =-=-=-=-=-=-=-=-=-=-=-=-=
 

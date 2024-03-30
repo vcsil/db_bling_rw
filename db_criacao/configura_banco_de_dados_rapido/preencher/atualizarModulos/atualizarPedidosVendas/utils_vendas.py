@@ -17,7 +17,7 @@ from atualizarModulos.utils import (db_verifica_se_existe,
 from datetime import datetime
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=- Funções utéis para preencher produtos. =-=-=-=-=-=-=-=-=-=
 

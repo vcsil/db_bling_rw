@@ -12,7 +12,7 @@ from tqdm import tqdm
 import logging
 import sys
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Conexão ao Banco de Dados =-=-=-=-=-=-=-=-=-=-=-=-=
 

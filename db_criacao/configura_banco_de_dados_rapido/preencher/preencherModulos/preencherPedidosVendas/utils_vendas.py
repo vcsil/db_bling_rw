@@ -12,7 +12,7 @@ from preencherModulos.utils import (
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=- Funções utéis para preencher produtos. =-=-=-=-=-=-=-=-=-=
 

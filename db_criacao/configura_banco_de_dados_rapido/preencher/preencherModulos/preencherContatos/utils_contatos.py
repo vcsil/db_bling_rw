@@ -10,7 +10,7 @@ from preencherModulos.utils import (db_pega_um_elemento, formata_data)
 from datetime import datetime
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 """Funções utéis para preencher contatos."""
 

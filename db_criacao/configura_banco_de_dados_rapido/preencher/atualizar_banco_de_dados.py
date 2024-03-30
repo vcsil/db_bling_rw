@@ -18,14 +18,15 @@ def main():
     log_texto += '%(module)s; - %(funcName)s;'
     log_texto += '\t%(message)s;'
 
-    # Criando o RotatingFileHandler com tamanho máximo 2MB
-    handler = RotatingFileHandler('meu_log_atualizar.txt', maxBytes=2e6)
-    handler.setLevel(logging.DEBUG)
     formatter = logging.Formatter(log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j')
+    # Criando o RotatingFileHandler com tamanho máximo 2MB
+    handler = RotatingFileHandler('meu_log_atualizar.txt', backupCount=2,
+                                  maxBytes=2*1024*1024)
     handler.setFormatter(formatter)
+    handler.setLevel(logging.DEBUG)
 
     # Obtendo o logger e adicionando o handler
-    logger = logging.getLogger()
+    logger = logging.getLogger("root")
     logger.setLevel(logging.DEBUG)
     logger.addHandler(handler)
 

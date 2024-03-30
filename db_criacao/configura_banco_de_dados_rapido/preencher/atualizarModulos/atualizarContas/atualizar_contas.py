@@ -19,7 +19,7 @@ from datetime import date
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=- Atualizar Tabela Contas =-=-=-=-=-=-=-=-=-=-=-=-=-
 

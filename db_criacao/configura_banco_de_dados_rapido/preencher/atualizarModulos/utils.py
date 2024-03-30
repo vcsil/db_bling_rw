@@ -11,7 +11,7 @@ from preencherModulos.utils import (db_pega_um_elemento,
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 
 def api_pega_todos_id_verifica_db(api, db, param, tabela_busca,

@@ -20,7 +20,7 @@ from config.conexao_db import ConectaDB
 import logging
 import pytz
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 
 def preencher_modulos():

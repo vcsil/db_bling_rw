@@ -14,7 +14,7 @@ from atualizarModulos.utils import (
 
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger('root')
 
 
 def atualizar_estoque_fornecedor(tabelas_colunas, id_produto, api, db, conn):
