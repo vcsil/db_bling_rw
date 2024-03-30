@@ -5,7 +5,7 @@ Created on Thu Mar 21 21:04:27 2024.
 
 @author: vcsil
 """
-from preencherModulos.utils import (db_pega_um_elemento, api_pega_todos_id,
+from preencherModulos.utils import (db_pega_um_elemento,
                                     db_pega_varios_elementos)
 
 from tqdm import tqdm
