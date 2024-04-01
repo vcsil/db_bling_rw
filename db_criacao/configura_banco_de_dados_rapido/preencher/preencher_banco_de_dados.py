@@ -9,6 +9,8 @@ from preencherModulos.preencher_modulos import preencher_modulos
 import atualizar_banco_de_dados
 
 from logging.handlers import RotatingFileHandler
+from datetime import datetime
+from pytz import timezone
 from tqdm import tqdm
 import logging
 import time
@@ -23,7 +25,10 @@ def main():
     log_texto += '\t%(message)s;'
 
     formatter = logging.Formatter(log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j')
-    # Criando o RotatingFileHandler com tamanho máximo 2MB e mantendo até 3 arq
+    # Configura o fuso horário
+    formatter.converter = lambda *args: datetime.now(
+        tz=timezone('America/Sao_Paulo')).timetuple()
+    # Criando o RotatingFileHandler com tamanho máximo 2MB
     handler = RotatingFileHandler('meu_log_preencher.txt', backupCount=2,
                                   maxBytes=2*1024*1024)
     handler.setFormatter(formatter)

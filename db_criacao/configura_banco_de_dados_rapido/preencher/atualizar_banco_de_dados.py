@@ -9,6 +9,8 @@ from atualizarModulos.atualizar_modulos import atualizar_modulos
 from temporizador_funcao import agendar_tarefa
 
 from logging.handlers import RotatingFileHandler
+from datetime import datetime
+from pytz import timezone
 import logging
 
 
@@ -19,6 +21,9 @@ def main():
     log_texto += '\t%(message)s;'
 
     formatter = logging.Formatter(log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j')
+    # Configura o fuso horário
+    formatter.converter = lambda *args: datetime.now(
+        tz=timezone('America/Sao_Paulo')).timetuple()
     # Criando o RotatingFileHandler com tamanho máximo 2MB
     handler = RotatingFileHandler('meu_log_atualizar.txt', backupCount=2,
                                   maxBytes=2*1024*1024)
