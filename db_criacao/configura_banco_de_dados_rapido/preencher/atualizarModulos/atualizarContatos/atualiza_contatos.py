@@ -11,6 +11,8 @@ from preencherModulos.utils import (
 from atualizarModulos.utils import solicita_novos_ids, solicita_item_novos
 from atualizarModulos.atualizarContatos.utils_contatos import (
     _verifica_atualiza_contato)
+
+from colorama import Back, Style
 from tqdm import tqdm
 import logging
 
@@ -73,6 +75,12 @@ class AtualizarContatos():
         valores = solicita_item_novos(
             param=PARAM, tabela=tabela, colunas_retorno="id_bling", conn=conn,
             api=api, db=self.db)
+
+        if len(valores) == 0:
+            return
+
+        print(Back.GREEN + f"Insere {len(valores)} categ. novas"
+              + Style.RESET_ALL)
         valores = [{"id_bling": classi["id"], "nome": classi["descricao"]}
                    for classi in valores]
 
@@ -89,6 +97,11 @@ class AtualizarContatos():
             coluna_busca="id_bling", coluna_retorno="id_bling", conn=conn,
             api=api, db=self.db)
 
+        if len(ids_contatos_novos) == 0:
+            return
+
+        print(Back.GREEN + f"Adciona {len(ids_contatos_novos)} contatos novos"
+              + Style.RESET_ALL)
         t_desc = f"Adciona {len(ids_contatos_novos)} contatos novos"
         for contato_novo in tqdm(ids_contatos_novos, desc=t_desc):
             _verifica_atualiza_contato(

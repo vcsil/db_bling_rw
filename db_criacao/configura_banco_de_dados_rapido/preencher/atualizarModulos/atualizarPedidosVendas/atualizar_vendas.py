@@ -13,6 +13,7 @@ from atualizarModulos.atualizarPedidosVendas.utils_vendas import (
     solicita_preenche_venda)
 from atualizarModulos.utils import solicita_item_novos
 
+from colorama import Back, Style
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -41,6 +42,11 @@ class AtualizarVendas():
 
         list_ids_modulos = []
 
+        if len(modulos) == 0:
+            return []
+
+        print(Back.GREEN + f"Insere {len(modulos)} módulos pedidos."
+              + Style.RESET_ALL)
         log.info(f"Passará por {len(modulos)} módulos")
         for modulo in tqdm(modulos, desc="Salva modulos"):
             modulo["id_bling"] = modulo.pop("id")
@@ -66,12 +72,17 @@ class AtualizarVendas():
         ids_modulos += [item["id_bling"] for item in ids_modulos_db]
 
         log.info(f"Passará por {len(ids_modulos)} módulos")
-        for id_modulo in tqdm(ids_modulos, desc="Modulo"):
+        for id_modulo in tqdm(ids_modulos, desc="Modulo de pedidos"):
             PARAM = f"/situacoes/modulos/{id_modulo}"
             situacoes = solicita_item_novos(
                 param=PARAM, tabela=tabela, colunas_retorno="id_bling",
                 conn=conn, api=api, db=self.db)
 
+            if len(situacoes) == 0:
+                continue
+
+            print(Back.GREEN + f"Insere {len(situacoes)} situações."
+                  + Style.RESET_ALL)
             log.info(f"Passará por {len(situacoes)} situações")
             for situacao in situacoes:
                 situacao["id_bling"] = situacao.pop("id")
@@ -104,6 +115,11 @@ class AtualizarVendas():
         ids_vendas_alter = api_pega_todos_id(api, PARAM)
         ids_vendas_alter.sort()
 
+        if len(ids_vendas_alter) == 0:
+            return
+
+        print(Back.GREEN + f"Insere/altera {len(ids_vendas_alter)} pedidos."
+              + Style.RESET_ALL)
         ROTA = "/pedidos/vendas/"
         for id_venda in tqdm(ids_vendas_alter, desc="Busca pedidos de vendas"):
             log.info(f"Solicita dados da venda {id_venda} na API")

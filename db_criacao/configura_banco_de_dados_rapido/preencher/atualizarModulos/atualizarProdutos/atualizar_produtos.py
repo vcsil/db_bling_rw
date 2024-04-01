@@ -17,6 +17,7 @@ from atualizarModulos.atualizarProdutos.utils_produtos import (
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids)
 
+from colorama import Back, Style
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -91,8 +92,13 @@ class AtualizarProdutos():
             coluna_busca="id_bling", coluna_retorno="id_bling",
             conn=conn, api=api, db=self.db)
 
+        if len(ids_categorias) == 0:
+            return
+
         ROTA = '/categorias/produtos/'
-        log.info(f"Passará por {len(ids_categorias)} categorias")
+        print(Back.GREEN + f"Insere {len(ids_categorias)} catg. produtos novas"
+              + Style.RESET_ALL)
+        log.info(f"Passará por {len(ids_categorias)} catg. produtos novas")
         list_relacao_categoria = []
         for idCategoria in tqdm(ids_categorias, desc="Atualiza categorias"):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
@@ -126,7 +132,12 @@ class AtualizarProdutos():
             param="/depositos?", tabela_busca=tabela, coluna_busca="id_bling",
             coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
 
+        if len(ids_depositos) == 0:
+            return
+
         ROTA = '/depositos/'
+        print(Back.GREEN + f"Insere {len(ids_depositos)} depositos novos"
+              + Style.RESET_ALL)
         log.info(f"Passará por {len(ids_depositos)} depositos")
         for idDeposito in tqdm(ids_depositos, desc="Busca depositos"):
             log.info(f"Solicita dados do deposito {idDeposito} na API")
@@ -148,6 +159,11 @@ class AtualizarProdutos():
             api=api, db=self.db)
         produtos_nao_incluidos = []
 
+        if len(ids_produtos) == 0:
+            return
+
+        print(Back.GREEN + f"Insere {len(ids_produtos)} produtos novos"
+              + Style.RESET_ALL)
         log.info(f"Passará por {len(ids_produtos)} produtos")
         for idProduto in tqdm(ids_produtos, desc="Busca produtos"):
             log.info(f"Solicita dados do produto {idProduto} na API")
@@ -195,6 +211,11 @@ class AtualizarProdutos():
         param += f"dataAlteracaoInicial={hoje}&dataAlteracaoFinal={hoje}&"
         ids_produtos_alterado = api_pega_todos_id(api=api, param=param)
 
+        if len(ids_produtos_alterado) == 0:
+            return
+
+        print(Back.BLUE + f"Atualiza {len(ids_produtos_alterado)} produtos"
+              + Style.RESET_ALL)
         for idProduto in tqdm(ids_produtos_alterado, desc="Atualiza produtos"):
             # Verifica se ele já eiste no banco de dados
             produto_existe = db_verifica_se_existe(

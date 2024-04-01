@@ -15,6 +15,7 @@ from preencherModulos.utils import (
 
 from atualizarModulos.utils import solicita_novos_ids, solicita_item_novos
 
+from colorama import Back, Style
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -95,6 +96,11 @@ class AtualizarContas():
             coluna_busca="id_bling", coluna_retorno="id_bling", conn=conn,
             api=api, db=self.db)
 
+        if len(ids_formas_pagamento) == 0:
+            return
+
+        print(Back.GREEN + f"Insere {len(ids_formas_pagamento)} formas pag."
+              + Style.RESET_ALL)
         ROTA = '/formas-pagamentos/'
         log.info(f"Passará por {len(ids_formas_pagamento)} formas pagamentos")
         for idFormaPagamento in tqdm(ids_formas_pagamento,
@@ -119,7 +125,12 @@ class AtualizarContas():
             param=PARAM, tabela=tabela, colunas_retorno="id_bling", conn=conn,
             api=api, db=self.db)
 
-        log.info(f"Passará por {len(contas_contabeis)} contas banarias")
+        if len(contas_contabeis) == 0:
+            return
+
+        print(Back.GREEN + f"Insere {len(contas_contabeis)} contas bancarias."
+              + Style.RESET_ALL)
+        log.info(f"Passará por {len(contas_contabeis)} contas bancarias")
         for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis"):
             c_contabel["id_bling"] = c_contabel.pop("id")
             c_contabel["nome"] = c_contabel.pop("descricao")
@@ -150,6 +161,11 @@ class AtualizarContas():
             param=PARAM, tabela_busca=tabela, coluna_busca="id_bling",
             coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
 
+        if len(ids_categorias) == 0:
+            return
+
+        print(Back.GREEN + f"Insere {len(ids_categorias)} categorias contas."
+              + Style.RESET_ALL)
         ROTA = '/categorias/receitas-despesas/'
         log.info(f"Passará por {len(ids_categorias)} categorias")
         list_relacao_categoria = []
@@ -210,6 +226,11 @@ class AtualizarContas():
             set(ids_vendedores_api) - set(ids_vendedores_db))
         ids_vendedores.sort()
 
+        if len(ids_vendedores) == 0:
+            return
+
+        print(Back.GREEN + f"Insere {len(ids_vendedores)} vendedores."
+              + Style.RESET_ALL)
         ROTA = "/vendedores/"
         log.info(f"Passará por {len(ids_vendedores)} vendedores")
         for idVendedor in tqdm(ids_vendedores, desc="Busca vendedores"):
@@ -243,8 +264,15 @@ class AtualizarContas():
 
         ids_contas = [contas_receber, contas_pagar]
 
+        if (len(contas_receber) + len(contas_pagar)) == 0:
+            return
+
         ROTA = ["/contas/receber/", "/contas/pagar/"]
         for idx in tqdm(range(len(ROTA)), desc="Busca contas", position=0):
+            print(
+                Back.GREEN +
+                f"Insere {len(ids_contas[idx])} {ROTA[idx]}."
+                + Style.RESET_ALL)
             for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}",
                                 leave=True, position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
