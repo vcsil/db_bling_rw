@@ -17,7 +17,7 @@ from atualizarModulos.atualizarProdutos.utils_produtos import (
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids)
 
-from datetime import date, datetime
+from datetime import datetime
 from tqdm import tqdm
 import logging
 
@@ -190,7 +190,7 @@ class AtualizarProdutos():
         colunas = self.tabelas_colunas[tabela][:]
 
         # Pega os produtos alterados no dia de hoje
-        hoje = date.today()  # - timedelta(days=1)
+        hoje = str(datetime.now(fuso).date())
         param = "/produtos?criterio=1&tipo=P&"
         param += f"dataAlteracaoInicial={hoje}&dataAlteracaoFinal={hoje}&"
         ids_produtos_alterado = api_pega_todos_id(api=api, param=param)

@@ -13,7 +13,7 @@ from atualizarModulos.atualizarPedidosVendas.utils_vendas import (
     solicita_preenche_venda)
 from atualizarModulos.utils import solicita_item_novos
 
-from datetime import date
+from datetime import datetime
 from tqdm import tqdm
 import logging
 
@@ -98,7 +98,7 @@ class AtualizarVendas():
 
     def atualizar_pedidos_vendas(self, tabela: str, conn, api, fuso):
         """Atualiza a tabela vendas da database."""
-        hoje = date.today()
+        hoje = str(datetime.now(fuso).date())
         PARAM = "/pedidos/vendas?"
         PARAM = f"/pedidos/vendas?dataAlteracaoInicial={hoje}&"
         ids_vendas_alter = api_pega_todos_id(api, PARAM)

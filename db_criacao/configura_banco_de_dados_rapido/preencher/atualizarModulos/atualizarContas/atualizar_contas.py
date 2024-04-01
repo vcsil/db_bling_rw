@@ -15,7 +15,7 @@ from preencherModulos.utils import (
 
 from atualizarModulos.utils import solicita_novos_ids, solicita_item_novos
 
-from datetime import date
+from datetime import datetime
 from tqdm import tqdm
 import logging
 
@@ -227,7 +227,7 @@ class AtualizarContas():
         """Atualiza a tabela contas_receitas_despesas da database."""
         colunas = self.tabelas_colunas[tabela][:]
 
-        hoje = date.today()  # - timedelta(days=1)
+        hoje = str(datetime.now(fuso).date())
 
         PARAM = "/contas/receber?"
         PARAM += f"tipoFiltroData=E&dataInicial={hoje}&dataFinal={hoje}&"
