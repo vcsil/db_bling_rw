@@ -10,7 +10,8 @@ from preencherModulos.preencherProdutos.utils_produtos import (
     solicita_insere_variacao, solicita_produto, insere_segunda_tentativa,
     _solicita_variacao)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id)
+    db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id,
+    db_pega_um_elemento)
 
 from atualizarModulos.atualizarProdutos.utils_produtos import (
     atualizar_estoque_fornecedor, atualiza_variacao, cria_variacao)
@@ -224,12 +225,19 @@ class AtualizarProdutos():
 
             log.info(f"Solicita dados do produto {idProduto} na API")
             if produto_existe:
+                # Salva data de criação
+                criado_em = db_pega_um_elemento(
+                    tabela_busca=tabela, coluna_busca="id_bling", db=self.db,
+                    valor_busca=[idProduto], colunas_retorno="criado_em",
+                    conn=conn)["criado_em"]
+
                 variacoes, produto = solicita_produto(
                     idProduto=idProduto, api=api, db=self.db, conn=conn,
                     tabelas_colunas=self.tabelas_colunas, fuso=fuso,
                     inserir_produto=False)
                 # Atualiza valores do produto
                 produto["alterado_em"] = datetime.now(fuso)
+                produto["criado_em"] = criado_em
                 db_atualizar_uma_linha(
                     tabela=tabela, colunas=colunas, valores=produto, conn=conn,
                     coluna_filtro=["id_bling"], valor_filtro=[idProduto],
@@ -255,6 +263,13 @@ class AtualizarProdutos():
                         valor_busca=[variacao["id_bling"]], db=self.db,
                         conn=conn, colunas_retorno="id_bling")
                     if variacao_existe:
+                        # Salva data de criação
+                        criado_em = db_pega_um_elemento(
+                            tabela_busca=tabela, coluna_busca="id_bling",
+                            valor_busca=[variacao["id_bling"]], db=self.db,
+                            colunas_retorno="criado_em",
+                            conn=conn)["criado_em"]
+                        variacao["criado_em"] = criado_em
                         atualiza_variacao(
                             tabelas_colunas=self.tabelas_colunas, db=self.db,
                             produto_variacao=produto_variacao, conn=conn,
