@@ -13,6 +13,7 @@ from atualizarModulos.atualizarContas.atualizar_contas import (
     AtualizarContas)
 from atualizarModulos.atualizarPedidosVendas.atualizar_vendas import (
     AtualizarVendas)
+from preencherModulos.utils import db_inserir_uma_linha
 
 from config.env_valores import EnvValores
 from config.conexao_api import ConectaAPI
@@ -69,8 +70,15 @@ def atualizar_modulos():
                                                                      fuso)
         log.info("Comita vendas")
         conn.commit()
-        print(f'Atualizado {datetime.now(fuso)}')
-        log.info(f"Atualizado {datetime.now(fuso)}")
+
+        agora = datetime.now(fuso)
+        db_inserir_uma_linha(
+            tabela="atualizacoes_modulos", db=db, conn=conn,
+            colunas=["datetime"], valores={"datetime": agora})
+        conn.commit()
+
+    print(f'Atualizado {agora}')
+    log.info(f"Atualizado {agora}")
 
 
 if __name__ == "__main__":
