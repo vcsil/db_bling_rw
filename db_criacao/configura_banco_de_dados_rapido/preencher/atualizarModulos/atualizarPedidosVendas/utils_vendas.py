@@ -12,7 +12,8 @@ from preencherModulos.utils import (
     db_pega_varios_elementos_controi_filtro)
 
 from atualizarModulos.utils import (db_verifica_se_existe,
-                                    db_atualizar_uma_linha)
+                                    db_atualizar_uma_linha,
+                                    item_com_valores_atualizados)
 
 from datetime import datetime
 import logging
@@ -32,11 +33,9 @@ def solicita_preenche_venda(rota: str, tabelas_colunas, api, conn, db, fuso):
         tabela_busca="vendas", coluna_busca="id_bling", conn=conn, db=db,
         valor_busca=venda["id"], colunas_retorno="id_bling")
 
-    venda["alterado_em"] = datetime.now(fuso) if existe_venda else None
-
     log.info("Manipula dados de venda")
     _modifica_insere_valores_vendas(venda, tabelas_colunas, existe_venda, conn,
-                                    db, api)
+                                    db, api, fuso)
 
     _modifica_insere_volumes(venda, existe_venda, conn, db)
     _modifica_insere_itens_produtos(venda["itens"], venda["id"], existe_venda,
@@ -45,7 +44,7 @@ def solicita_preenche_venda(rota: str, tabelas_colunas, api, conn, db, fuso):
 
 
 def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, existe,
-                                    conn, db, api):
+                                    conn, db, api, fuso):
     dataPrevista = venda["dataPrevista"]
     numeroLoja = venda["numeroLoja"]
     numeroPedidoCompra = venda["numeroPedidoCompra"]
@@ -89,15 +88,22 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, existe,
         "transporte_id_etiqueta": _modifica_insere_etiqueta(
             transporte["etiqueta"], tabelas_colunas, existe, venda["id"], conn,
             db),
-        "alterado_em": venda["alterado_em"]
+        "alterado_em": None
     }
     log.info("Insere pedido de venda")
 
     if existe:
-        db_atualizar_uma_linha(
-            tabela="vendas", colunas=tabelas_colunas["vendas"][:],
-            valores=valores_venda, coluna_filtro=["id_bling"],
-            valor_filtro=valores_venda["id_bling"], db=db, conn=conn)
+        valores_venda.pop("data")
+        valores_venda.pop("alterado_em")
+        valores_venda_att = item_com_valores_atualizados(
+            item_api=valores_venda, tabela="vendas", coluna_busca="id_bling",
+            api=api, db=db, conn=conn, fuso=fuso)
+
+        if valores_venda_att:
+            db_atualizar_uma_linha(
+                tabela="vendas", colunas=list(valores_venda_att.keys()),
+                valores=valores_venda_att, coluna_filtro=["id_bling"],
+                valor_filtro=valores_venda["id_bling"], db=db, conn=conn)
     else:
         db_inserir_uma_linha(tabela="vendas", valores=valores_venda, conn=conn,
                              colunas=list(valores_venda.keys()), db=db)

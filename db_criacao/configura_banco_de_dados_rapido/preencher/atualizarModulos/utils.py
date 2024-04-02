@@ -8,6 +8,7 @@ Created on Thu Mar 21 21:04:27 2024.
 from preencherModulos.utils import (db_pega_um_elemento,
                                     db_pega_varios_elementos)
 
+from datetime import datetime
 from tqdm import tqdm
 import logging
 
@@ -183,6 +184,23 @@ def solicita_item_novos(param, tabela, colunas_retorno, conn, api, db):
             lista_objetos.append(dict_encontrado)
 
     return lista_objetos
+
+
+def item_com_valores_atualizados(item_api, tabela, coluna_busca, api, db,
+                                 conn, fuso):
+    """Busca valores modificados nos elementos. Retorna False se iguais."""
+    item_db = db_pega_um_elemento(
+        tabela_busca=tabela, coluna_busca=coluna_busca, db=db, conn=conn,
+        colunas_retorno=list(item_api.keys()),
+        valor_busca=[item_api[coluna_busca]])
+
+    if item_db == item_api:
+        return False
+    else:
+        diff = [k for k in item_api.keys() if item_api[k] != item_db[k]]
+        log.info(f"Atualiza colunas: {diff}")
+        item_api["alterado_em"] = datetime.now(fuso)
+        return item_api
 
 
 if __name__ == "__main__":

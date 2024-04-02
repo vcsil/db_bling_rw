@@ -110,7 +110,6 @@ class AtualizarVendas():
     def atualizar_pedidos_vendas(self, tabela: str, conn, api, fuso):
         """Atualiza a tabela vendas da database."""
         hoje = str(datetime.now(fuso).date())
-        PARAM = "/pedidos/vendas?"
         PARAM = f"/pedidos/vendas?dataAlteracaoInicial={hoje}&"
         ids_vendas_alter = api_pega_todos_id(api, PARAM)
         ids_vendas_alter.sort()

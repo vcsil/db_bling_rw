@@ -10,7 +10,8 @@ from preencherModulos.preencherProdutos.utils_produtos import (
     _solicita_estoque_fornecedor, produto_insere_saldo_estoque)
 
 from atualizarModulos.utils import (
-    db_atualizar_uma_linha)
+    db_atualizar_uma_linha, db_verifica_se_existe,
+    item_com_valores_atualizados)
 
 import logging
 
@@ -94,6 +95,36 @@ def cria_variacao(tabelas_colunas, produto_variacao, variacao, api, db, conn):
     produto_insere_saldo_estoque(
         tabelas_colunas=tabelas_colunas, api=api,
         id_produto=variacao["id_bling"], db=db, conn=conn)
+
+
+def solicita_produto_para_atualizar(tabelas_colunas, idProduto, fuso,
+                                    api, db, conn):
+    """Solicita produto e retorna dict se tiver alteração ou False."""
+    variacoes, produto = solicita_produto(
+        idProduto=idProduto, api=api, db=db, conn=conn, fuso=fuso,
+        tabelas_colunas=tabelas_colunas, inserir_produto=False)
+
+    produto.pop("criado_em")
+    produto_modificado = item_com_valores_atualizados(
+        item_api=produto, tabela="produtos", coluna_busca="id_bling", api=api,
+        db=db, conn=conn, fuso=fuso)
+
+    return variacoes, produto_modificado
+
+
+def solicita_variacao_para_atualizar(produto_variacao, fuso, variacao, api, db,
+                                     conn):
+    """Solicita produto e retorna dict pronto para inserir."""
+    variacao.pop("criado_em")
+    variacao_modificado = item_com_valores_atualizados(
+        item_api=variacao, tabela="produtos", coluna_busca="id_bling", api=api,
+        db=db, conn=conn, fuso=fuso)
+
+    produto_variacao_modificado = item_com_valores_atualizados(
+        item_api=produto_variacao, tabela="produto_variacao", conn=conn,
+        coluna_busca="id_produto_filho", api=api, db=db, fuso=fuso)
+
+    return produto_variacao_modificado, variacao_modificado
 
 
 if __name__ == "__main__":
