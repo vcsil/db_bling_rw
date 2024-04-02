@@ -7,7 +7,7 @@ Created on Sun Dec 17 13:06:07 2023.
 """
 from preencherModulos.preencherProdutos.utils_produtos import (
     solicita_categeoria, solicita_deposito, produto_insere_saldo_estoque,
-    solicita_insere_variacao, solicita_produto)
+    solicita_insere_variacao, solicita_produto, insere_segunda_tentativa)
 from preencherModulos.utils import (
     db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id)
 
@@ -195,6 +195,12 @@ class AtualizarProdutos():
                     api=api, db=self.db, conn=conn)
             conn.commit()
 
+        log.info(f"Passará por {len(produtos_nao_incluidos)} produtos, novame")
+        for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca"):
+            insere_segunda_tentativa(tabelas_colunas=self.tabelas_colunas,
+                                     produto=prod_variacao, fuso=fuso, api=api,
+                                     db=self.db, conn=conn)
+        produtos_nao_incluidos = [item['id'] for item in produtos_nao_incluidos]
         print(Fore.YELLOW +
               f"Produtos não incluidos: {produtos_nao_incluidos}"
               + Style.RESET_ALL)
