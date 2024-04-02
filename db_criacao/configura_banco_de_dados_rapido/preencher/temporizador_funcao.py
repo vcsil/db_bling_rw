@@ -7,7 +7,6 @@ Created on Sat Mar 30 13:58:54 2024.
 """
 
 from datetime import datetime
-import schedule
 import pytz
 import time
 
@@ -19,21 +18,19 @@ def agendar_tarefa(job):
     current_hour = datetime.now(fuso).hour
 
     if current_day in range(0, 5):  # Segunda a Sexta
-        if 8 <= current_hour < 18:
-            schedule.every(15).minutes.do(job)
+        if 8 <= current_hour < 18:  # 8h as 18h - 15min
+            time.sleep(60*15)
         else:
-            schedule.every(4).hours.do(job)
-    elif current_day == 5:  # Sábado
-        if 8 <= current_hour < 14:
-            schedule.every(15).minutes.do(job)
-        else:
-            schedule.every(4).hours.do(job)
-    else:  # Domingo (e outros dias)
-        schedule.every(4).hours.do(job)
+            time.sleep(60*60*4)
 
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    elif current_day == 5:          # Sábado
+        if 8 <= current_hour < 14:  # 8h as 14h - 15min
+            time.sleep(60*15)
+        else:
+            time.sleep(60*60*4)
+
+    else:                           # Domingo (e outros dias)
+        time.sleep(60*60*4)         # 4/4h
 
 
 if __name__ == "__main__":

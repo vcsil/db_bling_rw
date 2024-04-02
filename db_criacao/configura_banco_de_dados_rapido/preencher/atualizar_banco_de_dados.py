@@ -12,6 +12,7 @@ from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from pytz import timezone
 import logging
+import sys
 
 
 def main():
@@ -38,9 +39,12 @@ def main():
     atualiza = True
     while atualiza:
         try:
-            agendar_tarefa(atualizar_modulos)
+            agendar_tarefa()
+            atualizar_modulos()
         except Exception as e:
-            print(e)
+            _, _, traceback_obj = sys.exc_info()
+            print(f"Erro no banco de dados: {e}\n{type(e)}")
+            print(f"{traceback_obj}\n")
             atualiza = False
 
 
