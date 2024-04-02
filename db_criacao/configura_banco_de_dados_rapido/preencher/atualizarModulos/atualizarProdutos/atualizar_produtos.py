@@ -195,6 +195,10 @@ class AtualizarProdutos():
                     api=api, db=self.db, conn=conn)
             conn.commit()
 
+        print(Back.ORANGE +
+              f"Produtos não incluidos: {produtos_nao_incluidos}"
+              + Style.RESET_ALL)
+
     def atualiza_valores_produtos(self, tabela, conn, api, fuso):
         """Busca por produtos que foram alterado na data definida."""
         colunas = self.tabelas_colunas[tabela][:]
