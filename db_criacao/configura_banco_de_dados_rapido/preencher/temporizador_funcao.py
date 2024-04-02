@@ -11,7 +11,7 @@ import pytz
 import time
 
 
-def agendar_tarefa(job):
+def agendar_tarefa():
     """15/15min Seg-Sex e Sab 8-14 e 4/4h mos outros horarios."""
     fuso = pytz.timezone("America/Sao_Paulo")
     current_day = datetime.now(fuso).weekday()
