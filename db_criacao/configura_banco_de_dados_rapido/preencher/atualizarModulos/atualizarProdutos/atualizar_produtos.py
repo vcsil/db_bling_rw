@@ -7,14 +7,13 @@ Created on Sun Dec 17 13:06:07 2023.
 """
 from preencherModulos.preencherProdutos.utils_produtos import (
     solicita_categeoria, solicita_deposito, produto_insere_saldo_estoque,
-    solicita_insere_variacao, solicita_produto, insere_segunda_tentativa,
-    _solicita_variacao)
+    solicita_insere_variacao, solicita_produto)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id,
-    db_pega_um_elemento)
+    db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id)
 
 from atualizarModulos.atualizarProdutos.utils_produtos import (
-    atualizar_estoque_fornecedor, atualiza_variacao, cria_variacao)
+    atualizar_estoque_fornecedor, solicita_produto_para_atualizar,
+    manipula_insere_variacao)
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids)
 
@@ -196,15 +195,10 @@ class AtualizarProdutos():
                     api=api, db=self.db, conn=conn)
             conn.commit()
 
-        log.info(f"Passará por {len(produtos_nao_incluidos)} produtos, novame")
-        for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca"):
-            insere_segunda_tentativa(tabelas_colunas=self.tabelas_colunas,
-                                     produto=prod_variacao, fuso=fuso, api=api,
-                                     db=self.db, conn=conn)
-
     def atualiza_valores_produtos(self, tabela, conn, api, fuso):
         """Busca por produtos que foram alterado na data definida."""
         colunas = self.tabelas_colunas[tabela][:]
+        colunas.remove("criado_em")
 
         # Pega os produtos alterados no dia de hoje
         hoje = str(datetime.now(fuso).date())
@@ -225,62 +219,29 @@ class AtualizarProdutos():
 
             log.info(f"Solicita dados do produto {idProduto} na API")
             if produto_existe:
-                # Salva data de criação
-                criado_em = db_pega_um_elemento(
-                    tabela_busca=tabela, coluna_busca="id_bling", db=self.db,
-                    valor_busca=[idProduto], colunas_retorno="criado_em",
-                    conn=conn)["criado_em"]
-
-                variacoes, produto = solicita_produto(
-                    idProduto=idProduto, api=api, db=self.db, conn=conn,
-                    tabelas_colunas=self.tabelas_colunas, fuso=fuso,
-                    inserir_produto=False)
-                # Atualiza valores do produto
-                produto["alterado_em"] = datetime.now(fuso)
-                produto["criado_em"] = criado_em
-                db_atualizar_uma_linha(
-                    tabela=tabela, colunas=colunas, valores=produto, conn=conn,
-                    coluna_filtro=["id_bling"], valor_filtro=[idProduto],
-                    db=self.db)
-
+                # Atualiza somente produtos com valores atualizados
+                variacoes, produto = solicita_produto_para_atualizar(
+                    tabelas_colunas=self.tabelas_colunas, conn=conn,
+                    idProduto=idProduto, fuso=fuso, api=api, db=self.db)
+                if produto:
+                    db_atualizar_uma_linha(
+                        tabela=tabela, colunas=colunas, valores=produto,
+                        coluna_filtro=["id_bling"], valor_filtro=[idProduto],
+                        db=self.db, conn=conn)
             else:
-                variacoes, produto = solicita_produto(
+                variacoes, produto = solicita_produto(  # E insere
                     idProduto=idProduto, api=api, db=self.db, conn=conn,
                     tabelas_colunas=self.tabelas_colunas, fuso=fuso,
                     inserir_produto=True)
 
-            # Lida com as variações do produto Pai
             if variacoes:
-                for variacao in variacoes:
-                    produto_variacao, variacao = _solicita_variacao(
-                        variacao=variacao, db=self.db, fuso=fuso,
-                        conn=conn, id_pai=idProduto)
-                    variacao["alterado_em"] = datetime.now(fuso)
-
-                    # Verifica se a variação já existe no banco de dados
-                    variacao_existe = db_verifica_se_existe(
-                        tabela_busca="produtos", coluna_busca="id_bling",
-                        valor_busca=[variacao["id_bling"]], db=self.db,
-                        conn=conn, colunas_retorno="id_bling")
-                    if variacao_existe:
-                        # Salva data de criação
-                        criado_em = db_pega_um_elemento(
-                            tabela_busca=tabela, coluna_busca="id_bling",
-                            valor_busca=[variacao["id_bling"]], db=self.db,
-                            colunas_retorno="criado_em",
-                            conn=conn)["criado_em"]
-                        variacao["criado_em"] = criado_em
-                        atualiza_variacao(
-                            tabelas_colunas=self.tabelas_colunas, db=self.db,
-                            produto_variacao=produto_variacao, conn=conn,
-                            variacao=variacao, api=api)
-
-                    else:
-                        cria_variacao(
-                            tabelas_colunas=self.tabelas_colunas, db=self.db,
-                            produto_variacao=produto_variacao, conn=conn,
-                            variacao=variacao, api=api)
+                # Lida com as variações do produto Pai
+                manipula_insere_variacao(
+                    id_pai=idProduto, variacoes=variacoes, conn=conn, api=api,
+                    tabelas_colunas=self.tabelas_colunas, fuso=fuso,
+                    db=self.db)
             else:
+                # Caso seja produto sem variação, lida com o estoque.
                 if produto_existe:
                     atualizar_estoque_fornecedor(
                         tabelas_colunas=self.tabelas_colunas, api=api,
@@ -310,6 +271,7 @@ class AtualizarProdutos():
         log.info("Inicio atualizar valores de produtos")
         self.atualiza_valores_produtos(tabela='produtos', conn=conn, api=api,
                                        fuso=fuso)
+        conn.commit()
 
         log.info("Fim produtos")
 

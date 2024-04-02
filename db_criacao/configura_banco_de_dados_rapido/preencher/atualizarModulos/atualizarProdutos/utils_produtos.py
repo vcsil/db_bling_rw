@@ -7,7 +7,8 @@ Created on Mon Mar 25 17:30:41 2024.
 """
 from preencherModulos.utils import db_inserir_uma_linha
 from preencherModulos.preencherProdutos.utils_produtos import (
-    _solicita_estoque_fornecedor, produto_insere_saldo_estoque)
+    _solicita_estoque_fornecedor, produto_insere_saldo_estoque,
+    solicita_produto, _solicita_variacao)
 
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe,
@@ -50,28 +51,30 @@ def atualiza_variacao(tabelas_colunas, produto_variacao, variacao,
     log.info(f"Atualiza variacao do produto {variacao['id_bling']}")
 
     colunas = tabelas_colunas["produtos"][:]
+    colunas.remove("criado_em")
     colunas_prod_var = tabelas_colunas["produto_variacao"][:]
     colunas_prod_var.remove("id")
 
-    # Atualiza na tabela de produtos
-    db_atualizar_uma_linha(
-        tabela="produtos", colunas=colunas, db=db,
-        valores=variacao, coluna_filtro="id_bling",
-        valor_filtro=variacao["id_bling"], conn=conn)
+    if variacao:
+        # Atualiza na tabela de produtos
+        db_atualizar_uma_linha(
+            tabela="produtos", colunas=colunas, db=db,
+            valores=variacao, coluna_filtro="id_bling",
+            valor_filtro=variacao["id_bling"], conn=conn)
+        # Atualiza estoque
+        atualizar_estoque_fornecedor(
+            tabelas_colunas=tabelas_colunas, db=db,
+            id_produto=variacao["id_bling"], api=api,
+            conn=conn)
 
-    # Atualiza na tabela produto_variacao
-    db_atualizar_uma_linha(
-        tabela="produto_variacao",
-        colunas=colunas_prod_var, db=db,
-        valores=produto_variacao,
-        coluna_filtro="id_produto_filho",
-        valor_filtro=variacao["id_bling"], conn=conn)
-
-    # Atualiza estoque
-    atualizar_estoque_fornecedor(
-        tabelas_colunas=tabelas_colunas, db=db,
-        id_produto=variacao["id_bling"], api=api,
-        conn=conn)
+    if produto_variacao:
+        # Atualiza na tabela produto_variacao
+        db_atualizar_uma_linha(
+            tabela="produto_variacao",
+            colunas=colunas_prod_var, db=db,
+            valores=produto_variacao,
+            coluna_filtro="id_produto_filho",
+            valor_filtro=variacao["id_bling"], conn=conn)
 
 
 def cria_variacao(tabelas_colunas, produto_variacao, variacao, api, db, conn):
@@ -125,6 +128,31 @@ def solicita_variacao_para_atualizar(produto_variacao, fuso, variacao, api, db,
         coluna_busca="id_produto_filho", api=api, db=db, fuso=fuso)
 
     return produto_variacao_modificado, variacao_modificado
+
+
+def manipula_insere_variacao(id_pai, variacoes, tabelas_colunas, api, db, conn,
+                             fuso):
+    """Solicita, verifica modificações, manipula e insere variacao."""
+    for variacao in variacoes:
+        produto_variacao, variacao = _solicita_variacao(
+            variacao=variacao, db=db, fuso=fuso, conn=conn, id_pai=id_pai)
+
+        # Verifica se a variação já existe no banco de dados
+        variacao_existe = db_verifica_se_existe(
+            tabela_busca="produtos", coluna_busca="id_bling", db=db, conn=conn,
+            valor_busca=[variacao["id_bling"]], colunas_retorno="id_bling")
+        if variacao_existe:
+            produto_variacao, variacao = solicita_variacao_para_atualizar(
+                conn=conn, db=db, fuso=fuso, variacao=variacao, api=api,
+                produto_variacao=produto_variacao)
+
+            atualiza_variacao(
+                tabelas_colunas=tabelas_colunas, db=db, conn=conn, api=api,
+                produto_variacao=produto_variacao, variacao=variacao)
+        else:
+            cria_variacao(
+                tabelas_colunas=tabelas_colunas, db=db, conn=conn, api=api,
+                produto_variacao=produto_variacao, variacao=variacao)
 
 
 if __name__ == "__main__":
