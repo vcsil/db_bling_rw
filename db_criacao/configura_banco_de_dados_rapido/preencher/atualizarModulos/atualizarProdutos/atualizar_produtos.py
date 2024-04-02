@@ -17,7 +17,7 @@ from atualizarModulos.atualizarProdutos.utils_produtos import (
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids)
 
-from colorama import Back, Style
+from colorama import Back, Style, Fore
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -195,7 +195,7 @@ class AtualizarProdutos():
                     api=api, db=self.db, conn=conn)
             conn.commit()
 
-        print(Back.ORANGE +
+        print(Fore.YELLOW +
               f"Produtos não incluidos: {produtos_nao_incluidos}"
               + Style.RESET_ALL)
 
