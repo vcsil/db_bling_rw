@@ -19,6 +19,7 @@ from config.env_valores import EnvValores
 from config.conexao_api import ConectaAPI
 from config.conexao_db import ConectaDB
 
+from colorama import Back, Style
 from datetime import datetime
 import logging
 import pytz
@@ -77,7 +78,7 @@ def atualizar_modulos():
             colunas=["datetime"], valores={"datetime": agora})
         conn.commit()
 
-    print(f'Atualizado {agora}')
+    print(Back.YELLOW + f'Atualizado {agora}' + Style.RESET_ALL)
     log.info(f"Atualizado {agora}")
 
 
