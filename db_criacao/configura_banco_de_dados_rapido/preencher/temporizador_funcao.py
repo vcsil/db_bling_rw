@@ -15,7 +15,16 @@ log = logging.getLogger('root')
 
 
 def agendar_tarefa():
-    """15/15min Seg-Sex e Sab 8-14 e 4/4h mos outros horarios."""
+    """
+    Define intervalos entre as chamdas da função principal.
+
+    Seg - Sex -- das 08h as 18h: 15/15min
+    Seg - Sex -- das 18h as 08h: 45/45min
+
+    Sab       -- das 08h as 14h: 15/15min
+
+    outros    -- 4/4h
+    """
     fuso = pytz.timezone("America/Sao_Paulo")
     agora = datetime.now(fuso)
     current_day = agora.weekday()
@@ -28,10 +37,10 @@ def agendar_tarefa():
             log.info(t)
             time.sleep(60*15)
         else:
-            t = f"Próxima atualização às: {agora + timedelta(hours=4)}"
+            t = f"Próxima atualização às: {agora + timedelta(minutes=45)}"
             print(t)
             log.info(t)
-            time.sleep(60*60*4)
+            time.sleep(60*45)
 
     elif current_day == 5:          # Sábado
         if 8 <= current_hour < 14:  # 8h as 14h - 15min
