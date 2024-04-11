@@ -8,6 +8,7 @@ Created on Thu Mar 21 21:04:27 2024.
 from preencherModulos.utils import (db_pega_um_elemento,
                                     db_pega_varios_elementos)
 
+from config.constants import API, DB
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -154,7 +155,7 @@ def solicita_novos_ids(param, tabela_busca, coluna_busca, coluna_retorno,
         coluna_busca=coluna_busca, colunas_retorno=coluna_retorno, conn=conn)
 
     ids_db = db_pega_varios_elementos(tabela_busca=tabela_busca, conn=conn,
-                                      colunas_retorno=coluna_retorno, db=db)
+                                      colunas_retorno=coluna_retorno, db=DB)
     ids_db = [item[coluna_retorno] for item in ids_db]
 
     ids = list(set(ids_api) - set(ids_db))
@@ -163,13 +164,13 @@ def solicita_novos_ids(param, tabela_busca, coluna_busca, coluna_retorno,
     return ids
 
 
-def solicita_item_novos(param, tabela, colunas_retorno, conn, api, db):
+def solicita_item_novos(param, tabela, colunas_retorno, conn):
     """Solicita items novos fazendo comparação com o ID e retornando objeto."""
-    lista_objetos_api = api.solicita_na_api(param)['data']
+    lista_objetos_api = API.solicita_na_api(param)['data']
     ids_api = [item["id"] for item in lista_objetos_api]
 
     ids_db = db_pega_varios_elementos(tabela_busca=tabela, conn=conn,
-                                      colunas_retorno=colunas_retorno, db=db)
+                                      colunas_retorno=colunas_retorno, db=DB)
     ids_db = [item[colunas_retorno] for item in ids_db]
 
     ids_novos = list(set(ids_api) - set(ids_db))

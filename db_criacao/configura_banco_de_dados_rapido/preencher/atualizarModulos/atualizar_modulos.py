@@ -15,7 +15,7 @@ from atualizarModulos.atualizarPedidosVendas.atualizar_vendas import (
     AtualizarVendas)
 from preencherModulos.utils import db_inserir_uma_linha
 
-from config.env_valores import EnvValores
+from config.constants import FUSO, DB
 from config.conexao_api import ConectaAPI
 from config.conexao_db import ConectaDB
 
@@ -44,10 +44,10 @@ def atualizar_modulos():
 
     # Inicia conexão com Banco de Dados
     log.info('Inicia atualização')
-    with db.conectar_ao_banco() as conn:
+    with DB.conectar_ao_banco() as conn:
 
         log.info("Começa atualizar contatos.")
-        AtualizarContatos(tabelas_colunas, db).atualizar_modulo_contatos(conn,
+        AtualizarContatos().atualizar_modulo_contatos(conn)
                                                                          api,
                                                                          fuso)
         log.info("Comita contatos")
@@ -72,7 +72,7 @@ def atualizar_modulos():
         log.info("Comita vendas")
         conn.commit()
 
-        agora = datetime.now(fuso)
+        agora = datetime.now(FUSO)
         db_inserir_uma_linha(
             tabela="atualizacoes_modulos", db=db, conn=conn,
             colunas=["datetime"], valores={"datetime": agora})
