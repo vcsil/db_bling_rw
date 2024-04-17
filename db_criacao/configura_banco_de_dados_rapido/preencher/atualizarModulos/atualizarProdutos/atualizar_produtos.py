@@ -9,20 +9,22 @@ from preencherModulos.preencherProdutos.utils_produtos import (
     solicita_categeoria, solicita_deposito, produto_insere_saldo_estoque,
     solicita_insere_variacao, solicita_produto, insere_segunda_tentativa)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id)
+    db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id,
+    db_pega_varios_elementos, db_pega_varios_elementos_controi_filtro)
 
 from atualizarModulos.atualizarProdutos.utils_produtos import (
     atualizar_estoque_fornecedor, solicita_produto_para_atualizar,
-    manipula_insere_variacao)
+    manipula_insere_variacao, atualiza_estoque, manipula_variacao_excluidas)
 from atualizarModulos.utils import (
-    db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids)
+    db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids,
+    txt_fundo_verde, slice_array, txt_fundo_azul, txt_amarelo)
 
-from colorama import Back, Style, Fore
+from config.constants import DB, TABELAS_COLUNAS, API, FUSO
 from datetime import datetime
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Produtos =-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -30,147 +32,134 @@ log = logging.getLogger('root')
 class AtualizarProdutos():
     """Preenche módulo de produtos."""
 
-    def __init__(self, tabelas_colunas, db):
-        self.tabelas_colunas = tabelas_colunas
-        self.db = db
+    def __init__(self):
+        pass
 
-    def _atualiza_produtos_tipos(self, tabela: str, sigla, conn):
+    def _atualiza_produtos_tipos(self, sigla, conn):
         """Atualiza a tabela produtos_tipos da database."""
         log.info("Insere novos tipos de contatos")
-        colunas = self.tabelas_colunas[tabela][:]
+
+        tabela = "produtos_tipos"
+        colunas = TABELAS_COLUNAS[tabela][:]
         colunas.remove("id")
 
         valor = {"nome": sigla, "sigla": sigla}
 
-        return db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=valor,
-                db=self.db, conn=conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
 
-    def _atualiza_produtos_formatos(self, tabela: str, sigla, conn):
+    def _atualiza_produtos_formatos(self, sigla, conn):
         """Atualiza a tabela produtos_formatos da database."""
         log.info("Insere novo formato de produtos")
-        colunas = self.tabelas_colunas[tabela][:]
-        colunas.remove('id')
+
+        tabela = "produtos_formatos"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        colunas.remove("id")
 
         valor = {"nome": sigla, "sigla": sigla}
 
-        return db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=valor,
-                db=self.db, conn=conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
 
-    def _atualiza_produtos_tipo_producao(self, tabela: str, sigla, conn):
+    def _atualiza_produtos_tipo_producao(self, sigla, conn):
         """Atualiza a tabela produtos_tipo_producao da database."""
         log.info("Insere novos tipos de produção de produtos")
-        colunas = self.tabelas_colunas[tabela][:]
-        colunas.remove('id')
+
+        tabela = "produtos_tipo_producao"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        colunas.remove("id")
 
         valor = {"nome": sigla, "sigla": sigla},
 
-        return db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valor,
-            db=self.db, conn=conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
 
-    def _atualiza_produtos_condicao(self, tabela: str, id_condicao, conn):
+    def _atualiza_produtos_condicao(self, id_condicao, conn):
         """Atualiza a tabela produtos_condicao da database."""
         log.info("Insere nova condicao de produtos")
-        colunas = self.tabelas_colunas[tabela][:]
+
+        tabela = "produtos_condicao"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valor = {"id": id_condicao, "nome": str(id_condicao)},
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valor,
-            db=self.db, conn=conn)
-        log.info("Fim de preencher produtos condição")
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
 
-    def _atualiza_produtos_categorias(self, tabela: str, conn, api):
+    def _atualiza_produtos_categorias(self, conn):
         """Atualiza a tabela produtos_categorias da database."""
         log.info("Insere novas categorias de produtos.")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        ids_categorias = solicita_novos_ids(
-            param="/categorias/produtos?", tabela_busca=tabela,
-            coluna_busca="id_bling", coluna_retorno="id_bling",
-            conn=conn, api=api, db=self.db)
+        tabela = "produtos_categorias"
+        colunas = TABELAS_COLUNAS[tabela][:]
+
+        PARAM = "/categorias/produtos?"
+        ids_categorias = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
 
         if len(ids_categorias) == 0:
             return
+        txt_fundo_verde(f"Insere {len(ids_categorias)} catg. produtos novas")
 
-        ROTA = '/categorias/produtos/'
-        print(Back.GREEN + f"Insere {len(ids_categorias)} catg. produtos novas"
-              + Style.RESET_ALL)
-        log.info(f"Passará por {len(ids_categorias)} catg. produtos novas")
+        ROTA = "/categorias/produtos/"
         list_relacao_categoria = []
         for idCategoria in tqdm(ids_categorias, desc="Atualiza categorias"):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
-            rel, categoria = solicita_categeoria(rota=ROTA+f"{idCategoria}",
-                                                 api=api)
+            rel, categoria = solicita_categeoria(ROTA+f"{idCategoria}", API)
 
             log.info(f"Insere categoria {idCategoria}")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=categoria,
-                db=self.db, conn=conn)
+            db_inserir_uma_linha(tabela, colunas, categoria, DB, conn)
 
             # Pegando informações sobre relação da categoria
             if rel:
                 list_relacao_categoria.append(rel)
 
         log.info("Insere relacoes das categorias")
-        colunas_relacao = (self
-                           .tabelas_colunas["produtos_categorias_relacao"][:])
+        colunas_relacao = TABELAS_COLUNAS[tabela + "_relacao"][:]
         colunas_relacao.remove("id")
-        db_inserir_varias_linhas(tabela="produtos_categorias_relacao",
-                                 colunas=colunas_relacao, conn=conn,
-                                 db=self.db, valores=list_relacao_categoria)
+        db_inserir_varias_linhas(tabela + "_relacao", colunas_relacao, db=DB,
+                                 valores=list_relacao_categoria, conn=conn)
 
-        log.info("Fim de preencher categorias dos produtos")
-
-    def _atualiza_produtos_depositos(self, tabela: str, conn, api):
+    def _atualiza_produtos_depositos(self, conn):
         """Atualiza a tabela produtos_depositos da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        log.info("Insere novas categorias de produtos.")
 
-        ids_depositos = solicita_novos_ids(
-            param="/depositos?", tabela_busca=tabela, coluna_busca="id_bling",
-            coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
+        tabela = "produtos_depositos"
+        colunas = TABELAS_COLUNAS[tabela][:]
+
+        PARAM = "/depositos?"
+        ids_depositos = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
 
         if len(ids_depositos) == 0:
             return
 
-        ROTA = '/depositos/'
-        print(Back.GREEN + f"Insere {len(ids_depositos)} depositos novos"
-              + Style.RESET_ALL)
+        txt_fundo_verde(f"Insere {len(ids_depositos)} depositos novos")
         log.info(f"Passará por {len(ids_depositos)} depositos")
-        for idDeposito in tqdm(ids_depositos, desc="Busca depositos"):
-            log.info(f"Solicita dados do deposito {idDeposito} na API")
-            deposito = solicita_deposito(rota=ROTA+f"{idDeposito}", api=api)
 
-            log.info("Insere deposito")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=deposito,
-                db=self.db,  conn=conn)
+        ROTA = "/depositos/"
+        for idDeposito in tqdm(ids_depositos, desc="Busca depositos"):
+            deposito = solicita_deposito(ROTA+f"{idDeposito}", API)
+
+            log.info(F"Insere deposito {idDeposito} NO db")
+            db_inserir_uma_linha(tabela, colunas, deposito, DB, conn)
 
         log.info("Fim de atualizar produtos depositos")
 
-    def atualiza_lista_produtos(self, tabela: str, conn, api, fuso):
-        """Pega produtos da API e compara com a tabela produtos da database."""
+    def atualiza_lista_produtos(self, conn):
+        """Insere produtos novos, cadastrados recentemente. Compara os ID."""
+        tabela = "produtos"
+
+        PARAM = "/produtos?criterio=5&tipo=T&"
         # Pega todos os produtos Pai e Simples
-        ids_produtos = solicita_novos_ids(
-            param="/produtos?criterio=5&tipo=T&", tabela_busca=tabela,
-            coluna_busca="id_bling", coluna_retorno="id_bling", conn=conn,
-            api=api, db=self.db)
-        produtos_nao_incluidos = []
+        ids_produtos = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
 
         if len(ids_produtos) == 0:
             return
 
-        print(Back.GREEN + f"Insere {len(ids_produtos)} produtos novos"
-              + Style.RESET_ALL)
+        txt_fundo_verde(f"Insere {len(ids_produtos)} produtos novos")
         log.info(f"Passará por {len(ids_produtos)} produtos")
+
+        produtos_nao_incluidos = []
         for idProduto in tqdm(ids_produtos, desc="Busca produtos"):
             log.info(f"Solicita dados do produto {idProduto} na API")
-            variacoes, produto = solicita_produto(
-                idProduto=idProduto, api=api, db=self.db, conn=conn,
-                tabelas_colunas=self.tabelas_colunas, fuso=fuso,
-                inserir_produto=True)
+            variacoes, produto = solicita_produto(idProduto, TABELAS_COLUNAS,
+                                                  API, DB, conn, FUSO,
+                                                  inserir_produto=True)
 
             # Se o produto não for Pai, será resolvido depois.
             if not produto:
@@ -181,107 +170,136 @@ class AtualizarProdutos():
             # Lida com as variações do produto Pai
             if variacoes:
                 for variacao in variacoes:
-                    solicita_insere_variacao(
-                        dict_variacao=variacao, fuso=fuso, id_Pai=idProduto,
-                        tabelas_colunas=self.tabelas_colunas, db=self.db,
-                        conn=conn)
+                    solicita_insere_variacao(variacao, TABELAS_COLUNAS,
+                                             idProduto, FUSO, DB, conn)
 
-                    produto_insere_saldo_estoque(
-                        tabelas_colunas=self.tabelas_colunas, api=api,
-                        id_produto=variacao["id"], db=self.db, conn=conn)
+                    produto_insere_saldo_estoque(TABELAS_COLUNAS,
+                                                 variacao["id"], API, DB, conn)
             else:
-                produto_insere_saldo_estoque(
-                    tabelas_colunas=self.tabelas_colunas, id_produto=idProduto,
-                    api=api, db=self.db, conn=conn)
+                produto_insere_saldo_estoque(TABELAS_COLUNAS,
+                                             idProduto, API, DB, conn)
             conn.commit()
 
+        ids_produtos_prontos = db_pega_varios_elementos(tabela, "id_bling", DB,
+                                                        conn)
+        ids_produtos_prontos = [linha["id_bling"] for linha
+                                in ids_produtos_prontos]
         log.info(f"Passará por {len(produtos_nao_incluidos)} produtos, novame")
         for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca"):
-            insere_segunda_tentativa(tabelas_colunas=self.tabelas_colunas,
-                                     produto=prod_variacao, fuso=fuso, api=api,
-                                     db=self.db, conn=conn)
-        produtos_nao_incluidos = [item['id'] for item in produtos_nao_incluidos]
-        print(Fore.YELLOW +
-              f"Produtos não incluidos: {produtos_nao_incluidos}"
-              + Style.RESET_ALL)
+            if prod_variacao["id"] in ids_produtos_prontos:
+                continue
+            insere_segunda_tentativa(TABELAS_COLUNAS, prod_variacao, FUSO, API,
+                                     DB, conn)
 
-    def atualiza_valores_produtos(self, tabela, conn, api, fuso):
+        produtos_nao_incluidos = [item["id"] for item
+                                  in produtos_nao_incluidos]
+        txt_amarelo(f"Produtos não incluidos: {produtos_nao_incluidos}")
+
+    def atualiza_valores_produtos(self, conn):
         """Busca por produtos que foram alterado na data definida."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "produtos"
+        colunas = TABELAS_COLUNAS[tabela][:]
         colunas.remove("criado_em")
 
         # Pega os produtos alterados no dia de hoje
-        hoje = str(datetime.now(fuso).date())
+        hoje = str(datetime.now(FUSO).date())
         param = "/produtos?criterio=1&tipo=P&"
         param += f"dataAlteracaoInicial={hoje}&dataAlteracaoFinal={hoje}&"
-        ids_produtos_alterado = api_pega_todos_id(api=api, param=param)
+        ids_produtos_alterado = api_pega_todos_id(api=API, param=param)
 
         if len(ids_produtos_alterado) == 0:
             return
 
-        print(Back.BLUE + f"Atualiza {len(ids_produtos_alterado)} produtos"
-              + Style.RESET_ALL)
+        txt_fundo_azul(f"Atualiza {len(ids_produtos_alterado)} produtos")
+
         for idProduto in tqdm(ids_produtos_alterado, desc="Atualiza produtos"):
-            # Verifica se ele já eiste no banco de dados
-            produto_existe = db_verifica_se_existe(
-                tabela_busca="produtos", coluna_busca="id_bling", db=self.db,
-                valor_busca=idProduto, colunas_retorno="id_bling", conn=conn)
+            log.info(f"Atualiza o produto: {idProduto}.")
+            # Verifica se ele já existe no banco de dados
+            produto_existe = db_verifica_se_existe(tabela, "id_bling",
+                                                   idProduto, conn)
 
             log.info(f"Solicita dados do produto {idProduto} na API")
             if produto_existe:
                 # Atualiza somente produtos com valores atualizados
-                variacoes, produto = solicita_produto_para_atualizar(
-                    tabelas_colunas=self.tabelas_colunas, conn=conn,
-                    idProduto=idProduto, fuso=fuso, api=api, db=self.db)
+                variacoes, produto = solicita_produto_para_atualizar(idProduto,
+                                                                     conn)
                 if produto:
-                    db_atualizar_uma_linha(
-                        tabela=tabela, colunas=colunas, valores=produto,
-                        coluna_filtro=["id_bling"], valor_filtro=[idProduto],
-                        db=self.db, conn=conn)
-            else:
-                variacoes, produto = solicita_produto(  # E insere
-                    idProduto=idProduto, api=api, db=self.db, conn=conn,
-                    tabelas_colunas=self.tabelas_colunas, fuso=fuso,
-                    inserir_produto=True)
+                    db_atualizar_uma_linha(tabela, colunas, produto,
+                                           ["id_bling"], [idProduto], conn)
+            else:  # Manipula e insere
+                variacoes, produto = solicita_produto(idProduto,
+                                                      TABELAS_COLUNAS,
+                                                      API, DB, conn, FUSO,
+                                                      inserir_produto=True)
 
             if variacoes:
+                # Verifica a situação das variaçoes
+                manipula_variacao_excluidas(idProduto, variacoes, conn)
+
                 # Lida com as variações do produto Pai
-                manipula_insere_variacao(
-                    id_pai=idProduto, variacoes=variacoes, conn=conn, api=api,
-                    tabelas_colunas=self.tabelas_colunas, fuso=fuso,
-                    db=self.db)
+                manipula_insere_variacao(idProduto, variacoes, conn)
             else:
                 # Caso seja produto sem variação, lida com o estoque.
                 if produto_existe:
-                    atualizar_estoque_fornecedor(
-                        tabelas_colunas=self.tabelas_colunas, api=api,
-                        id_produto=idProduto, db=self.db, conn=conn)
+                    atualizar_estoque_fornecedor(idProduto, conn)
                 else:
-                    produto_insere_saldo_estoque(
-                        tabelas_colunas=self.tabelas_colunas, api=api,
-                        id_produto=idProduto, db=self.db, conn=conn)
+                    produto_insere_saldo_estoque(TABELAS_COLUNAS, idProduto,
+                                                 API, DB, conn)
 
-    def atualizar_modulo_produtos(self, conn, api, fuso):
+    def atualizar_estoque(self, conn):
+        """Utiliado para atualizar a quantidade de produtos em estoque."""
+        BATCH_SIZE = 271
+
+        ids_p_db = db_pega_varios_elementos_controi_filtro(
+            tabela_busca="produtos", colunas_retorno=["id_bling"],
+            db=DB, conn=conn, filtro="WHERE situacao_produto='Inativo'")
+        ids_produto_db = [int(linha["id_bling"]) for linha in ids_p_db]
+
+        ids_p_db = db_pega_varios_elementos_controi_filtro(
+            tabela_busca="produtos", colunas_retorno=["id_bling"],
+            db=DB, conn=conn, filtro="WHERE situacao_produto='Excluido'")
+        ids_produto_db += [int(linha["id_bling"]) for linha in ids_p_db]
+
+        ids_pe_db = db_pega_varios_elementos(
+            tabela_busca="produtos_estoques", colunas_retorno="id_produto",
+            db=DB, conn=conn)
+        ids_pe_db = [int(linha["id_produto"]) for linha in ids_pe_db]
+
+        ids_att_estoque = list(set(ids_pe_db) - set(ids_produto_db))
+        ids_att_estoque.sort()
+        ids_att_estoque = [str(id_prod) for id_prod in ids_att_estoque]
+        batchs = slice_array(ids_att_estoque, BATCH_SIZE)
+
+        for batch in tqdm(batchs, "Atualizando estoque de produtos"):
+            query = "&idsProdutos[]="
+            query = "idsProdutos[]=" + query.join(batch)
+            param = "/estoques/saldos?" + query
+            list_estoque_produtos = API.solicita_na_api(param)["data"]
+
+            for saldo_estoque in tqdm(list_estoque_produtos, "Att produtos."):
+                atualiza_estoque(saldo_estoque, conn)
+
+        return
+
+    def atualizar_modulo_produtos(self, conn):
         """Preencher módulo de produtos."""
         log.info("Inicio")
 
         log.info("Inicio atualizar categroias de produtos")
-        self._atualiza_produtos_categorias(tabela="produtos_categorias",
-                                           conn=conn, api=api)
+        self._atualiza_produtos_categorias(conn=conn)
 
         log.info("Inicio atualizar depositos de produtos")
-        self._atualiza_produtos_depositos(tabela="produtos_depositos",
-                                          conn=conn, api=api)
+        self._atualiza_produtos_depositos(conn=conn)
         conn.commit()
 
         log.info("Inicio atualizar lista de produtos")
-        self.atualiza_lista_produtos(tabela='produtos', conn=conn, api=api,
-                                     fuso=fuso)
+        self.atualiza_lista_produtos(conn=conn)
 
         log.info("Inicio atualizar valores de produtos")
-        self.atualiza_valores_produtos(tabela='produtos', conn=conn, api=api,
-                                       fuso=fuso)
+        self.atualiza_valores_produtos(conn=conn)
         conn.commit()
+
+        self.atualizar_estoque(conn=conn)
 
         log.info("Fim produtos")
 
