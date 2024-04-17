@@ -8,7 +8,8 @@ Created on Thu Mar 21 16:12:39 2024.
 from preencherModulos.utils import (
     db_inserir_uma_linha, db_inserir_varias_linhas)
 
-from atualizarModulos.utils import solicita_novos_ids, solicita_item_novos
+from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos, 
+                                    txt_fundo_verde)
 from atualizarModulos.atualizarContatos.utils_contatos import (
     _verifica_atualiza_contato)
 
@@ -92,7 +93,7 @@ class AtualizarContatos():
         if len(ids_contatos_novos) == 0:
             return
 
-        print(Back.GREEN + f"Adciona {len(ids_contatos_novos)} contatos novos"
+        txt_fundo_verde(f"Adciona {len(ids_contatos_novos)} contatos novos")
         t_desc = f"Adciona {len(ids_contatos_novos)} contatos novos"
         for id_contato_novo in tqdm(ids_contatos_novos, desc=t_desc):
             _verifica_atualiza_contato(id_contato_novo, conn)
