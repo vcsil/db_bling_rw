@@ -9,6 +9,7 @@ from preencherModulos.utils import (db_pega_um_elemento, db_inserir_uma_linha,
                                     db_pega_varios_elementos)
 
 from config.constants import API, DB, FUSO, TABELAS_COLUNAS
+from colorama import Back, Style, Fore
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -204,6 +205,27 @@ def item_com_valores_atualizados(item_api, tabela, coluna_busca, conn):
         log.info(f"Atualiza colunas: {diff}")
         item_api["alterado_em"] = datetime.now(fuso)
         return item_api
+
+
+def txt_fundo_verde(text):
+    """Imprime uma mensagem com fundo verde no console."""
+    print(Back.GREEN + text + Style.RESET_ALL)
+    log.info(text)
+    return
+
+
+def txt_fundo_azul(text):
+    """Imprime uma mensagem com fundo verde no console."""
+    print(Back.BLUE + text + Style.RESET_ALL)
+    log.info(text)
+    return
+
+
+def txt_amarelo(text):
+    """Imprime uma mensagem com fundo verde no console."""
+    print(Fore.YELLOW + text + Style.RESET_ALL)
+    log.info(text)
+    return
 
 
 if __name__ == "__main__":
