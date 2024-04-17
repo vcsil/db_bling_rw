@@ -25,4 +25,4 @@ _env_db = EnvValores().env_db()
 DB = ConectaDB(_env_db)  # Carrega as variáveis de ambiente necessárias
 
 log.info("Obtém nome de todas tabelas")
-TABELA_COLUNAS = DB.cria_dict_tabelas_colunas()
+TABELAS_COLUNAS = DB.cria_dict_tabelas_colunas()
