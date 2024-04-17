@@ -329,7 +329,8 @@ def _modifica_produto_estoque(saldos: dict):
             "id_produto": saldos["produto"]["id"],
             "id_deposito": saldos["depositos"][idx]["id"],
             "saldo_fisico": saldos["depositos"][idx]["saldoFisico"],
-            "saldo_virtual": saldos["depositos"][idx]["saldoVirtual"]
+            "saldo_virtual": saldos["depositos"][idx]["saldoVirtual"],
+            "alterado_em": None
         }
         list_produto_estoque.append(produto_estoque)
     return list_produto_estoque
