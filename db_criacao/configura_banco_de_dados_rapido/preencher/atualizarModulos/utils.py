@@ -5,10 +5,10 @@ Created on Thu Mar 21 21:04:27 2024.
 
 @author: vcsil
 """
-from preencherModulos.utils import (db_pega_um_elemento,
+from preencherModulos.utils import (db_pega_um_elemento, db_inserir_uma_linha,
                                     db_pega_varios_elementos)
 
-from config.constants import API, DB
+from config.constants import API, DB, FUSO, TABELAS_COLUNAS
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -16,7 +16,7 @@ import logging
 log = logging.getLogger('root')
 
 
-def api_pega_todos_id_verifica_db(api, db, param, tabela_busca,
+def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
                                   coluna_busca, colunas_retorno,
                                   conn):
     """
@@ -36,24 +36,27 @@ def api_pega_todos_id_verifica_db(api, db, param, tabela_busca,
 
     log.info(f"Pega os id's dos dados em {param} até encontrar um no banco")
     barra_carregamento = tqdm(desc=f'Paginas de dados {param}')
-    while tem_dados:
+    while True:
         pagina += 1
         param_completo = param + f'pagina={pagina}&limite=100'
 
         dados_reduzido = api.solicita_na_api(param_completo)['data']
         # Retorna um list com os dados dentro de dict
+        dados_reduzido = API.solicita_na_api(param_completo)['data']
+        if not dados_reduzido:
+            break
 
-        if (len(dados_reduzido)) > 0:
+        list_ids.extend(map(lambda dado: dado['id'], dados_reduzido))
             for dados in dados_reduzido:
                 list_ids.append(dados['id'])
 
-            valor_busca = list_ids[-1]
-            existe = db_pega_um_elemento(
-                tabela_busca=tabela_busca, coluna_busca=coluna_busca,
-                valor_busca=[valor_busca], colunas_retorno=colunas_retorno,
-                db=db, conn=conn)
+        valor_busca = list_ids[-1]
+        existe = db_verifica_se_existe(tabela_busca, coluna_busca,
+                                       [valor_busca], conn)
+        if existe:
+            break
 
-            if existe:
+        barra_carregamento.update(1)
                 tem_dados = False
             barra_carregamento.update(1)
         else:
