@@ -18,8 +18,6 @@ log = logging.getLogger('root')
 
 
 def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
-                                  coluna_busca, colunas_retorno,
-                                  conn):
     """
     Pega todos o ID de de um determinado canal da API.
 
@@ -32,7 +30,6 @@ def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
 
     """
     list_ids = []  # Vai armazenar as ids
-    tem_dados = True  # Verifica se tem dados na página
     pagina = 0
 
     log.info(f"Pega os id's dos dados em {param} até encontrar um no banco")
@@ -41,15 +38,12 @@ def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
         pagina += 1
         param_completo = param + f'pagina={pagina}&limite=100'
 
-        dados_reduzido = api.solicita_na_api(param_completo)['data']
         # Retorna um list com os dados dentro de dict
         dados_reduzido = API.solicita_na_api(param_completo)['data']
         if not dados_reduzido:
             break
 
         list_ids.extend(map(lambda dado: dado['id'], dados_reduzido))
-            for dados in dados_reduzido:
-                list_ids.append(dados['id'])
 
         valor_busca = list_ids[-1]
         existe = db_verifica_se_existe(tabela_busca, coluna_busca,
@@ -58,10 +52,6 @@ def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
             break
 
         barra_carregamento.update(1)
-                tem_dados = False
-            barra_carregamento.update(1)
-        else:
-            tem_dados = False
 
     log.info("Fim")
     return list_ids  # Lista invertida = Ordem crescente de data
@@ -69,13 +59,6 @@ def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
 
 def db_atualizar_uma_linha(tabela, colunas, valores, coluna_filtro,
                            valor_filtro, conn):
-    colunas,
-    valores,
-    coluna_filtro,
-    valor_filtro,
-    db,
-    conn
-):
     """
     Faz um UPDATE de uma linha de dados no banco de dados.
 
@@ -110,7 +93,6 @@ def db_atualizar_uma_linha(tabela, colunas, valores, coluna_filtro,
 
 
 def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
-                          colunas_retorno, conn, db):
     """
     Utilizado para verificar se um elemento já existe a partir do seu ID.
 
@@ -127,9 +109,6 @@ def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
         O elemento que será utilizado como referência para a busca.
         Se a busca considerar mais de um valor, deve ser uma list.
         Exemplo: "F" ou [10, 9]
-    colunas_retorno : str
-        As respectivas colunas do objeto que será retornado.
-        Exemplo: ["id", "nome", "sigla"].
     conn: connection
         Connection DB
 
@@ -146,13 +125,11 @@ def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
 
     linha = db_pega_um_elemento(tabela_busca, coluna_busca, valor_busca,
                                 colunas_retorno, DB, conn)
-        valor_busca=valor_busca, colunas_retorno=colunas_retorno, db=db)
 
     return linha
 
 
 def solicita_novos_ids(param, tabela_busca, coluna, conn):
-                       conn, api, db):
     """Solicita ID a API, compara com os ids do banco de dados. Devolve new."""
     ids_api = api_pega_todos_id_verifica_db(
         api=API, db=DB, param=param, tabela_busca=tabela_busca,
@@ -160,7 +137,6 @@ def solicita_novos_ids(param, tabela_busca, coluna, conn):
 
     ids_db = db_pega_varios_elementos(tabela_busca, coluna, DB, conn)
     ids_db = [item[coluna] for item in ids_db]
-    ids_db = [item[coluna_retorno] for item in ids_db]
 
     ids = list(set(ids_api) - set(ids_db))
     ids.sort()
@@ -174,7 +150,6 @@ def solicita_item_novos(param, tabela, colunas_retorno, conn):
     ids_api = [item["id"] for item in lista_objetos_api]
 
     ids_db = db_pega_varios_elementos(tabela, colunas_retorno, DB, conn)
-                                      colunas_retorno=colunas_retorno, db=DB)
     ids_db = [item[colunas_retorno] for item in ids_db]
 
     ids_novos = list(set(ids_api) - set(ids_db))
@@ -239,6 +214,21 @@ def txt_amarelo(text):
     print(Fore.YELLOW + text + Style.RESET_ALL)
     log.info(text)
     return
+
+
+def slice_array(array, batch_size):
+    """
+    Fatiar um array em pedaços de tamanho fixo.
+
+    Args:
+      array: O array a ser fatiado.
+      batch_size: O tamanho de cada pedaço.
+
+    Returns
+    -------
+      Uma lista de pedaços do array original.
+    """
+    return [array[i:i + batch_size] for i in range(0, len(array), batch_size)]
 
 
 if __name__ == "__main__":
