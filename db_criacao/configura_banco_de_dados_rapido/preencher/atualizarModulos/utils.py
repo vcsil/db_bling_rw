@@ -66,8 +66,8 @@ def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
     return list_ids  # Lista invertida = Ordem crescente de data
 
 
-def db_atualizar_uma_linha(
-    tabela,
+def db_atualizar_uma_linha(tabela, colunas, valores, coluna_filtro,
+                           valor_filtro, conn):
     colunas,
     valores,
     coluna_filtro,
@@ -103,12 +103,12 @@ def db_atualizar_uma_linha(
     valor_filtro = (valor_filtro if isinstance(valor_filtro, list)
                     else [valor_filtro])
 
-    return db.update_one_in_db(
+    return DB.update_one_in_db(
         tabela=tabela, colunas=colunas, valores=valores, conn=conn,
         coluna_filtro=coluna_filtro, valor_filtro=valor_filtro)
 
 
-def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca,
+def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
                           colunas_retorno, conn, db):
     """
     Utilizado para verificar se um elemento já existe a partir do seu ID.
@@ -138,27 +138,27 @@ def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca,
         com as colunas de retorno passadas
 
     """
-    coluna_busca = (colunas_retorno if isinstance(colunas_retorno, list)
-                    else [colunas_retorno])
+    colunas_retorno = (coluna_busca if isinstance(coluna_busca, list)
+                       else [coluna_busca])
     valor_busca = (valor_busca if isinstance(valor_busca, list)
                    else [valor_busca])
 
-    linha = db_pega_um_elemento(
-        tabela_busca=tabela_busca, coluna_busca=coluna_busca, conn=conn,
+    linha = db_pega_um_elemento(tabela_busca, coluna_busca, valor_busca,
+                                colunas_retorno, DB, conn)
         valor_busca=valor_busca, colunas_retorno=colunas_retorno, db=db)
 
-    return bool(linha)
+    return linha
 
 
-def solicita_novos_ids(param, tabela_busca, coluna_busca, coluna_retorno,
+def solicita_novos_ids(param, tabela_busca, coluna, conn):
                        conn, api, db):
     """Solicita ID a API, compara com os ids do banco de dados. Devolve new."""
     ids_api = api_pega_todos_id_verifica_db(
-        api=api, db=db, param=param, tabela_busca=tabela_busca,
-        coluna_busca=coluna_busca, colunas_retorno=coluna_retorno, conn=conn)
+        api=API, db=DB, param=param, tabela_busca=tabela_busca,
+        coluna=coluna, colunas_retorno=coluna, conn=conn)
 
-    ids_db = db_pega_varios_elementos(tabela_busca=tabela_busca, conn=conn,
-                                      colunas_retorno=coluna_retorno, db=DB)
+    ids_db = db_pega_varios_elementos(tabela_busca, coluna, DB, conn)
+    ids_db = [item[coluna] for item in ids_db]
     ids_db = [item[coluna_retorno] for item in ids_db]
 
     ids = list(set(ids_api) - set(ids_db))
@@ -172,7 +172,7 @@ def solicita_item_novos(param, tabela, colunas_retorno, conn):
     lista_objetos_api = API.solicita_na_api(param)['data']
     ids_api = [item["id"] for item in lista_objetos_api]
 
-    ids_db = db_pega_varios_elementos(tabela_busca=tabela, conn=conn,
+    ids_db = db_pega_varios_elementos(tabela, colunas_retorno, DB, conn)
                                       colunas_retorno=colunas_retorno, db=DB)
     ids_db = [item[colunas_retorno] for item in ids_db]
 
@@ -190,8 +190,7 @@ def solicita_item_novos(param, tabela, colunas_retorno, conn):
     return lista_objetos
 
 
-def item_com_valores_atualizados(item_api, tabela, coluna_busca, api, db,
-                                 conn, fuso):
+def item_com_valores_atualizados(item_api, tabela, coluna_busca, conn):
     """Busca valores modificados nos elementos. Retorna False se iguais."""
     item_db = db_pega_um_elemento(
         tabela_busca=tabela, coluna_busca=coluna_busca, db=db, conn=conn,
