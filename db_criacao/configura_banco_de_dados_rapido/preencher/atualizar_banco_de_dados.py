@@ -11,7 +11,6 @@ from config.constants import FUSO
 
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
-from pytz import timezone
 import logging
 import sys
 
@@ -25,7 +24,6 @@ def main():
     formatter = logging.Formatter(log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j')
     # Configura o fuso horário
     formatter.converter = lambda *args: datetime.now(tz=FUSO).timetuple()
-        tz=timezone('America/Sao_Paulo')).timetuple()
     # Criando o RotatingFileHandler com tamanho máximo 2MB
     handler = RotatingFileHandler('meu_log_atualizar.txt', backupCount=2,
                                   maxBytes=2*1024*1024)
