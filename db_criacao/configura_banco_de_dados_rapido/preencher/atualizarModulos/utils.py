@@ -193,18 +193,31 @@ def solicita_item_novos(param, tabela, colunas_retorno, conn):
 
 def item_com_valores_atualizados(item_api, tabela, coluna_busca, conn):
     """Busca valores modificados nos elementos. Retorna False se iguais."""
-    item_db = db_pega_um_elemento(
-        tabela_busca=tabela, coluna_busca=coluna_busca, db=db, conn=conn,
-        colunas_retorno=list(item_api.keys()),
-        valor_busca=[item_api[coluna_busca]])
+    if (isinstance(coluna_busca, list)):
+        valor_busca = [item_api[coluna] for coluna in coluna_busca]
+    elif (isinstance(coluna_busca, str)):
+        valor_busca = [item_api[coluna_busca]]
+    else:
+        raise ValueError
+
+    item_db = db_pega_um_elemento(tabela, coluna_busca, db=DB, conn=conn,
+                                  valor_busca=valor_busca,
+                                  colunas_retorno=list(item_api.keys()))
 
     if item_db == item_api:
         return False
-    else:
-        diff = [k for k in item_api.keys() if item_api[k] != item_db[k]]
-        log.info(f"Atualiza colunas: {diff}")
-        item_api["alterado_em"] = datetime.now(fuso)
-        return item_api
+
+    # Caso ele não exista no banco de dados ainda
+    if not item_db:
+        item_api["alterado_em"] = datetime.now(FUSO)
+        db_inserir_uma_linha(tabela, colunas=TABELAS_COLUNAS[tabela],
+                             valores=item_api, db=DB, conn=conn)
+        return False
+
+    diff = [k for k in item_api.keys() if item_api[k] != item_db[k]]
+    log.info(f"Atualiza colunas: {diff}")
+    item_api["alterado_em"] = datetime.now(FUSO)
+    return item_api
 
 
 def txt_fundo_verde(text):
