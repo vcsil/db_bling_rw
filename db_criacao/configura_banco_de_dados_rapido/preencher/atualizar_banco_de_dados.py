@@ -36,6 +36,7 @@ def main():
     logger.addHandler(handler)
 
     atualiza = True
+    atualizar_modulos()
     while atualiza:
         try:
             agendar_tarefa()
