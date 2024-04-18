@@ -14,71 +14,50 @@ from atualizarModulos.atualizarContas.atualizar_contas import (
 from atualizarModulos.atualizarPedidosVendas.atualizar_vendas import (
     AtualizarVendas)
 from preencherModulos.utils import db_inserir_uma_linha
+from atualizarModulos.utils import txt_fundo_amarelo
 
 from config.constants import FUSO, DB
-from config.conexao_api import ConectaAPI
-from config.conexao_db import ConectaDB
 
 from colorama import Back, Style
 from datetime import datetime
 import logging
-import pytz
 
 log = logging.getLogger('root')
 
 
 def atualizar_modulos():
     """Preenche todos os módulos."""
-    fuso = pytz.timezone("America/Sao_Paulo")
-
-    log.info("Configura conexão com API")
-    env_api = EnvValores().env_api()
-    api = ConectaAPI(env_api)  # Carrega as variáveis de ambiente necessárias
-
-    log.info("Configura conexão com banco de dados")
-    env_db = EnvValores().env_db()
-    db = ConectaDB(env_db)  # Carrega as variáveis de ambiente necessárias
-
-    log.info("Obtém nome de todas tabelas")
-    tabelas_colunas = db.cria_dict_tabelas_colunas()
-
     # Inicia conexão com Banco de Dados
     log.info('Inicia atualização')
     with DB.conectar_ao_banco() as conn:
 
         log.info("Começa atualizar contatos.")
         AtualizarContatos().atualizar_modulo_contatos(conn)
-                                                                         api,
-                                                                         fuso)
         log.info("Comita contatos")
         conn.commit()
 
         log.info("Começa a atualizar produtos.")
-        AtualizarProdutos(tabelas_colunas, db).atualizar_modulo_produtos(conn,
-                                                                         api,
-                                                                         fuso)
+        AtualizarProdutos().atualizar_modulo_produtos(conn)
         log.info("Comita produtos")
         conn.commit()
 
         log.info("Começa atualizar contas a receber.")
-        AtualizarContas(tabelas_colunas, db).atualizar_modulo_contas(conn, api,
-                                                                     fuso)
+        AtualizarContas().atualizar_modulo_contas(conn)
         log.info("Comita contas a receber")
         conn.commit()
 
         log.info("Começa atualizar pedidos de venda.")
-        AtualizarVendas(tabelas_colunas, db).atualizar_modulo_vendas(conn, api,
-                                                                     fuso)
+        AtualizarVendas().atualizar_modulo_vendas(conn)
         log.info("Comita vendas")
         conn.commit()
 
         agora = datetime.now(FUSO)
         db_inserir_uma_linha(
-            tabela="atualizacoes_modulos", db=db, conn=conn,
+            tabela="atualizacoes_modulos", db=DB, conn=conn,
             colunas=["datetime"], valores={"datetime": agora})
         conn.commit()
 
-    print(Back.YELLOW + f'Atualizado {agora}' + Style.RESET_ALL)
+    txt_fundo_amarelo(f'Atualizado {agora}')
     log.info(f"Atualizado {agora}")
 
 

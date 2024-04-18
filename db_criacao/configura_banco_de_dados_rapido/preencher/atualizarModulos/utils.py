@@ -131,9 +131,7 @@ def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
 
 def solicita_novos_ids(param, tabela_busca, coluna, conn):
     """Solicita ID a API, compara com os ids do banco de dados. Devolve new."""
-    ids_api = api_pega_todos_id_verifica_db(
-        api=API, db=DB, param=param, tabela_busca=tabela_busca,
-        coluna=coluna, colunas_retorno=coluna, conn=conn)
+    ids_api = api_pega_todos_id_verifica_db(param, tabela_busca, coluna, conn)
 
     ids_db = db_pega_varios_elementos(tabela_busca, coluna, DB, conn)
     ids_db = [item[coluna] for item in ids_db]
