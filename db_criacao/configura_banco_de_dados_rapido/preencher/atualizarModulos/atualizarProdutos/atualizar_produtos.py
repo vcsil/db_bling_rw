@@ -184,16 +184,19 @@ class AtualizarProdutos():
                                                         conn)
         ids_produtos_prontos = [linha["id_bling"] for linha
                                 in ids_produtos_prontos]
+
+        ids_produtos_nao_incluidos = [item["id"] for item
+                                      in produtos_nao_incluidos]
+
         log.info(f"Passará por {len(produtos_nao_incluidos)} produtos, novame")
         for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca"):
             if prod_variacao["id"] in ids_produtos_prontos:
+                ids_produtos_nao_incluidos.remove(prod_variacao["id"])
                 continue
             insere_segunda_tentativa(TABELAS_COLUNAS, prod_variacao, FUSO, API,
                                      DB, conn)
 
-        produtos_nao_incluidos = [item["id"] for item
-                                  in produtos_nao_incluidos]
-        txt_amarelo(f"Produtos não incluidos: {produtos_nao_incluidos}")
+        txt_amarelo(f"Produtos não incluidos: {ids_produtos_nao_incluidos}")
 
     def atualiza_valores_produtos(self, conn):
         """Busca por produtos que foram alterado na data definida."""
