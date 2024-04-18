@@ -7,10 +7,10 @@ Created on Thu Mar 21 14:14:32 2024.
 """
 from atualizarModulos.atualizar_modulos import atualizar_modulos
 from temporizador_funcao import agendar_tarefa
+from config.constants import FUSO
 
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
-from pytz import timezone
 import logging
 import sys
 
@@ -23,8 +23,7 @@ def main():
 
     formatter = logging.Formatter(log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j')
     # Configura o fuso horário
-    formatter.converter = lambda *args: datetime.now(
-        tz=timezone('America/Sao_Paulo')).timetuple()
+    formatter.converter = lambda *args: datetime.now(tz=FUSO).timetuple()
     # Criando o RotatingFileHandler com tamanho máximo 2MB
     handler = RotatingFileHandler('meu_log_atualizar.txt', backupCount=2,
                                   maxBytes=2*1024*1024)
@@ -37,6 +36,7 @@ def main():
     logger.addHandler(handler)
 
     atualiza = True
+    atualizar_modulos()
     while atualiza:
         try:
             agendar_tarefa()

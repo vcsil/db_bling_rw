@@ -74,6 +74,7 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas,
         "transporte_id_contato": t_contato if bool(t_contato) else None,
         "transporte_id_etiqueta": _modifica_insere_etiqueta(
             transporte["etiqueta"], tabelas_colunas, conn, db),
+        "alterado_em": None,
     }
     log.info("Insere pedido de venda")
 

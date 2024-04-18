@@ -66,15 +66,13 @@ def solicita_ids_produtos(api) -> list:
     """Solicita e retorna o ID de todos os produtos (excluidos inclusos)."""
     # Pega todos produtos
     ids_produtos = api_pega_todos_id(api, '/produtos?criterio=5&tipo=T&')
-    # Pega produtos excluidos
-    ids_produtos += api_pega_todos_id(api, '/produtos?criterio=4&tipo=T&')
-    ids_produtos.sort()
     # Pega variações de produtos
     ids_variacoes = api_pega_todos_id(api, '/produtos?criterio=5&tipo=V&')
-    ids_variacoes.sort()
 
     # Remover as ids das variações
     ids_produtos = list(set(ids_produtos) - set(ids_variacoes))
+    ids_produtos.sort()
+
     return ids_produtos
 
 
@@ -329,7 +327,8 @@ def _modifica_produto_estoque(saldos: dict):
             "id_produto": saldos["produto"]["id"],
             "id_deposito": saldos["depositos"][idx]["id"],
             "saldo_fisico": saldos["depositos"][idx]["saldoFisico"],
-            "saldo_virtual": saldos["depositos"][idx]["saldoVirtual"]
+            "saldo_virtual": saldos["depositos"][idx]["saldoVirtual"],
+            "alterado_em": None
         }
         list_produto_estoque.append(produto_estoque)
     return list_produto_estoque

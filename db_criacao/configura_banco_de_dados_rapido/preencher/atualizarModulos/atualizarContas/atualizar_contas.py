@@ -10,17 +10,19 @@ from preencherModulos.preencherContas.utils_contas import (
     solicita_formas_pagamento, solicita_categeoria, solicita_conta,
     solicita_vendedor)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, api_pega_todos_id, db_inserir_uma_linha,
-    db_pega_varios_elementos)
+    db_inserir_varias_linhas, db_inserir_uma_linha, db_pega_varios_elementos)
 
-from atualizarModulos.utils import solicita_novos_ids, solicita_item_novos
+from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
+                                    txt_fundo_verde, db_verifica_se_existe,
+                                    item_com_valores_atualizados,
+                                    db_atualizar_uma_linha)
 
-from colorama import Back, Style
-from datetime import datetime
+from config.constants import API, DB, FUSO, TABELAS_COLUNAS
+from datetime import datetime, date
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=- Atualizar Tabela Contas =-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -28,198 +30,182 @@ log = logging.getLogger('root')
 class AtualizarContas():
     """Atualiza módulo de contas."""
 
-    def __init__(self, tabelas_colunas, db):
-        self.tabelas_colunas = tabelas_colunas
-        self.db = db
+    def __init__(self):
+        pass
 
-    def atualizar_contas_situacao(self, tabela, conn, id_situacao):
-        """Atualiza a tabela produtos_tipos da database."""
+    def _atualizar_contas_situacao(self, conn, id_situacao):
+        """Atualiza a tabela contas_situacao da database."""
         log.info(f"Atualiza situação contas receber com id {id_situacao}")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        valores = {"id": id_situacao, "nome": str(id_situacao)}
+        tabela = "contas_situacao"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        valor = {"id": id_situacao, "nome": str(id_situacao)}
 
-    def atualizar_tipos_pagamento(self, tabela, conn, id_tipo_pag):
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+
+    def _atualizar_tipos_pagamento(self, conn, id_tipo_pag):
         """Atualiza a tabela produtos_tipos da database."""
         log.info(f"Atualiza tipos de pagamento {id_tipo_pag}")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        valores = {"id": id_tipo_pag, "nome": str(id_tipo_pag)}
+        tabela = "tipos_pagamento"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        valor = {"id": id_tipo_pag, "nome": str(id_tipo_pag)}
 
-    def atualizar_formas_pagamento_padrao(self, tabela, conn, id_fp_padrao):
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+
+    def _atualizar_formas_pagamento_padrao(self, conn, id_fp_padrao):
         """Atualiza a tabela formas_pagamento_padrao da database."""
         log.info(f"Atualiza padrões de pagamento {id_fp_padrao}")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        valores = {"id": id_fp_padrao, "nome": str(id_fp_padrao)}
+        tabela = "formas_pagamento_padrao"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        valor = {"id": id_fp_padrao, "nome": str(id_fp_padrao)}
 
-    def atualizar_formas_pagamento_destino(self, tabela, conn, id_fp_destino):
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+
+    def _atualizar_formas_pagamento_destino(self, conn, id_fp_destino):
         """Atualiza a tabela formas_pagamento_destino da database."""
         log.info(f"Atualiza destino de pagamento {id_fp_destino}")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        valores = {"id": id_fp_destino, "nome": str(id_fp_destino)}
+        tabela = "formas_pagamento_destino"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        valor = {"id": id_fp_destino, "nome": str(id_fp_destino)}
 
-    def atualizar_formas_pagamento_finalidade(self, tabela, conn, if_fp_fin):
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+
+    def _atualizar_formas_pagamento_finalidade(self, conn, if_fp_fin):
         """Atualiza a tabela formas_pagamento_finalidade da database."""
         log.info(f"Insere finalidade de pagamento {if_fp_fin}")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        valores = {"id": if_fp_fin, "nome": str(if_fp_fin)}
+        tabela = "formas_pagamento_finalidade"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        valor = {"id": if_fp_fin, "nome": str(if_fp_fin)}
 
-    def atualizar_formas_pagamento(self, tabela: str, conn, api):
+        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+
+    def atualizar_formas_pagamento(self, conn):
         """Atualiza a tabela formas_pagamento da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "formas_pagamento"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        ids_formas_pagamento = solicita_novos_ids(
-            param="/formas-pagamentos?", tabela_busca=tabela,
-            coluna_busca="id_bling", coluna_retorno="id_bling", conn=conn,
-            api=api, db=self.db)
+        PARAM = "/formas-pagamentos?"
+        ids_formas_pagamento = solicita_novos_ids(PARAM, tabela, "id_bling",
+                                                  conn)
 
         if len(ids_formas_pagamento) == 0:
             return
 
-        print(Back.GREEN + f"Insere {len(ids_formas_pagamento)} formas pag."
-              + Style.RESET_ALL)
-        ROTA = '/formas-pagamentos/'
+        txt_fundo_verde(f"Insere {len(ids_formas_pagamento)} formas pag.")
         log.info(f"Passará por {len(ids_formas_pagamento)} formas pagamentos")
-        for idFormaPagamento in tqdm(ids_formas_pagamento,
-                                     desc="Busca formas pag."):
+
+        ROTA = "/formas-pagamentos/"
+        for idFormaPagamento in tqdm(ids_formas_pagamento, "Busca formas pag"):
             log.info(f"Solicita dados da forma pag {idFormaPagamento} na API")
             forma_pagamento = solicita_formas_pagamento(
-                rota=ROTA+f"{idFormaPagamento}", api=api)
+                ROTA+f"{idFormaPagamento}", API)
 
-            log.info("Insere formas de pagamento")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=forma_pagamento,
-                db=self.db,  conn=conn)
+            db_inserir_uma_linha(tabela, colunas, forma_pagamento, DB, conn)
 
         log.info("Fim de atualizar formas de pagamento")
 
-    def atualizar_contas_contabeis(self, tabela: str, conn, api):
+    def atualizar_contas_contabeis(self, conn):
         """Atualiza a tabela contas_contabeis da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "contas_contabeis"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         PARAM = "/contas-contabeis"
-        contas_contabeis = solicita_item_novos(
-            param=PARAM, tabela=tabela, colunas_retorno="id_bling", conn=conn,
-            api=api, db=self.db)
+        contas_contabeis = solicita_item_novos(PARAM, tabela, "id_bling", conn)
 
         if len(contas_contabeis) == 0:
             return
 
-        print(Back.GREEN + f"Insere {len(contas_contabeis)} contas bancarias."
-              + Style.RESET_ALL)
+        txt_fundo_verde(f"Insere {len(contas_contabeis)} contas bancarias.")
         log.info(f"Passará por {len(contas_contabeis)} contas bancarias")
+
         for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis"):
             c_contabel["id_bling"] = c_contabel.pop("id")
             c_contabel["nome"] = c_contabel.pop("descricao")
 
             log.info(f"Insere conta {c_contabel['id_bling']} no banco")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=c_contabel,
-                db=self.db,  conn=conn)
+            db_inserir_uma_linha(tabela, colunas, c_contabel, DB, conn)
         log.info("Contas contáveis inseridas")
 
-    def atualizar_categorias_receitas_despesas_tipo(self, tabela, conn, id_tp):
+    def _atualizar_categorias_receitas_despesas_tipo(self, conn, id_tp):
         """Atualiza a tabela categorias_receitas_despesas_tipo da database."""
         log.info("Atualiza tipos de categorias")
-        colunas = self.tabelas_colunas[tabela][:]
+
+        tabela = "categorias_receitas_despesas_tipo"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = {"id": id_tp, "nome": str(id_tp)}
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        return db_inserir_uma_linha(tabela, colunas, valores, DB, conn)
 
-    def atualizar_categorias_receitas_despesas(self, tabela: str, conn, api):
+    def atualizar_categorias_receitas_despesas(self, conn):
         """Atualiza a tabela categorias_receitas_despesas da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "categorias_receitas_despesas"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         PARAM = "/categorias/receitas-despesas?&tipo=0&situacao=0&"
-        ids_categorias = solicita_novos_ids(
-            param=PARAM, tabela_busca=tabela, coluna_busca="id_bling",
-            coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
+        ids_categorias = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
 
         if len(ids_categorias) == 0:
             return
 
-        print(Back.GREEN + f"Insere {len(ids_categorias)} categorias contas."
-              + Style.RESET_ALL)
-        ROTA = '/categorias/receitas-despesas/'
+        txt_fundo_verde(f"Insere {len(ids_categorias)} categorias contas.")
         log.info(f"Passará por {len(ids_categorias)} categorias")
+
+        ROTA = "/categorias/receitas-despesas/"
         list_relacao_categoria = []
         for idCategoria in tqdm(ids_categorias, desc="Busca categorias"):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
-            rel, categoria = solicita_categeoria(rota=ROTA+f"{idCategoria}",
-                                                 api=api)
+            rel, categoria = solicita_categeoria(ROTA+f"{idCategoria}", API)
 
             log.info("Insere categoria")
-            db_inserir_uma_linha(tabela=tabela, colunas=colunas, db=self.db,
-                                 valores=categoria, conn=conn)
+            db_inserir_uma_linha(tabela, colunas, categoria, DB, conn)
 
             # Pegando informações sobre relação da categoria
             if rel:
                 list_relacao_categoria.append(rel)
 
         log.info(f"Insere {len(list_relacao_categoria)} relacoes de categoria")
-        print(f"Insere {len(list_relacao_categoria)} relacoes de categoria")
+
         tab_relacao = "categorias_receitas_despesas_relacao"
-        colunas_relacao = self .tabelas_colunas[tab_relacao][:]
+        colunas_relacao = TABELAS_COLUNAS[tab_relacao][:]
         colunas_relacao.remove("id")
-        db_inserir_varias_linhas(tabela=tab_relacao,
-                                 colunas=colunas_relacao, conn=conn,
-                                 db=self.db, valores=list_relacao_categoria)
+        db_inserir_varias_linhas(tab_relacao, colunas_relacao,
+                                 list_relacao_categoria, DB, conn)
 
         log.info("Termina de atualizar categorias receitas despesas")
 
-    def atualizar_contas_tipo_ocorrencia(self, tabela, conn, id_cto):
+    def _atualizar_contas_tipo_ocorrencia(self, conn, id_cto):
         """Atualiza a tabela contas_tipo_ocorrencia da database."""
         log.info("Atualiza tipos de ocorrência de contas")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        valores = {"id": id_cto, "nome": str(id_cto)}
+        tabela = "contas_tipo_ocorrencia"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
-        log.info("Fim de atualizar tipos de ocorrência de contas")
+        valor = {"id": id_cto, "nome": str(id_cto)}
 
-    def atualizar_vendedores(self, tabela: str, conn, api):
+        return db_inserir_varias_linhas(tabela, colunas, valor, DB, conn)
+
+    def atualizar_vendedores(self, conn):
         """Atualiza a tabela vendedores da database."""
-        colunas = self.tabelas_colunas[tabela][:]
-        ids_vendedores_api = api_pega_todos_id(
-            api, "/vendedores?situacaoContato=A&")
-        ids_vendedores_api += api_pega_todos_id(
-            api, "/vendedores?situacaoContato=I&")
-        ids_vendedores_api += api_pega_todos_id(
-            api, "/vendedores?situacaoContato=S&")
-        ids_vendedores_api += api_pega_todos_id(
-            api, "/vendedores?situacaoContato=E&")
+        log.info("Inicia atualização dos vendedores")
 
-        ids_vendedores_db = db_pega_varios_elementos(
-            tabela_busca=tabela, colunas_retorno="id_bling",
-            db=self.db, conn=conn)
+        tabela = "vendedores"
+        colunas = TABELAS_COLUNAS[tabela][:]
+
+        ROTA = "/vendedores?situacaoContato=T&"
+        ids_vendedores_api = solicita_novos_ids(ROTA, tabela, "id_bling", conn)
+
+        ids_vendedores_db = db_pega_varios_elementos(tabela, "id_bling", DB,
+                                                     conn)
         ids_vendedores_db = [item["id_bling"] for item in ids_vendedores_db]
 
         ids_vendedores = list(
@@ -229,38 +215,33 @@ class AtualizarContas():
         if len(ids_vendedores) == 0:
             return
 
-        print(Back.GREEN + f"Insere {len(ids_vendedores)} vendedores."
-              + Style.RESET_ALL)
-        ROTA = "/vendedores/"
+        txt_fundo_verde(f"Insere {len(ids_vendedores)} vendedores.")
         log.info(f"Passará por {len(ids_vendedores)} vendedores")
+
+        ROTA = "/vendedores/"
         for idVendedor in tqdm(ids_vendedores, desc="Busca vendedores"):
             log.info(f"Solicita vendedor {idVendedor} na API")
-            conta = solicita_vendedor(rota=ROTA+f"{idVendedor}", api=api)
+            conta = solicita_vendedor(ROTA+f"{idVendedor}", API)
 
             log.info("Insere conta")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=conta,
-                db=self.db,  conn=conn)
+            db_inserir_uma_linha(tabela, colunas, conta, DB, conn)
 
-        log.info("Fim de preencher contas receitas despesas")
-
-    def atualizar_contas_receitas_despesas(self, tabela: str, conn, api, fuso):
+    def atualizar_contas_receitas_despesas(self, conn):
         """Atualiza a tabela contas_receitas_despesas da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        log.info("Inicia atualização de contas receitas despesas")
 
-        hoje = str(datetime.now(fuso).date())
+        tabela = "contas_receitas_despesas"
+        colunas = TABELAS_COLUNAS[tabela][:]
+
+        hoje = str(datetime.now(FUSO).date())
 
         PARAM = "/contas/receber?"
         PARAM += f"tipoFiltroData=E&dataInicial={hoje}&dataFinal={hoje}&"
-        contas_receber = solicita_novos_ids(
-            param=PARAM, tabela_busca=tabela, coluna_busca="id_bling",
-            coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
+        contas_receber = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
 
         PARAM = "/contas/pagar?"
         PARAM += f"dataEmissaoInicial={hoje}&dataEmissaoFinal={hoje}&"
-        contas_pagar = solicita_novos_ids(
-            param=PARAM, tabela_busca=tabela, coluna_busca="id_bling",
-            coluna_retorno="id_bling", conn=conn, api=api, db=self.db)
+        contas_pagar = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
 
         ids_contas = [contas_receber, contas_pagar]
 
@@ -268,48 +249,61 @@ class AtualizarContas():
             return
 
         ROTA = ["/contas/receber/", "/contas/pagar/"]
-        for idx in tqdm(range(len(ROTA)), desc="Busca contas", position=0):
-            print(
-                Back.GREEN +
-                f"Insere {len(ids_contas[idx])} {ROTA[idx]}."
-                + Style.RESET_ALL)
-            for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}",
-                                leave=True, position=1):
+        for idx in tqdm(range(len(ROTA)), desc="Busca contas"):
+            txt_fundo_verde(f"Insere {len(ids_contas[idx])} {ROTA[idx]}.")
+
+            for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}"):
                 log.info(f"Solicita dados da conta {idConta} na API")
-                conta = solicita_conta(rota=ROTA[idx]+f"{idConta}", api=api,
-                                       conn=conn, db=self.db, fuso=fuso,
-                                       tabelas_colunas=self.tabelas_colunas)
+
+                conta_existe = db_verifica_se_existe(tabela, "id_bling",
+                                                     idConta, conn)
+
+                conta = solicita_conta(ROTA[idx]+f"{idConta}", API,
+                                       TABELAS_COLUNAS, conn, DB, FUSO)
+
+                parametros = ['vencimento', 'data_emissao',
+                              'vencimento_original', 'competencia']
+                for p in parametros:
+                    data = conta[p].split("-")
+                    conta[p] = date(int(data[0]), int(data[1]), int(data[2]))
+
+                if conta_existe:
+                    conta_modificada = item_com_valores_atualizados(conta,
+                                                                    tabela,
+                                                                    "id_bling",
+                                                                    conn)
+                    if conta_modificada:
+                        db_atualizar_uma_linha(tabela, colunas,
+                                               conta_modificada,
+                                               "id_bling", idConta, conn)
+                        continue
+                    else:
+                        continue
 
                 log.info("Insere conta")
-                db_inserir_uma_linha(
-                    tabela=tabela, colunas=colunas, valores=conta,
-                    db=self.db,  conn=conn)
+                db_inserir_uma_linha(tabela, colunas, conta, DB, conn)
             conn.commit()
 
         log.info("Fim de preencher contas receitas despesas")
 
-    def atualizar_modulo_contas(self, conn, api, fuso):
+    def atualizar_modulo_contas(self, conn):
         """Atualizar módulo de contas."""
         log.info("Inicio")
 
         log.info("Inicio atualizar formas_pagamento")
-        self.atualizar_formas_pagamento(
-            tabela="formas_pagamento", conn=conn, api=api)
+        self.atualizar_formas_pagamento(conn)
 
         log.info("Inicio atualizar contas_contabeis")
-        self.atualizar_contas_contabeis(
-            tabela="contas_contabeis", conn=conn, api=api)
+        self.atualizar_contas_contabeis(conn)
 
         log.info("Inicio atualizar categorias_receitas_despesas")
-        self.atualizar_categorias_receitas_despesas(
-            tabela="categorias_receitas_despesas", conn=conn, api=api)
+        self.atualizar_categorias_receitas_despesas(conn)
 
         log.info("Inicio atualizar vendedores")
-        self.atualizar_vendedores(tabela="vendedores", conn=conn, api=api)
+        self.atualizar_vendedores(conn)
 
         log.info("Inicio atualizar contas_receitas_despesas")
-        self.atualizar_contas_receitas_despesas(
-            tabela="contas_receitas_despesas", conn=conn, api=api, fuso=fuso)
+        self.atualizar_contas_receitas_despesas(conn)
 
         log.info("Fim atualizar contas")
 

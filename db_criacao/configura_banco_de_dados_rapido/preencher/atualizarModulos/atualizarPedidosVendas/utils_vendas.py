@@ -15,6 +15,7 @@ from atualizarModulos.utils import (db_verifica_se_existe,
                                     db_atualizar_uma_linha,
                                     item_com_valores_atualizados)
 
+from config.constants import API, DB, FUSO, TABELAS_COLUNAS
 from datetime import datetime
 import logging
 
@@ -23,28 +24,25 @@ log = logging.getLogger('root')
 # =-=-=-=-=-=-=-=-=- Funções utéis para preencher vendas. =-=-=-=-=-=-=-=-=-=
 
 
-def solicita_preenche_venda(rota: str, tabelas_colunas, api, conn, db, fuso):
+def solicita_preenche_venda(rota: str, conn):
     """Solicita a conta e retorna os dados da conta manipulados."""
-    venda = api.solicita_na_api(rota)['data']
+    venda = API.solicita_na_api(rota)['data']
 
-    _verifica_contato(venda["contato"]["id"], tabelas_colunas,
-                      api, db, conn, fuso)
-    existe_venda = db_verifica_se_existe(
-        tabela_busca="vendas", coluna_busca="id_bling", conn=conn, db=db,
-        valor_busca=venda["id"], colunas_retorno="id_bling")
+    id_contato = venda["contato"]["id"]
+    _verifica_contato(id_contato, TABELAS_COLUNAS, API, DB, conn, FUSO)
+    existe_venda = db_verifica_se_existe("vendas", "id_bling", venda["id"],
+                                         conn)
 
     log.info("Manipula dados de venda")
-    _modifica_insere_valores_vendas(venda, tabelas_colunas, existe_venda, conn,
-                                    db, api, fuso)
+    _modifica_insere_valores_vendas(venda, existe_venda, conn)
 
-    _modifica_insere_volumes(venda, existe_venda, conn, db)
+    _modifica_insere_volumes(venda, existe_venda, conn)
     _modifica_insere_itens_produtos(venda["itens"], venda["id"], existe_venda,
-                                    conn, db)
-    _modifica_insere_parcelas(venda, existe_venda, conn, db)
+                                    conn)
+    _modifica_insere_parcelas(venda, existe_venda, conn)
 
 
-def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, existe,
-                                    conn, db, api, fuso):
+def _modifica_insere_valores_vendas(venda: dict, existe, conn):
     dataPrevista = venda["dataPrevista"]
     numeroLoja = venda["numeroLoja"]
     numeroPedidoCompra = venda["numeroPedidoCompra"]
@@ -86,8 +84,7 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, existe,
         "transporte_prazo_entrega": transporte["prazoEntrega"],
         "transporte_id_contato": t_contato if bool(t_contato) else None,
         "transporte_id_etiqueta": _modifica_insere_etiqueta(
-            transporte["etiqueta"], tabelas_colunas, existe, venda["id"], conn,
-            db),
+            transporte["etiqueta"], existe, venda["id"], conn),
         "alterado_em": None
     }
     log.info("Insere pedido de venda")
@@ -95,38 +92,35 @@ def _modifica_insere_valores_vendas(venda: dict, tabelas_colunas, existe,
     if existe:
         valores_venda.pop("data")
         valores_venda.pop("alterado_em")
-        valores_venda_att = item_com_valores_atualizados(
-            item_api=valores_venda, tabela="vendas", coluna_busca="id_bling",
-            api=api, db=db, conn=conn, fuso=fuso)
+        valores_venda_att = item_com_valores_atualizados(valores_venda,
+                                                         "vendas", "id_bling",
+                                                         conn)
 
         if valores_venda_att:
-            db_atualizar_uma_linha(
-                tabela="vendas", colunas=list(valores_venda_att.keys()),
-                valores=valores_venda_att, coluna_filtro=["id_bling"],
-                valor_filtro=valores_venda["id_bling"], db=db, conn=conn)
+            db_atualizar_uma_linha("vendas", list(valores_venda_att.keys()),
+                                   valores_venda_att, ["id_bling"],
+                                   valores_venda["id_bling"], conn)
     else:
-        db_inserir_uma_linha(tabela="vendas", valores=valores_venda, conn=conn,
-                             colunas=list(valores_venda.keys()), db=db)
+        db_inserir_uma_linha("vendas", list(valores_venda.keys()),
+                             valores_venda, DB, conn)
 
 
-def _modifica_insere_etiqueta(etiqueta: dict, tabelas_colunas, existe,
-                              id_venda, conn, db):
+def _modifica_insere_etiqueta(etiqueta: dict, existe, id_venda, conn):
     log.info("Insere etiqueta de transporte da venda")
     etiqueta["nomePais"] = "Brasil"
     if possui_informacao(etiqueta):
-        id_pais = verifica_preenche_valor(
-            tabela_busca='endereco_paises', coluna_busca='nome',
-            valor_busca=etiqueta["nomePais"], db=db, conn=conn,
-            list_colunas=tabelas_colunas["endereco_paises"])
-        endereco = manipula_dados_endereco(
-            etiqueta, id_pais, db, conn, tabelas_colunas)
+        id_pais = verifica_preenche_valor('endereco_paises', 'nome',
+                                          etiqueta["nomePais"],
+                                          TABELAS_COLUNAS["endereco_paises"],
+                                          conn=conn, db=DB)
+        endereco = manipula_dados_endereco(etiqueta, id_pais, DB, conn,
+                                           TABELAS_COLUNAS)
 
         # Inserir na tabela enderecos
         valores = list(endereco.values())
         colunas = list(endereco.keys())
-        id_endereco = verifica_preenche_valor(
-            tabela_busca="enderecos", coluna_busca=colunas, db=db,
-            valor_busca=valores, conn=conn, list_colunas=["id"]+colunas)
+        id_endereco = verifica_preenche_valor("enderecos", colunas, valores,
+                                              ["id"]+colunas, DB, conn)
 
         nome = etiqueta["nome"]
         valores_etiqueta = {
@@ -135,22 +129,24 @@ def _modifica_insere_etiqueta(etiqueta: dict, tabelas_colunas, existe,
         }
 
         if existe:
-            dict_transporte = db_pega_um_elemento(
-                tabela_busca="vendas", coluna_busca="id_bling",
-                valor_busca=[id_venda], db=db, conn=conn,
-                colunas_retorno="transporte_id_etiqueta")
+            dict_transporte = db_pega_um_elemento("vendas", "id_bling",
+                                                  [id_venda],
+                                                  "transporte_id_etiqueta",
+                                                  DB, conn)
             return dict_transporte["transporte_id_etiqueta"]
         else:
-            return db_inserir_uma_linha(
-                tabela="transporte_etiqueta", valores=valores_etiqueta,
-                colunas=list(valores_etiqueta.keys()), db=db, conn=conn)["id"]
+            return db_inserir_uma_linha("transporte_etiqueta",
+                                        list(valores_etiqueta.keys()),
+                                        valores_etiqueta, DB, conn)["id"]
 
     else:
         return None
 
 
-def _modifica_insere_volumes(venda: dict, existe, conn, db):
+def _modifica_insere_volumes(venda: dict, existe, conn):
     log.info("Insere volumes da venda")
+
+    tabela = "transporte_volumes"
     volumes = venda["transporte"]["volumes"]
     if len(volumes) > 0:
         id_venda = venda["id"]
@@ -162,21 +158,25 @@ def _modifica_insere_volumes(venda: dict, existe, conn, db):
                 "codigo_rastreamento": volume["codigoRastreamento"]
             }
 
+            valor_filtro = valores_etiqueta["id_bling"]
             if existe:
-                db_atualizar_uma_linha(
-                    tabela="transporte_volumes", coluna_filtro=["id_bling"],
-                    colunas=list(valores_etiqueta.keys()),
-                    valores=valores_etiqueta, db=db, conn=conn,
-                    valor_filtro=valores_etiqueta["id_bling"])
+                db_atualizar_uma_linha(tabela,
+                                       colunas=list(valores_etiqueta.keys()),
+                                       valores=valores_etiqueta,
+                                       coluna_filtro=["id_bling"],
+                                       valor_filtro=valor_filtro,
+                                       conn=conn)
             else:
-                db_inserir_uma_linha(
-                    tabela="transporte_volumes", valores=valores_etiqueta,
-                    colunas=list(valores_etiqueta.keys()), db=db, conn=conn)
+                db_inserir_uma_linha(tabela,
+                                     colunas=list(valores_etiqueta.keys()),
+                                     valores=valores_etiqueta, db=DB,
+                                     conn=conn)
 
 
 def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int, existe,
-                                    conn, db):
+                                    conn):
     log.info("Insere produtos da venda")
+    tabela = "vendas_itens_produtos"
 
     if len(venda_itens) > 0:
         for item in venda_itens:
@@ -191,23 +191,22 @@ def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int, existe,
             }
 
             if existe:
-                db_atualizar_uma_linha(
-                    tabela="vendas_itens_produtos",
-                    colunas=list(obj_item.keys()), valores=obj_item, db=db,
-                    coluna_filtro="id_bling", conn=conn,
-                    valor_filtro=obj_item["id_bling"])
+                db_atualizar_uma_linha(tabela, colunas=list(obj_item.keys()),
+                                       valores=obj_item,
+                                       coluna_filtro="id_bling",
+                                       valor_filtro=obj_item["id_bling"],
+                                       conn=conn)
             else:
-                db_inserir_uma_linha(
-                    tabela="vendas_itens_produtos", db=db, conn=conn,
-                    colunas=list(obj_item.keys()), valores=obj_item)
+                db_inserir_uma_linha(tabela, colunas=list(obj_item.keys()),
+                                     valores=obj_item, db=DB, conn=conn)
 
 
-def _modifica_insere_parcelas(venda: dict, existe, conn, db):
+def _modifica_insere_parcelas(venda: dict, existe, conn):
     log.info("Insere parcelas da venda")
     venda_parcelas = venda["parcelas"]
 
     if len(venda_parcelas) > 0:
-        contas = _busca_conta_receber(venda, conn, db)
+        contas = _busca_conta_receber(venda, conn)
 
         id_venda = venda["id"]
         for parcela in venda_parcelas:
@@ -237,17 +236,19 @@ def _modifica_insere_parcelas(venda: dict, existe, conn, db):
             }
 
             if existe:
-                db_atualizar_uma_linha(
-                    tabela="parcelas", colunas=list(obj_parcela.keys()),
-                    valores=obj_parcela, coluna_filtro=["id_bling"],
-                    valor_filtro=obj_parcela["id_bling"], db=db, conn=conn)
+                db_atualizar_uma_linha(tabela="parcelas",
+                                       colunas=list(obj_parcela.keys()),
+                                       valores=obj_parcela,
+                                       coluna_filtro=["id_bling"],
+                                       valor_filtro=obj_parcela["id_bling"],
+                                       conn=conn)
             else:
-                db_inserir_uma_linha(
-                    tabela="parcelas", colunas=list(obj_parcela.keys()),
-                    valores=obj_parcela, db=db, conn=conn)
+                db_inserir_uma_linha(tabela="parcelas",
+                                     colunas=list(obj_parcela.keys()),
+                                     valores=obj_parcela, db=DB, conn=conn)
 
 
-def _busca_conta_receber(venda: dict, conn, db):
+def _busca_conta_receber(venda: dict, conn):
     filtro = f"WHERE vencimento_original='{venda['data']}' "
     filtro += f"AND id_vendedor={venda['vendedor']['id']} "
     filtro += f"AND id_contato={venda['contato']['id']} AND historico LIKE "
@@ -255,9 +256,9 @@ def _busca_conta_receber(venda: dict, conn, db):
 
     colunas_retorno = ["id_bling", "valor", "id_portador"]
 
-    return db_pega_varios_elementos_controi_filtro(
-        tabela_busca="contas_receitas_despesas", filtro=filtro,
-        colunas_retorno=colunas_retorno, db=db, conn=conn)
+    tabela = "contas_receitas_despesas"
+    return db_pega_varios_elementos_controi_filtro(tabela, filtro,
+                                                   colunas_retorno, DB, conn)
 
 
 if __name__ == "__main__":
