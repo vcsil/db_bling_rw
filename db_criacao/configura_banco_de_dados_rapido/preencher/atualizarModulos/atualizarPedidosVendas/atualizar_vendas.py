@@ -11,9 +11,9 @@ from preencherModulos.utils import (
 
 from atualizarModulos.atualizarPedidosVendas.utils_vendas import (
     solicita_preenche_venda)
-from atualizarModulos.utils import solicita_item_novos
+from atualizarModulos.utils import solicita_item_novos, txt_fundo_verde
 
-from colorama import Back, Style
+from config.constants import API, DB, FUSO, TABELAS_COLUNAS
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -26,123 +26,114 @@ log = logging.getLogger('root')
 class AtualizarVendas():
     """Atualiza módulo de produtos."""
 
-    def __init__(self, tabelas_colunas, db):
-        self.tabelas_colunas = tabelas_colunas
-        self.db = db
+    def __init__(self):
+        pass
 
-    def atualizar_modulos(self, tabela: str, conn, api):
+    def atualizar_modulos(self, conn):
         """Atualiza a tabela modulos da database."""
         log.info("Atualiza módulos")
-        colunas = self.tabelas_colunas[tabela][:]
+
+        tabela = "modulos"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         PARAM = "/situacoes/modulos"
-        modulos = solicita_item_novos(
-            param=PARAM, tabela=tabela, colunas_retorno="id_bling", conn=conn,
-            api=api, db=self.db)
+        modulos = solicita_item_novos(PARAM, tabela, "id_bling", conn)
 
         list_ids_modulos = []
 
         if len(modulos) == 0:
             return []
 
-        print(Back.GREEN + f"Insere {len(modulos)} módulos pedidos."
-              + Style.RESET_ALL)
+        txt_fundo_verde(f"Insere {len(modulos)} módulos pedidos.")
         log.info(f"Passará por {len(modulos)} módulos")
+
         for modulo in tqdm(modulos, desc="Salva modulos"):
             modulo["id_bling"] = modulo.pop("id")
             modulo["criar_situacoes"] = modulo.pop("criarSituacoes")
             list_ids_modulos.append(modulo["id_bling"])
 
             log.info(f"Insere módulo {modulo['id_bling']} no banco de dados")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=modulo,
-                db=self.db,  conn=conn)
-        log.info("Módulos inseridos")
+            db_inserir_uma_linha(tabela, colunas, modulo, DB, conn)
+
         return list_ids_modulos
 
-    def atualizar_situacoes(self, ids_modulos: list, tabela: str, conn, api):
+    def atualizar_situacoes(self, ids_modulos: list, conn):
         """Atualiza a tabela situacoes da database."""
         log.info("Atualiza situacoes")
-        colunas = self.tabelas_colunas[tabela][:]
+
+        tabela = "situacoes"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         # Pega os módulos novos e os já salvos
-        ids_modulos_db = db_pega_varios_elementos(
-            tabela_busca="modulos", colunas_retorno="id_bling",
-            conn=conn, db=self.db)
+        ids_modulos_db = db_pega_varios_elementos("modulos", "id_bling", DB,
+                                                  conn)
         ids_modulos += [item["id_bling"] for item in ids_modulos_db]
 
         log.info(f"Passará por {len(ids_modulos)} módulos")
         for id_modulo in tqdm(ids_modulos, desc="Modulo de pedidos"):
             PARAM = f"/situacoes/modulos/{id_modulo}"
-            situacoes = solicita_item_novos(
-                param=PARAM, tabela=tabela, colunas_retorno="id_bling",
-                conn=conn, api=api, db=self.db)
+            situacoes = solicita_item_novos(PARAM, tabela, "id_bling", conn)
 
             if len(situacoes) == 0:
                 continue
 
-            print(Back.GREEN + f"Insere {len(situacoes)} situações."
-                  + Style.RESET_ALL)
+            txt_fundo_verde(f"Insere {len(situacoes)} situações.")
             log.info(f"Passará por {len(situacoes)} situações")
+
             for situacao in situacoes:
                 situacao["id_bling"] = situacao.pop("id")
                 situacao["id_modulo"] = id_modulo
                 situacao.pop("idHerdado")
 
                 log.info(f"Insere situacao {situacao['id_bling']}")
-                db_inserir_uma_linha(
-                    tabela=tabela, colunas=colunas, valores=situacao,
-                    db=self.db,  conn=conn)
+                db_inserir_uma_linha(tabela, colunas, situacao, DB, conn)
+
         log.info("Situações atualizadas")
 
-    def atualizar_transporte_frete_por_conta_de(self, tabela, conn, id_trans):
-        """Atualiza a tabela produtos_formatos da database."""
+    def _atualizar_transporte_frete_por_conta_de(self, conn, id_trans):
+        """Atualiza a tabela transporte_frete_por_conta_de da database."""
         log.info("Atualiza transporte frete por conta de")
-        colunas = self.tabelas_colunas[tabela][:]
 
-        valores = {"id": id_trans, "nome": str(id_trans)}
+        tabela = "transporte_frete_por_conta_de"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
-        db_inserir_uma_linha(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
-        log.info("Termina de inserir transporte frete por conta de")
+        valor = {"id": id_trans, "nome": str(id_trans)}
 
-    def atualizar_pedidos_vendas(self, tabela: str, conn, api, fuso):
+        db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+
+    def atualizar_pedidos_vendas(self, conn):
         """Atualiza a tabela vendas da database."""
-        hoje = str(datetime.now(fuso).date())
+        hoje = str(datetime.now(FUSO).date())
         PARAM = f"/pedidos/vendas?dataAlteracaoInicial={hoje}&"
-        ids_vendas_alter = api_pega_todos_id(api, PARAM)
+        ids_vendas_alter = api_pega_todos_id(API, PARAM)
         ids_vendas_alter.sort()
 
         if len(ids_vendas_alter) == 0:
             return
 
-        print(Back.GREEN + f"Insere/altera {len(ids_vendas_alter)} pedidos."
-              + Style.RESET_ALL)
+        txt_fundo_verde(f"Insere/altera {len(ids_vendas_alter)} pedidos.")
+
         ROTA = "/pedidos/vendas/"
         for id_venda in tqdm(ids_vendas_alter, desc="Busca pedidos de vendas"):
             log.info(f"Solicita dados da venda {id_venda} na API")
-            solicita_preenche_venda(
-                rota=ROTA+f"{id_venda}", api=api, conn=conn, db=self.db,
-                tabelas_colunas=self.tabelas_colunas, fuso=fuso)
+
+            solicita_preenche_venda(ROTA+f"{id_venda}", conn)
             conn.commit()
 
         log.info("Fim de atualizar pedido de venda")
 
-    def atualizar_modulo_vendas(self, conn, api, fuso):
+    def atualizar_modulo_vendas(self, conn):
         """Atualizar módulo de produtos."""
         log.info("Inicio atualização vendas")
 
         log.info("Inicio atualizar modulos")
-        modulos = self.atualizar_modulos(tabela="modulos", conn=conn, api=api)
+        modulos = self.atualizar_modulos(conn)
 
         log.info("Inicio atualizar situações")
-        self.atualizar_situacoes(tabela="situacoes", ids_modulos=modulos,
-                                 api=api, conn=conn)
+        self.atualizar_situacoes(modulos, conn)
 
         log.info("Inicio atualizar vendas")
-        self.atualizar_pedidos_vendas(tabela="vendas", conn=conn, api=api,
-                                      fuso=fuso)
+        self.atualizar_pedidos_vendas(conn)
 
         log.info("Fim produtos")
 
