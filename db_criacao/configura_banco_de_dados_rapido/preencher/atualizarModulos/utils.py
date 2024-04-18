@@ -203,15 +203,22 @@ def txt_fundo_verde(text):
 
 
 def txt_fundo_azul(text):
-    """Imprime uma mensagem com fundo verde no console."""
+    """Imprime uma mensagem com fundo azul no console."""
     print(Back.BLUE + text + Style.RESET_ALL)
     log.info(text)
     return
 
 
 def txt_amarelo(text):
-    """Imprime uma mensagem com fundo verde no console."""
+    """Imprime uma mensagem com texto amarelo no console."""
     print(Fore.YELLOW + text + Style.RESET_ALL)
+    log.info(text)
+    return
+
+
+def txt_fundo_amarelo(text):
+    """Imprime uma mensagem com fundo amarelo no console."""
+    print(Back.YELLOW + text + Style.RESET_ALL)
     log.info(text)
     return
 
