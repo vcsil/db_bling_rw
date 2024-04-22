@@ -13,7 +13,7 @@ from preencherModulos.preencherPedidosVendas.utils_vendas import (
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 # =-=-=-=-=-=-=-=-=-=-=-=-= Preencher Tabela Contatos =-=-=-=-=-=-=-=-=-=-=-=-=
 
@@ -21,14 +21,13 @@ log = logging.getLogger('root')
 class PreencherVendas():
     """Preenche módulo de produtos."""
 
-    def __init__(self, tabelas_colunas, db):
-        self.tabelas_colunas = tabelas_colunas
-        self.db = db
+    def __init__(self):
+        pass
 
     def preencher_modulos(self, tabela: str, conn, api):
         """Preenche a tabela modulo da database."""
         colunas = self.tabelas_colunas[tabela][:]
-        modulos = api.solicita_na_api('/situacoes/modulos')['data']
+        modulos = api.solicita_na_api("/situacoes/modulos")["data"]
         list_ids_modulos = []
 
         log.info(f"Passará por {len(modulos)} módulos")
@@ -51,7 +50,7 @@ class PreencherVendas():
         log.info(f"Passará por {len(ids_modulos)} módulos")
         for id_modulo in tqdm(ids_modulos, desc="Modulo"):
             situacoes = api.solicita_na_api(f"/situacoes/modulos/{id_modulo}")
-            situacoes = situacoes['data']
+            situacoes = situacoes["data"]
 
             log.info(f"Passará por {len(situacoes)} situações")
             for situacao in situacoes:
@@ -70,15 +69,15 @@ class PreencherVendas():
         colunas = self.tabelas_colunas[tabela][:]
 
         valores = [
-            {"id": '0',
-             "nome": 'Contratação do Frete por conta do Remetente (CIF) '},
-            {"id": '1',
-             "nome": 'Contratação do Frete por conta do Destinatário (FOB)'},
-            {"id": '2', "nome": 'Contratação do Frete por conta de Terceiros'},
-            {"id": '3', "nome": 'Transporte Próprio por conta do Remetente'},
-            {"id": '4',
-             "nome": 'Transporte Próprio por conta do Destinatário'},
-            {"id": '9', "nome": 'Sem Ocorrência de Transporte'},
+            {"id": "0",
+             "nome": "Contratação do Frete por conta do Remetente (CIF) "},
+            {"id": "1",
+             "nome": "Contratação do Frete por conta do Destinatário (FOB)"},
+            {"id": "2", "nome": "Contratação do Frete por conta de Terceiros"},
+            {"id": "3", "nome": "Transporte Próprio por conta do Remetente"},
+            {"id": "4",
+             "nome": "Transporte Próprio por conta do Destinatário"},
+            {"id": "9", "nome": "Sem Ocorrência de Transporte"},
         ]
 
         log.info("Insere transporte frete por conta de")
@@ -101,7 +100,7 @@ class PreencherVendas():
 
         log.info("Fim de preencher pedido de venda")
 
-    def preencher_modulo_vendas(self, conn, api, fuso):
+    def preencher_modulo_vendas(self, conn):
         """Preencher módulo de produtos."""
         log.info("Inicio preenchimento vendas")
 
