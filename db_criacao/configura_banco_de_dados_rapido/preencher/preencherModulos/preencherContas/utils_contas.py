@@ -5,17 +5,19 @@ Created on Thu Jan 11 00:48:45 2024.
 
 @author: vcsil
 """
+from config.constants import API
 from preencherModulos.utils import _verifica_contato
+
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 """Funções utéis para preencher produtos."""
 
 
-def solicita_formas_pagamento(rota: str, api):
+def solicita_formas_pagamento(rota: str):
     """Solicita e retorna os dados das formas de pagamento."""
-    forma_pag = api.solicita_na_api(rota)['data']
+    forma_pag = API.solicita_na_api(rota)["data"]
     log.info("Manipula dados da forma de pagamento")
     valores_forma_pagamento = _modifica_valores_formas_pagamento(forma_pag)
 
@@ -40,9 +42,9 @@ def _modifica_valores_formas_pagamento(forma_pag: dict):
     return valores_forma_pagamento
 
 
-def solicita_categeoria(rota: str, api):
+def solicita_categeoria(rota: str):
     """Solicita a categoria e retorna os dados e a relação pai/filho."""
-    categoria = api.solicita_na_api(rota)['data']
+    categoria = API.solicita_na_api(rota)["data"]
     valores_categoria = _modifica_valores_categoria(categoria)
 
     log.info("Manipula dados da categoria")
@@ -66,9 +68,9 @@ def _modifica_valores_categoria(categoria: dict):
     return valores_categoria
 
 
-def solicita_vendedor(rota: str, api):
+def solicita_vendedor(rota: str):
     """Solicita vendedor e retorna os dados manipulados."""
-    vendedor = api.solicita_na_api(rota)['data']
+    vendedor = API.solicita_na_api(rota)["data"]
     log.info("Manipula dados da forma de pagamento")
     valores_forma_pagamento = _modifica_valores_vendedor(vendedor)
 
@@ -88,11 +90,10 @@ def _modifica_valores_vendedor(vendedor: dict):
     return valores_vendedor
 
 
-def solicita_conta(rota: str, api, tabelas_colunas, conn, db, fuso):
+def solicita_conta(rota: str, conn):
     """Solicita a conta e retorna os dados da conta manipulados."""
-    conta = api.solicita_na_api(rota)['data']
-    _verifica_contato(id_contato=conta["contato"]["id"], api=api, conn=conn,
-                      tabelas_colunas=tabelas_colunas, db=db, fuso=fuso)
+    conta = API.solicita_na_api(rota)["data"]
+    _verifica_contato(conta["contato"]["id"], conn)
     log.info("Manipula dados da forma de pagamento")
     valores_forma_pagamento = _modifica_valores_conta(conta)
 
