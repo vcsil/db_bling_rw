@@ -5,16 +5,15 @@ Created on Thu Mar 21 16:12:39 2024.
 
 @author: vcsil
 """
-from preencherModulos.utils import (
-    db_inserir_uma_linha, db_inserir_varias_linhas)
+from preencherModulos.utils import (db_inserir_uma_linha,
+                                    db_inserir_varias_linhas)
 
-from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos, 
+from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
                                     txt_fundo_verde)
 from atualizarModulos.atualizarContatos.utils_contatos import (
     _verifica_atualiza_contato)
 
-from config.constants import DB, TABELAS_COLUNAS
-from colorama import Back, Style
+from config.constants import TABELAS_COLUNAS
 from tqdm import tqdm
 import logging
 
@@ -37,7 +36,7 @@ class AtualizarContatos():
 
         valor = {"nome": sigla, "sigla": sigla}
 
-        id_situacao = db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        id_situacao = db_inserir_uma_linha(tabela, colunas, valor, conn)
 
         return id_situacao
 
@@ -49,7 +48,7 @@ class AtualizarContatos():
 
         valor = {"nome": sigla, "sigla": sigla}
 
-        id_tipo = db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        id_tipo = db_inserir_uma_linha(tabela, colunas, valor, conn)
         return id_tipo
 
     def _atualizar_contatos_indicador_inscricao_estadual(self, tabela: str,
@@ -60,7 +59,7 @@ class AtualizarContatos():
 
         valor = {"id": id_iie, "nome": str(id_iie)}
 
-        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, conn)
 
     def atualizar_contatos_classificacao(self, conn):
         """Atualiza a tabela contatos_classificacao da database."""
@@ -78,7 +77,7 @@ class AtualizarContatos():
         valores = [{"id_bling": classi["id"], "nome": classi["descricao"]}
                    for classi in valores]
 
-        db_inserir_varias_linhas(tabela, colunas, valores, DB, conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         return
 
     def atualiza_contatos(self, conn):

@@ -17,15 +17,15 @@ import sys
 
 def main():
     """Executa programa."""
-    log_texto = '%(asctime)s; %(levelname)s;\t%(name)s;\t'
-    log_texto += '%(module)s; - %(funcName)s;'
-    log_texto += '\t%(message)s;'
+    log_texto = "%(asctime)s; %(levelname)s;\t%(name)s;\t"
+    log_texto += "%(module)s; - %(funcName)s;"
+    log_texto += "\t%(message)s;"
 
-    formatter = logging.Formatter(log_texto, datefmt='%d/%m/%Y %H:%M:%S,%j')
+    formatter = logging.Formatter(log_texto, datefmt="%d/%m/%Y %H:%M:%S,%j")
     # Configura o fuso horário
     formatter.converter = lambda *args: datetime.now(tz=FUSO).timetuple()
     # Criando o RotatingFileHandler com tamanho máximo 2MB
-    handler = RotatingFileHandler('meu_log_atualizar.txt', backupCount=2,
+    handler = RotatingFileHandler("meu_log_atualizar.txt", backupCount=2,
                                   maxBytes=2*1024*1024)
     handler.setFormatter(formatter)
     handler.setLevel(logging.DEBUG)
