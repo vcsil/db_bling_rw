@@ -33,7 +33,7 @@ class PreencherVendas():
         list_ids_modulos = []
 
         log.info(f"Passará por {len(modulos)} módulos")
-        for modulo in tqdm(modulos, desc="Salva modulos"):
+        for modulo in tqdm(modulos, desc="Salva modulos", position=1):
             modulo["id_bling"] = modulo.pop("id")
             modulo["criar_situacoes"] = modulo.pop("criarSituacoes")
             list_ids_modulos.append(modulo["id_bling"])
@@ -49,7 +49,7 @@ class PreencherVendas():
         colunas = TABELAS_COLUNAS[tabela][:]
 
         log.info(f"Passará por {len(ids_modulos)} módulos")
-        for id_modulo in tqdm(ids_modulos, desc="Modulo"):
+        for id_modulo in tqdm(ids_modulos, desc="Modulo", position=1):
             situacoes = API.solicita_na_api(f"/situacoes/modulos/{id_modulo}")
             situacoes = situacoes["data"]
 
@@ -91,7 +91,8 @@ class PreencherVendas():
         ids_vendas.sort()
 
         ROTA = "/pedidos/vendas/"
-        for idVenda in tqdm(ids_vendas, desc="Busca pedidos de vendas"):
+        for idVenda in tqdm(ids_vendas, desc="Busca pedidos de vendas",
+                            position=1):
             log.info(f"Solicita dados da venda {idVenda} na API")
             solicita_preenche_venda(rota=ROTA+f"{idVenda}", conn=conn)
 

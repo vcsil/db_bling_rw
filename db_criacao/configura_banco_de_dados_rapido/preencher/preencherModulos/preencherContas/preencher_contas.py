@@ -127,7 +127,8 @@ class PreencherContas():
 
         ROTA = "/formas-pagamentos/"
         log.info(f"Passará por {len(ids_formas_pagamento)} formas pagamentos")
-        for id_fp in tqdm(ids_formas_pagamento, desc="Busca formas pag."):
+        for id_fp in tqdm(ids_formas_pagamento, desc="Busca formas pag.",
+                          position=1):
             log.info(f"Solicita dados da forma pag {id_fp} na API")
             forma_pagamento = solicita_formas_pagamento(ROTA+f"{id_fp}")
 
@@ -143,7 +144,8 @@ class PreencherContas():
         contas_contabeis = API.solicita_na_api("/contas-contabeis")["data"]
 
         log.info(f"Passará por {len(contas_contabeis)} contas banarias")
-        for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis"):
+        for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis",
+                               position=1):
             c_contabel["id_bling"] = c_contabel.pop("id")
             c_contabel["nome"] = c_contabel.pop("descricao")
 
@@ -180,7 +182,8 @@ class PreencherContas():
         ROTA = "/categorias/receitas-despesas/"
         log.info(f"Passará por {len(ids_categorias)} categorias")
         list_relacao_categoria = []
-        for idCategoria in tqdm(ids_categorias, desc="Busca categorias"):
+        for idCategoria in tqdm(ids_categorias, desc="Busca categorias",
+                                position=1):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
             rel, categoria = solicita_categeoria(rota=ROTA+f"{idCategoria}")
 
@@ -240,7 +243,8 @@ class PreencherContas():
 
         ROTA = "/vendedores/"
         log.info(f"Passará por {len(ids_vendedores)} vendedores")
-        for idVendedor in tqdm(ids_vendedores, desc="Busca vendedores"):
+        for idVendedor in tqdm(ids_vendedores, desc="Busca vendedores",
+                               position=1):
             log.info(f"Solicita vendedor {idVendedor} na API")
             conta = solicita_vendedor(rota=ROTA+f"{idVendedor}")
 

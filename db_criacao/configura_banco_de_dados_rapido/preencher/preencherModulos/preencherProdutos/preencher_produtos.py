@@ -100,7 +100,8 @@ class PreencherProdutos():
         ROTA = "/categorias/produtos/"
         log.info(f"Passará por {len(ids_categorias)} categorias")
         list_relacao_categoria = []
-        for idCategoria in tqdm(ids_categorias, desc="Busca categorias"):
+        for idCategoria in tqdm(ids_categorias, desc="Busca categorias",
+                                position=1):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
             rel, categoria = solicita_categeoria(rota=ROTA+f"{idCategoria}")
 
@@ -128,7 +129,8 @@ class PreencherProdutos():
 
         ROTA = "/depositos/"
         log.info(f"Passará por {len(ids_depositos)} depositos")
-        for idDeposito in tqdm(ids_depositos, desc="Busca depositos"):
+        for idDeposito in tqdm(ids_depositos, desc="Busca depositos",
+                               position=1):
             log.info(f"Solicita dados do deposito {idDeposito} na API")
             deposito = solicita_deposito(rota=ROTA+f"{idDeposito}")
 
@@ -144,7 +146,7 @@ class PreencherProdutos():
         produtos_nao_incluidos = []
 
         log.info(f"Passará por {len(ids_produtos)} produtos")
-        for idProduto in tqdm(ids_produtos, desc="Busca produtos"):
+        for idProduto in tqdm(ids_produtos, desc="Busca produtos", position=1):
             log.info(f"Solicita dados do produto {idProduto} na API")
             variacoes, produto = solicita_produto(idProduto, conn,
                                                   inserir_produto=True)
@@ -165,7 +167,8 @@ class PreencherProdutos():
                 produto_insere_saldo_estoque(idProduto, conn)
 
         log.info(f"Passará por {len(produtos_nao_incluidos)} produtos, novame")
-        for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca"):
+        for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca",
+                                  position=1):
             insere_segunda_tentativa(prod_variacao, conn)
 
     def preencher_modulo_produtos(self, conn):

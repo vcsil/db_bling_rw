@@ -33,7 +33,7 @@ def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
     pagina = 0
 
     log.info(f"Pega os id's dos dados em {param} até encontrar um no banco")
-    barra_carregamento = tqdm(desc=f"Paginas de dados {param}")
+    barra_carregamento = tqdm(desc=f"Paginas de dados {param}", position=1)
     while True:
         pagina += 1
         param_completo = param + f"pagina={pagina}&limite=100"

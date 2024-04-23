@@ -472,7 +472,7 @@ class ConectaDB():
         db_tabelas = self.pega_nome_tabelas()
 
         texto_barra_carregar = "Pegando nome das colunas das tabelas"
-        for tabela in tqdm(db_tabelas, desc=texto_barra_carregar):
+        for tabela in tqdm(db_tabelas, desc=texto_barra_carregar, position=1):
             log.info(f"Pegando nome das colunas da tabela: {tabela}")
             tabelas_colunas[tabela] = self.pega_nome_colunas(tabela)
 

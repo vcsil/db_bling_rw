@@ -98,7 +98,8 @@ class AtualizarProdutos():
 
         ROTA = "/categorias/produtos/"
         list_relacao_categoria = []
-        for idCategoria in tqdm(ids_categorias, desc="Atualiza categorias"):
+        for idCategoria in tqdm(ids_categorias, desc="Atualiza categorias",
+                                position=1):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
             rel, categoria = solicita_categeoria(ROTA+f"{idCategoria}")
 
@@ -132,7 +133,8 @@ class AtualizarProdutos():
         log.info(f"Passará por {len(ids_depositos)} depositos")
 
         ROTA = "/depositos/"
-        for idDeposito in tqdm(ids_depositos, desc="Busca depositos"):
+        for idDeposito in tqdm(ids_depositos, desc="Busca depositos",
+                               position=1):
             deposito = solicita_deposito(ROTA+f"{idDeposito}")
 
             log.info(F"Insere deposito {idDeposito} NO db")
@@ -155,7 +157,7 @@ class AtualizarProdutos():
         log.info(f"Passará por {len(ids_produtos)} produtos")
 
         produtos_nao_incluidos = []
-        for idProduto in tqdm(ids_produtos, desc="Busca produtos"):
+        for idProduto in tqdm(ids_produtos, desc="Busca produtos", position=1):
             log.info(f"Solicita dados do produto {idProduto} na API")
             variacoes, produto = solicita_produto(idProduto, conn,
                                                   inserir_produto=True)
@@ -185,7 +187,8 @@ class AtualizarProdutos():
                                       in produtos_nao_incluidos]
 
         log.info(f"Passará por {len(produtos_nao_incluidos)} produtos, novame")
-        for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca"):
+        for prod_variacao in tqdm(produtos_nao_incluidos, desc="Repete busca",
+                                  position=1):
             if prod_variacao["id"] in ids_produtos_prontos:
                 ids_produtos_nao_incluidos.remove(prod_variacao["id"])
                 continue
@@ -210,7 +213,8 @@ class AtualizarProdutos():
 
         txt_fundo_azul(f"Atualiza {len(ids_produtos_alterado)} produtos")
 
-        for idProduto in tqdm(ids_produtos_alterado, desc="Atualiza produtos"):
+        for idProduto in tqdm(ids_produtos_alterado, desc="Atualiza produtos",
+                              position=1):
             log.info(f"Atualiza o produto: {idProduto}.")
             # Verifica se ele já existe no banco de dados
             produto_existe = db_verifica_se_existe(tabela, "id_bling",
@@ -267,13 +271,15 @@ class AtualizarProdutos():
         ids_att_estoque = [str(id_prod) for id_prod in ids_att_estoque]
         batchs = slice_array(ids_att_estoque, BATCH_SIZE)
 
-        for batch in tqdm(batchs, "Atualizando estoque de produtos"):
+        for batch in tqdm(batchs, "Atualizando estoque de produtos",
+                          position=1):
             query = "&idsProdutos[]="
             query = "idsProdutos[]=" + query.join(batch)
             param = "/estoques/saldos?" + query
             list_estoque_produtos = API.solicita_na_api(param)["data"]
 
-            for saldo_estoque in tqdm(list_estoque_produtos, "Att produtos."):
+            for saldo_estoque in tqdm(list_estoque_produtos, "Att produtos.",
+                                      position=1):
                 atualiza_estoque(saldo_estoque, conn)
 
         return

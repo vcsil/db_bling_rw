@@ -105,7 +105,8 @@ class AtualizarContas():
         log.info(f"Passará por {len(ids_formas_pagamento)} formas pagamentos")
 
         ROTA = "/formas-pagamentos/"
-        for idFormaPagamento in tqdm(ids_formas_pagamento, "Busca formas pag"):
+        for idFormaPagamento in tqdm(ids_formas_pagamento, "Busca formas pag",
+                                     position=1):
             log.info(f"Solicita dados da forma pag {idFormaPagamento} na API")
             forma_pagamento = solicita_formas_pagamento(
                 ROTA+f"{idFormaPagamento}")
@@ -128,7 +129,8 @@ class AtualizarContas():
         txt_fundo_verde(f"Insere {len(contas_contabeis)} contas bancarias.")
         log.info(f"Passará por {len(contas_contabeis)} contas bancarias")
 
-        for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis"):
+        for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis",
+                               position=1):
             c_contabel["id_bling"] = c_contabel.pop("id")
             c_contabel["nome"] = c_contabel.pop("descricao")
 
@@ -163,7 +165,8 @@ class AtualizarContas():
 
         ROTA = "/categorias/receitas-despesas/"
         list_relacao_categoria = []
-        for idCategoria in tqdm(ids_categorias, desc="Busca categorias"):
+        for idCategoria in tqdm(ids_categorias, desc="Busca categorias",
+                                position=1):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
             rel, categoria = solicita_categeoria(ROTA+f"{idCategoria}")
 
@@ -219,7 +222,8 @@ class AtualizarContas():
         log.info(f"Passará por {len(ids_vendedores)} vendedores")
 
         ROTA = "/vendedores/"
-        for idVendedor in tqdm(ids_vendedores, desc="Busca vendedores"):
+        for idVendedor in tqdm(ids_vendedores, desc="Busca vendedores",
+                               position=1):
             log.info(f"Solicita vendedor {idVendedor} na API")
             conta = solicita_vendedor(ROTA+f"{idVendedor}")
 
@@ -249,10 +253,11 @@ class AtualizarContas():
             return
 
         ROTA = ["/contas/receber/", "/contas/pagar/"]
-        for idx in tqdm(range(len(ROTA)), desc="Busca contas"):
+        for idx in tqdm(range(len(ROTA)), desc="Busca contas", position=1):
             txt_fundo_verde(f"Insere {len(ids_contas[idx])} {ROTA[idx]}.")
 
-            for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}"):
+            for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}",
+                                position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
 
                 conta_existe = db_verifica_se_existe(tabela, "id_bling",

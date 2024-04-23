@@ -94,7 +94,8 @@ class AtualizarContatos():
 
         txt_fundo_verde(f"Adciona {len(ids_contatos_novos)} contatos novos")
         t_desc = f"Adciona {len(ids_contatos_novos)} contatos novos"
-        for id_contato_novo in tqdm(ids_contatos_novos, desc=t_desc):
+        for id_contato_novo in tqdm(ids_contatos_novos, desc=t_desc,
+                                    position=1):
             _verifica_atualiza_contato(id_contato_novo, conn)
             conn.commit()
         return

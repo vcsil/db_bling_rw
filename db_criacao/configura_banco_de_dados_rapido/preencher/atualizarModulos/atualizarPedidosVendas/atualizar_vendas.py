@@ -47,7 +47,7 @@ class AtualizarVendas():
         txt_fundo_verde(f"Insere {len(modulos)} módulos pedidos.")
         log.info(f"Passará por {len(modulos)} módulos")
 
-        for modulo in tqdm(modulos, desc="Salva modulos"):
+        for modulo in tqdm(modulos, desc="Salva modulos", position=1):
             modulo["id_bling"] = modulo.pop("id")
             modulo["criar_situacoes"] = modulo.pop("criarSituacoes")
             list_ids_modulos.append(modulo["id_bling"])
@@ -69,7 +69,8 @@ class AtualizarVendas():
         ids_modulos += [item["id_bling"] for item in ids_modulos_db]
 
         log.info(f"Passará por {len(ids_modulos)} módulos")
-        for id_modulo in tqdm(ids_modulos, desc="Modulo de pedidos"):
+        for id_modulo in tqdm(ids_modulos, desc="Modulo de pedidos",
+                              position=1):
             PARAM = f"/situacoes/modulos/{id_modulo}"
             situacoes = solicita_item_novos(PARAM, tabela, "id_bling", conn)
 
@@ -113,7 +114,8 @@ class AtualizarVendas():
         txt_fundo_verde(f"Insere/altera {len(ids_vendas_alter)} pedidos.")
 
         ROTA = "/pedidos/vendas/"
-        for id_venda in tqdm(ids_vendas_alter, desc="Busca pedidos de vendas"):
+        for id_venda in tqdm(ids_vendas_alter, desc="Busca pedidos de vendas",
+                             position=1):
             log.info(f"Solicita dados da venda {id_venda} na API")
 
             solicita_preenche_venda(ROTA+f"{id_venda}", conn)

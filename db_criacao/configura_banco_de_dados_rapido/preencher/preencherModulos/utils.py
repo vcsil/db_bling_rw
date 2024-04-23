@@ -242,7 +242,7 @@ def api_pega_todos_id(param: str, pag_unica: bool = False) -> List[int]:
     pagina = 0
 
     log.info(f"Pega os id's de todos os dados em {param}")
-    barra_carregamento = tqdm(desc=f"Paginas de dados {param}")
+    barra_carregamento = tqdm(desc=f"Paginas de dados {param}", position=1)
     while tem_dados:
         pagina += 1
         param_completo = param + f"pagina={pagina}&limite=100"
