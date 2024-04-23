@@ -10,6 +10,7 @@ from preencherModulos.utils import (
 from preencherModulos.preencherPedidosVendas.utils_vendas import (
     solicita_preenche_venda)
 
+from config.constants import API, TABELAS_COLUNAS
 from tqdm import tqdm
 import logging
 
@@ -24,10 +25,11 @@ class PreencherVendas():
     def __init__(self):
         pass
 
-    def preencher_modulos(self, tabela: str, conn, api):
+    def preencher_modulos(self, conn):
         """Preenche a tabela modulo da database."""
-        colunas = self.tabelas_colunas[tabela][:]
-        modulos = api.solicita_na_api("/situacoes/modulos")["data"]
+        tabela = "modulos"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        modulos = API.solicita_na_api("/situacoes/modulos")["data"]
         list_ids_modulos = []
 
         log.info(f"Passará por {len(modulos)} módulos")
@@ -37,19 +39,18 @@ class PreencherVendas():
             list_ids_modulos.append(modulo["id_bling"])
 
             log.info(f"Insere módulo {modulo['id_bling']} no banco de dados")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=modulo,
-                db=self.db,  conn=conn)
+            db_inserir_uma_linha(tabela, colunas, modulo, conn)
         log.info("Módulos inseridos")
         return list_ids_modulos
 
-    def preencher_situacoes(self, ids_modulos: list, tabela: str, conn, api):
+    def preencher_situacoes(self, ids_modulos: list, conn):
         """Preenche a tabela situacoes da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "situacoes"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         log.info(f"Passará por {len(ids_modulos)} módulos")
         for id_modulo in tqdm(ids_modulos, desc="Modulo"):
-            situacoes = api.solicita_na_api(f"/situacoes/modulos/{id_modulo}")
+            situacoes = API.solicita_na_api(f"/situacoes/modulos/{id_modulo}")
             situacoes = situacoes["data"]
 
             log.info(f"Passará por {len(situacoes)} situações")
@@ -57,16 +58,16 @@ class PreencherVendas():
                 situacao["id_bling"] = situacao.pop("id")
                 situacao["id_modulo"] = id_modulo
                 situacao.pop("idHerdado")
+                print(situacao)
 
                 log.info(f"Insere situacao {situacao['id_bling']}")
-                db_inserir_uma_linha(
-                    tabela=tabela, colunas=colunas, valores=situacao,
-                    db=self.db,  conn=conn)
+                db_inserir_uma_linha(tabela, colunas, situacao, conn)
         log.info("Situações inseridas")
 
-    def preencher_transporte_frete_por_conta_de(self, tabela: str, conn):
+    def preencher_transporte_frete_por_conta_de(self, conn):
         """Preenche a tabela produtos_formatos da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "transporte_frete_por_conta_de"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": "0",
@@ -81,22 +82,18 @@ class PreencherVendas():
         ]
 
         log.info("Insere transporte frete por conta de")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Termina de inserir transporte frete por conta de")
 
-    def preencher_pedidos_vendas(self, tabela: str, conn, api, fuso):
+    def preencher_pedidos_vendas(self, conn):
         """Preenche a tabela vendas da database."""
-        ids_vendas = api_pega_todos_id(api, "/pedidos/vendas?")
+        ids_vendas = api_pega_todos_id("/pedidos/vendas?")
         ids_vendas.sort()
 
         ROTA = "/pedidos/vendas/"
         for idVenda in tqdm(ids_vendas, desc="Busca pedidos de vendas"):
             log.info(f"Solicita dados da venda {idVenda} na API")
-            solicita_preenche_venda(
-                rota=ROTA+f"{idVenda}", api=api, conn=conn, db=self.db,
-                tabelas_colunas=self.tabelas_colunas, fuso=fuso)
+            solicita_preenche_venda(rota=ROTA+f"{idVenda}", conn=conn)
 
         log.info("Fim de preencher pedido de venda")
 
@@ -105,19 +102,16 @@ class PreencherVendas():
         log.info("Inicio preenchimento vendas")
 
         log.info("Inicio preencher modulos")
-        modulos = self.preencher_modulos(tabela="modulos", conn=conn, api=api)
+        modulos = self.preencher_modulos(conn)
 
         log.info("Inicio preencher situações")
-        self.preencher_situacoes(tabela="situacoes", ids_modulos=modulos,
-                                 api=api, conn=conn)
+        self.preencher_situacoes(modulos, conn)
 
         log.info("Inicio preencher transporte_frete_por_conta_de")
-        self.preencher_transporte_frete_por_conta_de(
-            tabela="transporte_frete_por_conta_de", conn=conn)
+        self.preencher_transporte_frete_por_conta_de(conn)
 
         log.info("Inicio preencher vendas")
-        self.preencher_pedidos_vendas(tabela="vendas", conn=conn, api=api,
-                                      fuso=fuso)
+        self.preencher_pedidos_vendas(conn)
 
         log.info("Fim produtos")
 
