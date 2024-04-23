@@ -19,7 +19,7 @@ from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids,
     txt_fundo_verde, slice_array, txt_fundo_azul, txt_amarelo)
 
-from config.constants import DB, TABELAS_COLUNAS, API, FUSO
+from config.constants import TABELAS_COLUNAS, API, FUSO
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -45,7 +45,7 @@ class AtualizarProdutos():
 
         valor = {"nome": sigla, "sigla": sigla}
 
-        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, conn)
 
     def _atualiza_produtos_formatos(self, sigla, conn):
         """Atualiza a tabela produtos_formatos da database."""
@@ -57,7 +57,7 @@ class AtualizarProdutos():
 
         valor = {"nome": sigla, "sigla": sigla}
 
-        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, conn)
 
     def _atualiza_produtos_tipo_producao(self, sigla, conn):
         """Atualiza a tabela produtos_tipo_producao da database."""
@@ -69,7 +69,7 @@ class AtualizarProdutos():
 
         valor = {"nome": sigla, "sigla": sigla},
 
-        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, conn)
 
     def _atualiza_produtos_condicao(self, id_condicao, conn):
         """Atualiza a tabela produtos_condicao da database."""
@@ -80,7 +80,7 @@ class AtualizarProdutos():
 
         valor = {"id": id_condicao, "nome": str(id_condicao)},
 
-        return db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        return db_inserir_uma_linha(tabela, colunas, valor, conn)
 
     def _atualiza_produtos_categorias(self, conn):
         """Atualiza a tabela produtos_categorias da database."""
@@ -100,10 +100,10 @@ class AtualizarProdutos():
         list_relacao_categoria = []
         for idCategoria in tqdm(ids_categorias, desc="Atualiza categorias"):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
-            rel, categoria = solicita_categeoria(ROTA+f"{idCategoria}", API)
+            rel, categoria = solicita_categeoria(ROTA+f"{idCategoria}")
 
             log.info(f"Insere categoria {idCategoria}")
-            db_inserir_uma_linha(tabela, colunas, categoria, DB, conn)
+            db_inserir_uma_linha(tabela, colunas, categoria, conn)
 
             # Pegando informações sobre relação da categoria
             if rel:
@@ -112,7 +112,7 @@ class AtualizarProdutos():
         log.info("Insere relacoes das categorias")
         colunas_relacao = TABELAS_COLUNAS[tabela + "_relacao"][:]
         colunas_relacao.remove("id")
-        db_inserir_varias_linhas(tabela + "_relacao", colunas_relacao, db=DB,
+        db_inserir_varias_linhas(tabela + "_relacao", colunas_relacao,
                                  valores=list_relacao_categoria, conn=conn)
 
     def _atualiza_produtos_depositos(self, conn):
@@ -133,10 +133,10 @@ class AtualizarProdutos():
 
         ROTA = "/depositos/"
         for idDeposito in tqdm(ids_depositos, desc="Busca depositos"):
-            deposito = solicita_deposito(ROTA+f"{idDeposito}", API)
+            deposito = solicita_deposito(ROTA+f"{idDeposito}")
 
             log.info(F"Insere deposito {idDeposito} NO db")
-            db_inserir_uma_linha(tabela, colunas, deposito, DB, conn)
+            db_inserir_uma_linha(tabela, colunas, deposito, conn)
 
         log.info("Fim de atualizar produtos depositos")
 
@@ -157,8 +157,7 @@ class AtualizarProdutos():
         produtos_nao_incluidos = []
         for idProduto in tqdm(ids_produtos, desc="Busca produtos"):
             log.info(f"Solicita dados do produto {idProduto} na API")
-            variacoes, produto = solicita_produto(idProduto, TABELAS_COLUNAS,
-                                                  API, DB, conn, FUSO,
+            variacoes, produto = solicita_produto(idProduto, conn,
                                                   inserir_produto=True)
 
             # Se o produto não for Pai, será resolvido depois.
@@ -170,17 +169,14 @@ class AtualizarProdutos():
             # Lida com as variações do produto Pai
             if variacoes:
                 for variacao in variacoes:
-                    solicita_insere_variacao(variacao, TABELAS_COLUNAS,
-                                             idProduto, FUSO, DB, conn)
+                    solicita_insere_variacao(variacao, idProduto, conn)
 
-                    produto_insere_saldo_estoque(TABELAS_COLUNAS,
-                                                 variacao["id"], API, DB, conn)
+                    produto_insere_saldo_estoque(variacao["id"], conn)
             else:
-                produto_insere_saldo_estoque(TABELAS_COLUNAS,
-                                             idProduto, API, DB, conn)
+                produto_insere_saldo_estoque(idProduto, conn)
             conn.commit()
 
-        ids_produtos_prontos = db_pega_varios_elementos(tabela, "id_bling", DB,
+        ids_produtos_prontos = db_pega_varios_elementos(tabela, "id_bling",
                                                         conn)
         ids_produtos_prontos = [linha["id_bling"] for linha
                                 in ids_produtos_prontos]
@@ -193,8 +189,7 @@ class AtualizarProdutos():
             if prod_variacao["id"] in ids_produtos_prontos:
                 ids_produtos_nao_incluidos.remove(prod_variacao["id"])
                 continue
-            insere_segunda_tentativa(TABELAS_COLUNAS, prod_variacao, FUSO, API,
-                                     DB, conn)
+            insere_segunda_tentativa(prod_variacao, conn)
 
         txt_amarelo(f"Produtos não incluidos: {ids_produtos_nao_incluidos}")
 
@@ -208,7 +203,7 @@ class AtualizarProdutos():
         hoje = str(datetime.now(FUSO).date())
         param = "/produtos?criterio=1&tipo=P&"
         param += f"dataAlteracaoInicial={hoje}&dataAlteracaoFinal={hoje}&"
-        ids_produtos_alterado = api_pega_todos_id(api=API, param=param)
+        ids_produtos_alterado = api_pega_todos_id(param)
 
         if len(ids_produtos_alterado) == 0:
             return
@@ -230,9 +225,7 @@ class AtualizarProdutos():
                     db_atualizar_uma_linha(tabela, colunas, produto,
                                            ["id_bling"], [idProduto], conn)
             else:  # Manipula e insere
-                variacoes, produto = solicita_produto(idProduto,
-                                                      TABELAS_COLUNAS,
-                                                      API, DB, conn, FUSO,
+                variacoes, produto = solicita_produto(idProduto, conn,
                                                       inserir_produto=True)
 
             if variacoes:
@@ -246,26 +239,27 @@ class AtualizarProdutos():
                 if produto_existe:
                     atualizar_estoque_fornecedor(idProduto, conn)
                 else:
-                    produto_insere_saldo_estoque(TABELAS_COLUNAS, idProduto,
-                                                 API, DB, conn)
+                    produto_insere_saldo_estoque(idProduto, conn)
 
     def atualizar_estoque(self, conn):
         """Utiliado para atualizar a quantidade de produtos em estoque."""
         BATCH_SIZE = 271
 
         ids_p_db = db_pega_varios_elementos_controi_filtro(
-            tabela_busca="produtos", colunas_retorno=["id_bling"],
-            db=DB, conn=conn, filtro="WHERE situacao_produto='Inativo'")
+            tabela_busca="produtos",
+            filtro="WHERE situacao_produto='Inativo'",
+            colunas_retorno=["id_bling"], conn=conn)
         ids_produto_db = [int(linha["id_bling"]) for linha in ids_p_db]
 
         ids_p_db = db_pega_varios_elementos_controi_filtro(
-            tabela_busca="produtos", colunas_retorno=["id_bling"],
-            db=DB, conn=conn, filtro="WHERE situacao_produto='Excluido'")
+            tabela_busca="produtos",
+            filtro="WHERE situacao_produto='Excluido'",
+            colunas_retorno=["id_bling"], conn=conn)
         ids_produto_db += [int(linha["id_bling"]) for linha in ids_p_db]
 
         ids_pe_db = db_pega_varios_elementos(
             tabela_busca="produtos_estoques", colunas_retorno="id_produto",
-            db=DB, conn=conn)
+            conn=conn)
         ids_pe_db = [int(linha["id_produto"]) for linha in ids_pe_db]
 
         ids_att_estoque = list(set(ids_pe_db) - set(ids_produto_db))

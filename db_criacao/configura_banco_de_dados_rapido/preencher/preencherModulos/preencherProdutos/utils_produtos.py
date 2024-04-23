@@ -9,18 +9,19 @@ from preencherModulos.utils import (formata_data, verifica_preenche_valor,
                                     db_pega_um_elemento, db_inserir_uma_linha,
                                     db_inserir_varias_linhas,
                                     api_pega_todos_id)
+from config.constants import API, FUSO, TABELAS_COLUNAS
 
 from datetime import datetime
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 """Funções utéis para preencher produtos."""
 
 
-def solicita_categeoria(rota: str, api):
+def solicita_categeoria(rota: str):
     """Solicita a categoria e retorna os dados e a relação pai/filho."""
-    categoria = api.solicita_na_api(rota)['data']
+    categoria = API.solicita_na_api(rota)["data"]
     valores_categoria = _modifica_valores_categoria(categoria)
 
     log.info("Manipula dados da categoria")
@@ -42,9 +43,9 @@ def _modifica_valores_categoria(categoria: dict):
     return valores_categoria
 
 
-def solicita_deposito(rota: str, api):
+def solicita_deposito(rota: str):
     """Solicita o deposito na API."""
-    deposito = api.solicita_na_api(rota)['data']
+    deposito = API.solicita_na_api(rota)["data"]
     log.info("Manipula dados do deposito")
     valores_deposito = _modifica_valores_deposito(deposito)
 
@@ -55,19 +56,19 @@ def _modifica_valores_deposito(deposito: dict):
     valores_deposito = {
         "id_bling": deposito["id"],
         "descricao": deposito["descricao"],
-        "situacao": bool(deposito['situacao']),
-        "padrao": deposito['padrao'],
-        "desconsiderar_saldo": deposito['desconsiderarSaldo'],
+        "situacao": bool(deposito["situacao"]),
+        "padrao": deposito["padrao"],
+        "desconsiderar_saldo": deposito["desconsiderarSaldo"],
     }
     return valores_deposito
 
 
-def solicita_ids_produtos(api) -> list:
+def solicita_ids_produtos() -> list:
     """Solicita e retorna o ID de todos os produtos (excluidos inclusos)."""
     # Pega todos produtos
-    ids_produtos = api_pega_todos_id(api, '/produtos?criterio=5&tipo=T&')
+    ids_produtos = api_pega_todos_id("/produtos?criterio=5&tipo=T&")
     # Pega variações de produtos
-    ids_variacoes = api_pega_todos_id(api, '/produtos?criterio=5&tipo=V&')
+    ids_variacoes = api_pega_todos_id("/produtos?criterio=5&tipo=V&")
 
     # Remover as ids das variações
     ids_produtos = list(set(ids_produtos) - set(ids_variacoes))
@@ -76,52 +77,48 @@ def solicita_ids_produtos(api) -> list:
     return ids_produtos
 
 
-def solicita_produto(idProduto: int, tabelas_colunas: dict,
-                     api, db, conn, fuso, inserir_produto: bool = False):
+def solicita_produto(idProduto: int, conn, inserir_produto: bool = False):
     """Solicita o produto na API e pode inserir no banco de dados."""
-    produto = api.solicita_na_api("/produtos/"+str(idProduto))['data']
+    produto = API.solicita_na_api("/produtos/"+str(idProduto))["data"]
 
     # Se o produto for uma variação
     if ("variacao" in produto.keys()):
         return (produto, False)
 
     log.info("Manipula dados do produto")
-    valores_produto = _modifica_valores_produto(produto=produto, db=db,
-                                                conn=conn, fuso=fuso)
+    valores_produto = _modifica_valores_produto(produto, conn)
 
     # Se o produto tiver variações, vai enviar o dict das variações separado.
     if len(produto["variacoes"]) > 0:
         variacoes = produto["variacoes"]  # List de dicts com o formato do pai
 
         if inserir_produto:
-            _insere_produto(produto=valores_produto, db=db, conn=conn,
-                            colunas=tabelas_colunas['produtos'][:])
+            _insere_produto(valores_produto, TABELAS_COLUNAS["produtos"][:],
+                            conn)
 
         return (variacoes, valores_produto)
     else:
         if inserir_produto:
-            _insere_produto(produto=valores_produto, db=db, conn=conn,
-                            colunas=tabelas_colunas['produtos'][:])
+            _insere_produto(valores_produto, TABELAS_COLUNAS["produtos"][:],
+                            conn)
         return (False, valores_produto)
 
 
-def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
-    id_tipo_producao = _pega_tipo_producao(produto, db, conn)
+def _modifica_valores_produto(produto: dict, conn, id_pai=None):
+    id_tipo_producao = _pega_tipo_producao(produto, conn)
 
     valores_produto = {
         "id_bling": produto["id"],
         "nome": produto["nome"],
         "codigo": produto["codigo"],
         "preco": round(produto["preco"]*100),
-        "id_tipo_produto": db_pega_um_elemento(
-            tabela_busca="produtos_tipos", coluna_busca='sigla',
-            valor_busca=produto["tipo"], colunas_retorno=["id"],
-            db=db, conn=conn)["id"],
+        "id_tipo_produto": db_pega_um_elemento("produtos_tipos", "sigla",
+                                               produto["tipo"], ["id"],
+                                               conn)["id"],
         "situacao_produto": _formata_situacao_produto(produto["situacao"]),
-        "id_formato_produto": db_pega_um_elemento(
-            tabela_busca="produtos_formatos", coluna_busca='sigla',
-            valor_busca=produto["formato"], colunas_retorno=["id"],
-            db=db, conn=conn)["id"],
+        "id_formato_produto": db_pega_um_elemento("produtos_formatos", "sigla",
+                                                  produto["formato"], ["id"],
+                                                  conn)["id"],
         "id_produto_pai": id_pai,
         "descricao_curta": produto["descricaoCurta"],
         "data_validade": formata_data(produto["dataValidade"]),
@@ -144,29 +141,25 @@ def _modifica_valores_produto(produto: dict, db, conn, fuso, id_pai=None):
         "estoque_maximo": produto["estoque"]["maximo"],
         "estoque_crossdocking": produto["estoque"]["crossdocking"],
         "estoque_localizacao": produto["estoque"]["localizacao"],
-        "id_dimensoes": _formata_dimensoes(dimensoes_api=produto["dimensoes"],
-                                           db=db, conn=conn),
+        "id_dimensoes": _formata_dimensoes(produto["dimensoes"], conn),
         "ncm": produto["tributacao"]["ncm"],
         "cest": produto["tributacao"]["cest"],
-        "id_midia_principal": _formata_midia(
-            midias=produto["midia"], id_produto=produto["id"],
-            db=db, conn=conn),
-        "criado_em": datetime.now(fuso),
+        "id_midia_principal": _formata_midia(produto["midia"], produto["id"],
+                                             conn),
+        "criado_em": datetime.now(FUSO),
         "alterado_em": None
     }
     for chave, valor in valores_produto.items():
-        if (valor == ''):
+        if (valor == ""):
             valores_produto[chave] = None
 
     return valores_produto
 
 
-def _pega_tipo_producao(produto, db, conn):
+def _pega_tipo_producao(produto, conn):
     if "tipoProducao" in list(produto.keys()):
-        return db_pega_um_elemento(
-            tabela_busca="produtos_tipo_producao", coluna_busca='sigla',
-            valor_busca=produto["tipoProducao"], colunas_retorno=["id"],
-            db=db, conn=conn)["id"]
+        return db_pega_um_elemento("produtos_tipo_producao", "sigla",
+                                   produto["tipoProducao"], ["id"], conn)["id"]
     else:
         return None
 
@@ -181,7 +174,7 @@ def _formata_situacao_produto(situacao):
         return "Excluido"
 
 
-def _formata_dimensoes(dimensoes_api, db, conn):
+def _formata_dimensoes(dimensoes_api, conn):
     for key in dimensoes_api.keys():
         if key != "unidadeMedida":
             dimensoes_api[key] = round(dimensoes_api[key] * 100)
@@ -189,22 +182,20 @@ def _formata_dimensoes(dimensoes_api, db, conn):
     colunas[colunas.index("unidadeMedida")] = "unidade_medida"
     valores = list(dimensoes_api.values())
 
-    id_dimensao = verifica_preenche_valor(
-        tabela_busca="dimensoes", coluna_busca=colunas, valor_busca=valores,
-        list_colunas=['id']+colunas, db=db, conn=conn)
+    id_dimensao = verifica_preenche_valor("dimensoes", colunas, valores,
+                                          ["id"]+colunas, conn)
 
     return id_dimensao
 
 
-def _formata_midia(midias, id_produto, db, conn):
+def _formata_midia(midias, id_produto, conn):
     colunas = ["tipo", "url", "url_miniatura", "validade"]
 
     if midias["video"]["url"] != "":
         video = midias["video"]
         video = {"tipo": False, "url": video["url"], "url_miniatura": None,
                  "validade": None}
-        db_inserir_uma_linha(tabela="produtos_midias", colunas=colunas,
-                             valores=[video], db=db, conn=conn)
+        db_inserir_uma_linha("produtos_midias", colunas, [video], conn)
 
     imagens = midias["imagens"]
     midia_principal = False
@@ -213,56 +204,49 @@ def _formata_midia(midias, id_produto, db, conn):
             imagem = {"tipo": True, "url": obj_imagem["link"],
                       "url_miniatura": obj_imagem["linkMiniatura"],
                       "validade": obj_imagem["validade"]}
-            id_foto = db_inserir_uma_linha(
-                tabela="produtos_midias", colunas=colunas, valores=imagem,
-                db=db, conn=conn)["id"]
+            id_foto = db_inserir_uma_linha("produtos_midias", colunas, imagem,
+                                           conn)["id"]
 
             midia_relacao = {"id_produto": id_produto, "id_image": id_foto}
-            db_inserir_uma_linha(
-                tabela="produtos_midias_relacao", colunas=["id_produto", "id_image"],
-                valores=midia_relacao, db=db, conn=conn)
+            db_inserir_uma_linha("produtos_midias_relacao",
+                                 ["id_produto", "id_image"], midia_relacao,
+                                 conn)
             if not (midia_principal):
                 midia_principal = id_foto
 
     return midia_principal if midia_principal else None
 
 
-def _insere_produto(produto: dict, colunas: list, db, conn):
+def _insere_produto(produto: dict, colunas: list, conn):
     """Insere o produto manipulado no banco de dados."""
     log.info(f"Insere produto {produto['id_bling']} no banco de dados")
-    db_inserir_uma_linha(tabela="produtos", valores=produto, db=db, conn=conn,
-                         colunas=colunas)
+    db_inserir_uma_linha("produtos", colunas, produto, conn)
 
 
 def solicita_insere_variacao(
         dict_variacao: dict,
-        tabelas_colunas: dict,
         id_Pai: int,
-        fuso, db, conn):
+        conn):
     """Solicita produto variação na API, trata e insere no banco de dados."""
     log.info(f"Insere variacao {dict_variacao['id']}")
-    colunas_produtos = tabelas_colunas["produtos"][:]
+    colunas_produtos = TABELAS_COLUNAS["produtos"][:]
 
-    colunas_produto_variacao = tabelas_colunas["produto_variacao"][:]
-    colunas_produto_variacao.remove('id')
+    colunas_produto_variacao = TABELAS_COLUNAS["produto_variacao"][:]
+    colunas_produto_variacao.remove("id")
 
-    produto_variacao, produto = _solicita_variacao(variacao=dict_variacao,
-                                                   db=db, fuso=fuso, conn=conn,
-                                                   id_pai=id_Pai)
+    produto_variacao, produto = _solicita_variacao(dict_variacao, id_Pai, conn)
 
     log.info(f"Insere produto {dict_variacao['id']} no banco de dados")
-    db_inserir_uma_linha(tabela="produtos", colunas=colunas_produtos,
-                         valores=produto, db=db, conn=conn)
+    db_inserir_uma_linha("produtos", colunas_produtos, produto, conn)
 
     log.info("Insere produto_variacao")  # Outra tabela
-    db_inserir_uma_linha(tabela="produto_variacao", valores=produto_variacao,
-                         colunas=colunas_produto_variacao, db=db, conn=conn)
+    db_inserir_uma_linha("produto_variacao", colunas_produto_variacao,
+                         produto_variacao, conn)
 
 
-def _solicita_variacao(variacao: dict, id_pai: int, fuso, db, conn):
+def _solicita_variacao(variacao: dict, id_pai: int, conn):
     """Monta objeto variacao."""
-    valores_produto = _modifica_valores_produto(
-        produto=variacao, db=db, conn=conn, fuso=fuso, id_pai=id_pai)
+    valores_produto = _modifica_valores_produto(variacao, conn, id_pai)
 
     produto_variacao = _modifica_produto_variacao(variacao, id_pai)
     return (produto_variacao, valores_produto)
@@ -271,7 +255,7 @@ def _solicita_variacao(variacao: dict, id_pai: int, fuso, db, conn):
 def _modifica_produto_variacao(produto, id_pai):
     produto_variacao = {
         "id_produto_pai": id_pai,
-        "id_produto_filho": produto['id'],
+        "id_produto_filho": produto["id"],
         "nome": produto["variacao"]["nome"],
         "ordem": produto["variacao"]["ordem"],
         "clone_pai": produto["variacao"]["produtoPai"]["cloneInfo"]
@@ -279,43 +263,37 @@ def _modifica_produto_variacao(produto, id_pai):
     return produto_variacao
 
 
-def produto_insere_saldo_estoque(
-        tabelas_colunas: dict,
-        id_produto: int,
-        api, db, conn):
+def produto_insere_saldo_estoque(id_produto: int, conn):
     """Pega saldos da API e salva no banco de dados."""
     log.info("Insere saldos de estoque e fornecedor")
 
-    colunas_produto_estoques = tabelas_colunas["produtos_estoques"][:]
-    colunas_produto_estoques.remove('id')
+    colunas_produto_estoques = TABELAS_COLUNAS["produtos_estoques"][:]
+    colunas_produto_estoques.remove("id")
 
-    colunas_produto_forncdr = tabelas_colunas["produto_fornecedor"][:]
+    colunas_produto_forncdr = TABELAS_COLUNAS["produto_fornecedor"][:]
 
     produto_fornecedor, produtos_estoques = (
-        _solicita_estoque_fornecedor(id_produto=id_produto, api=api))
+        _solicita_estoque_fornecedor(id_produto))
 
-    db_inserir_varias_linhas(tabela="produtos_estoques", db=db, conn=conn,
-                             colunas=colunas_produto_estoques,
-                             valores=produtos_estoques)
-    db_inserir_varias_linhas(tabela="produto_fornecedor", db=db, conn=conn,
-                             colunas=colunas_produto_forncdr,
-                             valores=produto_fornecedor)
+    db_inserir_varias_linhas("produtos_estoques", colunas_produto_estoques,
+                             produtos_estoques, conn)
+    db_inserir_varias_linhas("produto_fornecedor", colunas_produto_forncdr,
+                             produto_fornecedor, conn)
 
 
-def _solicita_estoque_fornecedor(id_produto: int, api):
+def _solicita_estoque_fornecedor(id_produto: int):
     """Solicita saldo e estoque na api."""
     rota1 = "/estoques/saldos?idsProdutos[]=" + str(id_produto)
-    produto_estoque = api.solicita_na_api(rota1)['data'][0]
+    produto_estoque = API.solicita_na_api(rota1)["data"][0]
 
     log.info("Manipula dados dos produtos_estoques")
     saldo_produto = _modifica_produto_estoque(saldos=produto_estoque)
 
     rota2 = "/produtos/fornecedores?idProduto=" + str(id_produto)
-    produto_fornecedor = api.solicita_na_api(rota2)['data']
+    produto_fornecedor = API.solicita_na_api(rota2)["data"]
 
     log.info("Manipula dados dos produto_fornecedor")
-    fornecedor_produto = _modifica_produto_fornecedor(
-        fornecedor=produto_fornecedor)
+    fornecedor_produto = _modifica_produto_fornecedor(produto_fornecedor)
 
     return (fornecedor_produto, saldo_produto)
 
@@ -353,22 +331,19 @@ def _modifica_produto_fornecedor(fornecedor: dict):
     return list_produto_fornecedor
 
 
-def insere_segunda_tentativa(tabelas_colunas: dict, produto: int,
-                             fuso, api, db, conn):
+def insere_segunda_tentativa(produto: int, conn):
     """Trata produtos não inseridos de primeiros."""
     # Tira a variação do nome do produto
     nome_produto = " ".join([nome for nome in produto["nome"]
                              .split() if ":" not in nome])
     rota = f"/produtos?pagina=1&limite=1&tipo=C&nome={nome_produto}"
-    produto_pai = api.solicita_na_api(rota)["data"]
+    produto_pai = API.solicita_na_api(rota)["data"]
     if not produto_pai:
         rota = "/produtos?pagina=1&limite=1&tipo=PS&nome=Generico"
-        produto_pai = api.solicita_na_api(rota)["data"]
+        produto_pai = API.solicita_na_api(rota)["data"]
     id_Pai = produto_pai[0]["id"]
 
-    solicita_insere_variacao(
-        dict_variacao=produto, fuso=fuso, id_Pai=id_Pai,
-        tabelas_colunas=tabelas_colunas, db=db, conn=conn)
+    solicita_insere_variacao(produto, id_Pai, conn)
 
 
 if __name__ == "__main__":

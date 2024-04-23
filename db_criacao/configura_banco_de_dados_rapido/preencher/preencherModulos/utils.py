@@ -7,20 +7,20 @@ Created on Sun Dec 17 12:43:57 2023.
 """
 from config.erros.erros import EsqueceuPassarID
 
+from config.constants import API, DB, TABELAS_COLUNAS
 from typing import List, Dict, Union
 from datetime import datetime
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 """Funções utéis para preencher os módulos."""
 
 
 def db_inserir_varias_linhas(
     tabela: str,
-    colunas: Union[str, List[str]],
+    colunas: List[str],
     valores: List[Dict[str, Union[str, int]]],
-    db,
     conn
 ):
     """
@@ -30,8 +30,8 @@ def db_inserir_varias_linhas(
     ----------
     tabela : str
         Nome da tabela que vai receber os valores.
-    colunas : Union[str, List[str]]
-        Nome das colunas que vão receber os valores.
+    colunas : List[str]
+        Lista com nome(s) das colunas que vão receber os valores.
     valores : List[Dict[str, Union[str, int]]]
         Valores que serão inseridos, devem estar dentro de uma list de dict
         Exemplo: [{'id': 0, 'nome': 'a'}]
@@ -43,15 +43,13 @@ def db_inserir_varias_linhas(
     None.
 
     """
-    db.insert_many_in_db(
-        tabela=tabela, colunas=colunas, valores=valores, conn=conn)
+    DB.insert_many_in_db(tabela, colunas, valores, conn)
 
 
 def db_inserir_uma_linha(
     tabela: str,
     colunas: Union[str, List[str]],
     valores: List[Dict[str, Union[str, int]]],
-    db,
     conn
 ):
     """
@@ -61,8 +59,8 @@ def db_inserir_uma_linha(
     ----------
     tabela : str
         Nome da tabela que vai receber os valores.
-    colunas : Union[str, List[str]]
-        Nome das colunas que vão receber os valores.
+    colunas : List[str]
+        Lista de nome(s) das colunas que vão receber os valores.
     valores : List[Dict[str, Union[str, int]]]
         O valor inserido deve ser um dict
         Exemplo: {'id': 0, 'nome': 'a'}
@@ -74,8 +72,7 @@ def db_inserir_uma_linha(
     None.
 
     """
-    return db.insert_one_in_db(
-        tabela=tabela, colunas=colunas, valores=valores, conn=conn)
+    return DB.insert_one_in_db(tabela, colunas, valores, conn)
 
 
 def db_pega_um_elemento(
@@ -83,11 +80,10 @@ def db_pega_um_elemento(
         coluna_busca: Union[str, List[str]],
         valor_busca: Union[str, list],
         colunas_retorno: list,
-        db,
         conn
 ) -> Union[dict, None]:
     """
-    Utilizado para buscar um elemento que já existe.
+    Utilizado para buscar um elemento que já existe no banco de dados.
 
     Parameters
     ----------
@@ -120,9 +116,9 @@ def db_pega_um_elemento(
         valor_busca)
 
     try:
-        elemento_dict = db.select_one_from_db(
-            tabela=tabela_busca, colunas=colunas_retorno, conn=conn,
-            filtro=(coluna_busca, valor_busca))
+        elemento_dict = DB.select_one_from_db(tabela_busca, colunas_retorno,
+                                              conn,
+                                              (coluna_busca, valor_busca))
 
         return elemento_dict
     # Erro vai ser chamado ao tentar buscar uma elemento que não existe
@@ -135,7 +131,6 @@ def db_pega_um_elemento(
 def db_pega_varios_elementos(
         tabela_busca: str,
         colunas_retorno: list,
-        db,
         conn,
         coluna_busca: Union[str, List[str]] = None,
         valor_busca: Union[str, list] = None,
@@ -158,7 +153,7 @@ def db_pega_varios_elementos(
         O elemento que será utilizado como referência para a busca.
         Se a busca considerar mais de um valor, deve ser uma list.
         Exemplo: "F" ou [10, 9]
-    colunas_retorno : str
+    colunas_retorno :List[str]
         As respectivas colunas do objeto que será retornado.
         Exemplo: ["id", "nome", "sigla"].
     conn: connection
@@ -178,9 +173,8 @@ def db_pega_varios_elementos(
               else None)
 
     try:
-        elemento_dict = db.select_all_from_db(
-            tabela=tabela_busca, colunas=colunas_retorno, conn=conn,
-            filtro=filtro)
+        elemento_dict = DB.select_all_from_db(tabela_busca, colunas_retorno,
+                                              conn, filtro)
 
         return elemento_dict
     # Erro vai ser chamado ao tentar buscar uma elemento que não existe
@@ -194,11 +188,10 @@ def db_pega_varios_elementos_controi_filtro(
         tabela_busca: str,
         filtro: str,
         colunas_retorno: list,
-        db,
         conn
 ) -> dict:
     """
-    Utilizado para buscar varios elementos que já existem.
+    Utilizado para buscar varios elementos que já existem a partir de filtro.
 
     Parameters
     ----------
@@ -213,7 +206,6 @@ def db_pega_varios_elementos_controi_filtro(
         Exemplo: ["id", "nome", "sigla"].
     conn: connection
         Connection DB
-    db:
 
 
     Returns
@@ -223,9 +215,9 @@ def db_pega_varios_elementos_controi_filtro(
 
     """
     try:
-        elemento_dict = db.select_all_from_db_like_as(
-            tabela=tabela_busca, colunas=colunas_retorno, conn=conn,
-            filtro=filtro)
+        elemento_dict = DB.select_all_from_db_like_as(tabela_busca,
+                                                      colunas_retorno, conn,
+                                                      filtro)
 
         return elemento_dict
     # Erro vai ser chamado ao tentar buscar uma elemento que não existe
@@ -235,7 +227,7 @@ def db_pega_varios_elementos_controi_filtro(
         log.info(e)
 
 
-def api_pega_todos_id(api, param: str, pag_unica: bool = False) -> List[int]:
+def api_pega_todos_id(param: str, pag_unica: bool = False) -> List[int]:
     """
     Pega todos o ID de de um determinado canal da API.
 
@@ -250,17 +242,17 @@ def api_pega_todos_id(api, param: str, pag_unica: bool = False) -> List[int]:
     pagina = 0
 
     log.info(f"Pega os id's de todos os dados em {param}")
-    barra_carregamento = tqdm(desc=f'Paginas de dados {param}')
+    barra_carregamento = tqdm(desc=f"Paginas de dados {param}")
     while tem_dados:
         pagina += 1
-        param_completo = param + f'pagina={pagina}&limite=100'
+        param_completo = param + f"pagina={pagina}&limite=100"
 
-        dados_reduzido = api.solicita_na_api(param_completo)['data']
+        dados_reduzido = API.solicita_na_api(param_completo)["data"]
         # Retorna um list com os dados dentro de dict
 
         if (len(dados_reduzido)) > 0:
             for dados in dados_reduzido:
-                list_ids.append(dados['id'])
+                list_ids.append(dados["id"])
 
             barra_carregamento.update(1)
             if pag_unica:
@@ -286,7 +278,6 @@ def verifica_preenche_valor(
         coluna_busca: Union[str, List[str]],
         valor_busca: Union[str, List[str]],
         list_colunas,
-        db,
         conn,
         relacao_externa: Dict[str, int] = None
 ) -> int:
@@ -321,9 +312,8 @@ def verifica_preenche_valor(
     """
     # Procura ID do campo
     try:
-        campo_ja_existe = db_pega_um_elemento(
-            tabela_busca=tabela_busca, coluna_busca=coluna_busca, db=db,
-            valor_busca=valor_busca, colunas_retorno=list_colunas, conn=conn)
+        campo_ja_existe = db_pega_um_elemento(tabela_busca, coluna_busca,
+                                              valor_busca, list_colunas, conn)
 
         id_campo = _pega_valor_id_do_dict(campo_ja_existe)
 
@@ -342,9 +332,8 @@ def verifica_preenche_valor(
                                      for chave, valor
                                      in relacao_externa.items()}}
 
-        dados_inseridos = db_inserir_uma_linha(
-            tabela=tabela_busca, colunas=valores.keys(), valores=valores,
-            db=db, conn=conn)
+        dados_inseridos = db_inserir_uma_linha(tabela_busca, valores.keys(),
+                                               valores, conn)
 
         id_campo = _pega_valor_id_do_dict(dados_inseridos)
         return id_campo
@@ -352,7 +341,7 @@ def verifica_preenche_valor(
 
 def formata_data(data: str):
     """Formata data para o padrão do banco de dados."""
-    ano, mes, dia = data.split('-')
+    ano, mes, dia = data.split("-")
     if ano == "0000":
         return None
     else:
@@ -373,9 +362,7 @@ def possui_informacao(dict_dados: Dict[str, Union[str, int, None]]) -> bool:
 def manipula_dados_endereco(
         dict_endereco: Dict[str, str],
         id_pais: int,
-        db,
         conn,
-        tabelas_colunas
 ) -> Dict[str, Union[str, int]]:
     """
     Adequa os dados do endereço ao formato do banco de dados.
@@ -397,52 +384,50 @@ def manipula_dados_endereco(
 
     """
     log.info("Manipula dados contatos")
-    uf = ''.join(dict_endereco['uf'].split()).upper()
-    id_uf = verifica_preenche_valor(
-        tabela_busca='endereco_unidade_federativa', coluna_busca='nome',
-        valor_busca=uf, relacao_externa={'id_pais': id_pais}, conn=conn, db=db,
-        list_colunas=tabelas_colunas['endereco_unidade_federativa'][:])
 
-    municipio = ' '.join(dict_endereco['municipio'].split()).title()
-    id_municipio = verifica_preenche_valor(
-        tabela_busca='endereco_municipios', coluna_busca='nome', db=db,
-        valor_busca=municipio, relacao_externa={'id_uf': id_uf}, conn=conn,
-        list_colunas=tabelas_colunas['endereco_municipios'][:])
+    uf = "".join(dict_endereco["uf"].split()).upper()
+    list_colunas = TABELAS_COLUNAS["endereco_unidade_federativa"][:]
+    id_uf = verifica_preenche_valor("endereco_unidade_federativa", "nome", uf,
+                                    list_colunas, conn, {"id_pais": id_pais})
 
-    bairro = ' '.join(dict_endereco['bairro'].split()).title()
-    id_bairro = verifica_preenche_valor(
-        tabela_busca='endereco_bairros', coluna_busca='nome', db=db,
-        valor_busca=bairro, relacao_externa={'id_municipio': id_municipio},
-        conn=conn, list_colunas=tabelas_colunas['endereco_bairros'][:])
+    municipio = " ".join(dict_endereco["municipio"].split()).title()
+    list_colunas = TABELAS_COLUNAS["endereco_municipios"][:]
+    id_municipio = verifica_preenche_valor("endereco_municipios", "nome",
+                                           municipio, list_colunas, conn,
+                                           {"id_uf": id_uf})
 
-    numero = dict_endereco['numero']
-    complemento = ' '.join(dict_endereco['complemento'].split()).title()
+    bairro = " ".join(dict_endereco["bairro"].split()).title()
+    list_colunas = TABELAS_COLUNAS["endereco_bairros"][:]
+    id_bairro = verifica_preenche_valor("endereco_bairros", "nome", bairro,
+                                        list_colunas, conn,
+                                        {"id_municipio": id_municipio})
+
+    numero = dict_endereco["numero"]
+    complemento = " ".join(dict_endereco["complemento"].split()).title()
     endereco = {
-        'endereco': ' '.join(dict_endereco['endereco'].split()).title(),
-        'cep': dict_endereco['cep'],
-        'id_bairro': id_bairro,
-        'id_municipio': id_municipio,
-        'id_uf': id_uf,
-        'id_pais': id_pais,
-        'numero': numero if numero else None,
-        'complemento': complemento if complemento else None
+        "endereco": " ".join(dict_endereco["endereco"].split()).title(),
+        "cep": dict_endereco["cep"],
+        "id_bairro": id_bairro,
+        "id_municipio": id_municipio,
+        "id_uf": id_uf,
+        "id_pais": id_pais,
+        "numero": numero if numero else None,
+        "complemento": complemento if complemento else None
     }
     return endereco
 
 
-def _verifica_contato(id_contato, tabelas_colunas, api, db, conn, fuso):
-    contato_exite = db_pega_um_elemento(
-        tabela_busca="contatos", coluna_busca="id_bling", db=db,
-        valor_busca=[id_contato], colunas_retorno="id_bling", conn=conn)
+def _verifica_contato(id_contato, conn):
+    contato_exite = db_pega_um_elemento("contatos", "id_bling", [id_contato],
+                                        "id_bling", conn)
 
     if contato_exite:
         return
     else:
         from preencherModulos.preencherContatos.preencher_contatos import (
             PreencherContatos)
-        PreencherContatos(tabelas_colunas, db).preencher_contatos(
-            tabela="contatos", conn=conn, api=api, fuso=fuso,
-            unicoContatoNovo=[id_contato])
+        PreencherContatos().preencher_contatos(conn,
+                                               unicoContatoNovo=[id_contato])
         return
 
 

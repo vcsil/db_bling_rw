@@ -13,7 +13,7 @@ from atualizarModulos.atualizarPedidosVendas.utils_vendas import (
     solicita_preenche_venda)
 from atualizarModulos.utils import solicita_item_novos, txt_fundo_verde
 
-from config.constants import API, DB, FUSO, TABELAS_COLUNAS
+from config.constants import FUSO, TABELAS_COLUNAS
 from datetime import datetime
 from tqdm import tqdm
 import logging
@@ -53,7 +53,7 @@ class AtualizarVendas():
             list_ids_modulos.append(modulo["id_bling"])
 
             log.info(f"Insere módulo {modulo['id_bling']} no banco de dados")
-            db_inserir_uma_linha(tabela, colunas, modulo, DB, conn)
+            db_inserir_uma_linha(tabela, colunas, modulo, conn)
 
         return list_ids_modulos
 
@@ -65,8 +65,7 @@ class AtualizarVendas():
         colunas = TABELAS_COLUNAS[tabela][:]
 
         # Pega os módulos novos e os já salvos
-        ids_modulos_db = db_pega_varios_elementos("modulos", "id_bling", DB,
-                                                  conn)
+        ids_modulos_db = db_pega_varios_elementos("modulos", "id_bling", conn)
         ids_modulos += [item["id_bling"] for item in ids_modulos_db]
 
         log.info(f"Passará por {len(ids_modulos)} módulos")
@@ -86,7 +85,7 @@ class AtualizarVendas():
                 situacao.pop("idHerdado")
 
                 log.info(f"Insere situacao {situacao['id_bling']}")
-                db_inserir_uma_linha(tabela, colunas, situacao, DB, conn)
+                db_inserir_uma_linha(tabela, colunas, situacao, conn)
 
         log.info("Situações atualizadas")
 
@@ -99,13 +98,13 @@ class AtualizarVendas():
 
         valor = {"id": id_trans, "nome": str(id_trans)}
 
-        db_inserir_uma_linha(tabela, colunas, valor, DB, conn)
+        db_inserir_uma_linha(tabela, colunas, valor, conn)
 
     def atualizar_pedidos_vendas(self, conn):
         """Atualiza a tabela vendas da database."""
         hoje = str(datetime.now(FUSO).date())
         PARAM = f"/pedidos/vendas?dataAlteracaoInicial={hoje}&"
-        ids_vendas_alter = api_pega_todos_id(API, PARAM)
+        ids_vendas_alter = api_pega_todos_id(PARAM)
         ids_vendas_alter.sort()
 
         if len(ids_vendas_alter) == 0:

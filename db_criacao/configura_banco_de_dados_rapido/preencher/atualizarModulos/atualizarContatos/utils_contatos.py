@@ -6,7 +6,6 @@ Created on Wed Mar 27 16:22:17 2024.
 @author: vcsil
 """
 from atualizarModulos.utils import db_verifica_se_existe
-from config.constants import FUSO, API, DB, TABELAS_COLUNAS
 
 
 def _verifica_atualiza_contato(id_contato, conn):
@@ -20,8 +19,8 @@ def _verifica_atualiza_contato(id_contato, conn):
         from preencherModulos.preencherContatos.preencher_contatos import (
             PreencherContatos)
 
-        PreencherContatos(TABELAS_COLUNAS, DB).preencher_contatos(
-            tabela, conn, API, FUSO, unicoContatoNovo=[id_contato])
+        PreencherContatos().preencher_contatos(conn,
+                                               unicoContatoNovo=[id_contato])
 
         return
 

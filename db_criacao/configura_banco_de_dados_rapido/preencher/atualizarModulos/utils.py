@@ -14,7 +14,7 @@ from datetime import datetime
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 
 def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
@@ -33,17 +33,17 @@ def api_pega_todos_id_verifica_db(param, tabela_busca, coluna_busca, conn):
     pagina = 0
 
     log.info(f"Pega os id's dos dados em {param} até encontrar um no banco")
-    barra_carregamento = tqdm(desc=f'Paginas de dados {param}')
+    barra_carregamento = tqdm(desc=f"Paginas de dados {param}")
     while True:
         pagina += 1
-        param_completo = param + f'pagina={pagina}&limite=100'
+        param_completo = param + f"pagina={pagina}&limite=100"
 
         # Retorna um list com os dados dentro de dict
-        dados_reduzido = API.solicita_na_api(param_completo)['data']
+        dados_reduzido = API.solicita_na_api(param_completo)["data"]
         if not dados_reduzido:
             break
 
-        list_ids.extend(map(lambda dado: dado['id'], dados_reduzido))
+        list_ids.extend(map(lambda dado: dado["id"], dados_reduzido))
 
         valor_busca = list_ids[-1]
         existe = db_verifica_se_existe(tabela_busca, coluna_busca,
@@ -87,9 +87,8 @@ def db_atualizar_uma_linha(tabela, colunas, valores, coluna_filtro,
     valor_filtro = (valor_filtro if isinstance(valor_filtro, list)
                     else [valor_filtro])
 
-    return DB.update_one_in_db(
-        tabela=tabela, colunas=colunas, valores=valores, conn=conn,
-        coluna_filtro=coluna_filtro, valor_filtro=valor_filtro)
+    return DB.update_one_in_db(tabela, colunas, valores, coluna_filtro,
+                               valor_filtro, conn)
 
 
 def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
@@ -124,7 +123,7 @@ def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
                    else [valor_busca])
 
     linha = db_pega_um_elemento(tabela_busca, coluna_busca, valor_busca,
-                                colunas_retorno, DB, conn)
+                                colunas_retorno, conn)
 
     return linha
 
@@ -133,7 +132,7 @@ def solicita_novos_ids(param, tabela_busca, coluna, conn):
     """Solicita ID a API, compara com os ids do banco de dados. Devolve new."""
     ids_api = api_pega_todos_id_verifica_db(param, tabela_busca, coluna, conn)
 
-    ids_db = db_pega_varios_elementos(tabela_busca, coluna, DB, conn)
+    ids_db = db_pega_varios_elementos(tabela_busca, coluna, conn)
     ids_db = [item[coluna] for item in ids_db]
 
     ids = list(set(ids_api) - set(ids_db))
@@ -144,10 +143,10 @@ def solicita_novos_ids(param, tabela_busca, coluna, conn):
 
 def solicita_item_novos(param, tabela, colunas_retorno, conn):
     """Solicita items novos fazendo comparação com o ID e retornando objeto."""
-    lista_objetos_api = API.solicita_na_api(param)['data']
+    lista_objetos_api = API.solicita_na_api(param)["data"]
     ids_api = [item["id"] for item in lista_objetos_api]
 
-    ids_db = db_pega_varios_elementos(tabela, colunas_retorno, DB, conn)
+    ids_db = db_pega_varios_elementos(tabela, colunas_retorno, conn)
     ids_db = [item[colunas_retorno] for item in ids_db]
 
     ids_novos = list(set(ids_api) - set(ids_db))
@@ -173,9 +172,8 @@ def item_com_valores_atualizados(item_api, tabela, coluna_busca, conn):
     else:
         raise ValueError
 
-    item_db = db_pega_um_elemento(tabela, coluna_busca, db=DB, conn=conn,
-                                  valor_busca=valor_busca,
-                                  colunas_retorno=list(item_api.keys()))
+    item_db = db_pega_um_elemento(tabela, coluna_busca, valor_busca,
+                                  list(item_api.keys()), conn)
 
     if item_db == item_api:
         return False
@@ -184,7 +182,7 @@ def item_com_valores_atualizados(item_api, tabela, coluna_busca, conn):
     if not item_db:
         item_api["alterado_em"] = datetime.now(FUSO)
         db_inserir_uma_linha(tabela, colunas=TABELAS_COLUNAS[tabela],
-                             valores=item_api, db=DB, conn=conn)
+                             valores=item_api, conn=conn)
         return False
 
     diff = [k for k in item_api.keys() if item_api[k] != item_db[k]]

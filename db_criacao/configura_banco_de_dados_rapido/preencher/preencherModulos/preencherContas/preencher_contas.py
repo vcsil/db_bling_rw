@@ -10,11 +10,12 @@ from preencherModulos.preencherContas.utils_contas import (
     solicita_vendedor)
 from preencherModulos.utils import (
     db_inserir_varias_linhas, api_pega_todos_id, db_inserir_uma_linha)
+from config.constants import API, TABELAS_COLUNAS
 
 from tqdm import tqdm
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 # =-=-=-=-=-=-=-=-=-=-=-=-=- Preencher Tabela Contas =-=-=-=-=-=-=-=-=-=-=-=-=-
 
@@ -22,13 +23,13 @@ log = logging.getLogger('root')
 class PreencherContas():
     """Preenche módulo de contas."""
 
-    def __init__(self, tabelas_colunas, db):
-        self.tabelas_colunas = tabelas_colunas
-        self.db = db
+    def __init__(self):
+        pass
 
-    def preencher_contas_situacao(self, tabela: str, conn):
-        """Preenche a tabela produtos_tipos da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+    def preencher_contas_situacao(self, conn):
+        """Preenche a tabela contas_situacao da database."""
+        tabela = "contas_situacao"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": 1, "nome": "Em aberto"},
@@ -39,14 +40,13 @@ class PreencherContas():
         ]
 
         log.info("Insere situação contas receber")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Fim de preencher situação contas receber")
 
-    def preencher_tipos_pagamento(self, tabela: str, conn):
+    def preencher_tipos_pagamento(self, conn):
         """Preenche a tabela produtos_tipos da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "tipos_pagamento"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": 1, "nome": "Dinheiro"},
@@ -70,14 +70,13 @@ class PreencherContas():
         ]
 
         log.info("Insere tipos de pagamento")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Fim de preencher tipos de pagamento")
 
-    def preencher_formas_pagamento_padrao(self, tabela: str, conn):
+    def preencher_formas_pagamento_padrao(self, conn):
         """Preenche a tabela formas_pagamento_padrao da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "formas_pagamento_padrao"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": 0, "nome": "Não"},
@@ -86,14 +85,13 @@ class PreencherContas():
         ]
 
         log.info("Insere padrões de pagamento")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Fim de preencher padrões de pagamento")
 
-    def preencher_formas_pagamento_destino(self, tabela: str, conn):
+    def preencher_formas_pagamento_destino(self, conn):
         """Preenche a tabela formas_pagamento_destino da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "formas_pagamento_destino"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": 1, "nome": "Conta a receber/pagar"},
@@ -102,14 +100,13 @@ class PreencherContas():
         ]
 
         log.info("Insere destino de pagamento")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Fim de preencher destino de pagamento")
 
-    def preencher_formas_pagamento_finalidade(self, tabela: str, conn):
+    def preencher_formas_pagamento_finalidade(self, conn):
         """Preenche a tabela formas_pagamento_finalidade da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "formas_pagamento_finalidade"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": 1, "nome": "Pagamentos"},
@@ -118,36 +115,32 @@ class PreencherContas():
         ]
 
         log.info("Insere finalidade de pagamento")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Fim de preencher finalidade de pagamento")
 
-    def preencher_formas_pagamento(self, tabela: str, conn, api):
+    def preencher_formas_pagamento(self, conn):
         """Preenche a tabela formas_pagamento da database."""
-        colunas = self.tabelas_colunas[tabela][:]
-        ids_formas_pagamento = api_pega_todos_id(api, '/formas-pagamentos?')
+        tabela = "formas_pagamento"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        ids_formas_pagamento = api_pega_todos_id("/formas-pagamentos?")
         ids_formas_pagamento.sort()
 
-        ROTA = '/formas-pagamentos/'
+        ROTA = "/formas-pagamentos/"
         log.info(f"Passará por {len(ids_formas_pagamento)} formas pagamentos")
-        for idFormaPagamento in tqdm(ids_formas_pagamento,
-                                     desc="Busca formas pag."):
-            log.info(f"Solicita dados da forma pag {idFormaPagamento} na API")
-            forma_pagamento = solicita_formas_pagamento(
-                rota=ROTA+f"{idFormaPagamento}", api=api)
+        for id_fp in tqdm(ids_formas_pagamento, desc="Busca formas pag."):
+            log.info(f"Solicita dados da forma pag {id_fp} na API")
+            forma_pagamento = solicita_formas_pagamento(ROTA+f"{id_fp}")
 
             log.info("Insere formas de pagamento")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=forma_pagamento,
-                db=self.db,  conn=conn)
+            db_inserir_uma_linha(tabela, colunas, forma_pagamento, conn)
 
         log.info("Fim de preencher formas de pagamento")
 
-    def preencher_contas_contabeis(self, tabela: str, conn, api):
+    def preencher_contas_contabeis(self, conn):
         """Preenche a tabela contas_contabeis da database."""
-        colunas = self.tabelas_colunas[tabela][:]
-        contas_contabeis = api.solicita_na_api('/contas-contabeis')['data']
+        tabela = "contas_contabeis"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        contas_contabeis = API.solicita_na_api("/contas-contabeis")["data"]
 
         log.info(f"Passará por {len(contas_contabeis)} contas banarias")
         for c_contabel in tqdm(contas_contabeis, desc="Salva conta_contabeis"):
@@ -155,14 +148,13 @@ class PreencherContas():
             c_contabel["nome"] = c_contabel.pop("descricao")
 
             log.info(f"Insere conta {c_contabel['id_bling']} no banco")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=c_contabel,
-                db=self.db,  conn=conn)
+            db_inserir_uma_linha(tabela, colunas, c_contabel, conn)
         log.info("Contas contáveis inseridas")
 
-    def preencher_categorias_receitas_despesas_tipo(self, tabela: str, conn):
+    def preencher_categorias_receitas_despesas_tipo(self, conn):
         """Preenche a tabela categorias_receitas_despesas_tipo da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "categorias_receitas_despesas_tipo"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": 0, "nome": "Unknow"},
@@ -174,53 +166,50 @@ class PreencherContas():
         ]
 
         log.info("Insere tipos de categorias")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Fim de tipos de categorias")
 
-    def preencher_categorias_receitas_despesas(self, tabela: str, conn, api):
+    def preencher_categorias_receitas_despesas(self, conn):
         """Preenche a tabela produtos_formatos da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "categorias_receitas_despesas"
+        colunas = TABELAS_COLUNAS[tabela][:]
         ROTA = "/categorias/receitas-despesas?&tipo=0&situacao=0&"
-        ids_categorias = api_pega_todos_id(api, ROTA)
+        ids_categorias = api_pega_todos_id(ROTA)
         ids_categorias.sort()
 
-        ROTA = '/categorias/receitas-despesas/'
+        ROTA = "/categorias/receitas-despesas/"
         log.info(f"Passará por {len(ids_categorias)} categorias")
         list_relacao_categoria = []
         for idCategoria in tqdm(ids_categorias, desc="Busca categorias"):
             log.info(f"Solicita dados da categoria {idCategoria} na API")
-            rel, categoria = solicita_categeoria(rota=ROTA+f"{idCategoria}",
-                                                 api=api)
+            rel, categoria = solicita_categeoria(rota=ROTA+f"{idCategoria}")
 
             log.info("Insere categoria")
-            db_inserir_uma_linha(tabela=tabela, colunas=colunas, db=self.db,
-                                 valores=categoria, conn=conn)
+            db_inserir_uma_linha(tabela, colunas, categoria, conn)
 
             # Pegando informações sobre relação da categoria
             if rel:
                 list_relacao_categoria.append(rel)
 
         # Adiciona id 0
-        id0 = {'id_bling': 0, 'nome': 'Unknow', 'id_tipo': 0, 'situacao': True}
-        db_inserir_uma_linha(tabela=tabela, colunas=colunas, db=self.db,
-                             valores=id0, conn=conn)
+        id0 = {"id_bling": 0, "nome": "Unknow", "id_tipo": 0, "situacao": True}
+        db_inserir_uma_linha(tabela, colunas, id0, conn)
 
         log.info(f"Insere {len(list_relacao_categoria)} relacoes de categoria")
         print(f"Insere {len(list_relacao_categoria)} relacoes de categoria")
+
         tab_relacao = "categorias_receitas_despesas_relacao"
-        colunas_relacao = self .tabelas_colunas[tab_relacao][:]
+        colunas_relacao = TABELAS_COLUNAS[tab_relacao][:]
         colunas_relacao.remove("id")
-        db_inserir_varias_linhas(tabela=tab_relacao,
-                                 colunas=colunas_relacao, conn=conn,
-                                 db=self.db, valores=list_relacao_categoria)
+        db_inserir_varias_linhas(tab_relacao, colunas_relacao,
+                                 list_relacao_categoria, conn)
 
         log.info("Termina de inserir categorias receitas despesas")
 
-    def preencher_contas_tipo_ocorrencia(self, tabela: str, conn):
+    def preencher_contas_tipo_ocorrencia(self, conn):
         """Preenche a tabela contas_tipo_ocorrencia da database."""
-        colunas = self.tabelas_colunas[tabela][:]
+        tabela = "contas_tipo_ocorrencia"
+        colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
             {"id": 1, "nome": "Única"},
@@ -235,43 +224,38 @@ class PreencherContas():
         ]
 
         log.info("Insere tipos de ocorrência de contas")
-        db_inserir_varias_linhas(
-            tabela=tabela, colunas=colunas, valores=valores,
-            db=self.db, conn=conn)
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
         log.info("Fim de preencher tipos de ocorrência de contas")
 
-    def preencher_vendedores(self, tabela: str, conn, api):
+    def preencher_vendedores(self, conn):
         """Preenche a tabela vendedores da database."""
-        colunas = self.tabelas_colunas[tabela][:]
-        ids_vendedores = api_pega_todos_id(
-            api, "/vendedores?situacaoContato=A&")
-        ids_vendedores += api_pega_todos_id(
-            api, "/vendedores?situacaoContato=I&")
-        ids_vendedores += api_pega_todos_id(
-            api, "/vendedores?situacaoContato=S&")
-        ids_vendedores += api_pega_todos_id(
-            api, "/vendedores?situacaoContato=E&")
+        tabela = "vendedores"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        ids_vendedores = api_pega_todos_id("/vendedores?situacaoContato=A&")
+        ids_vendedores += api_pega_todos_id("/vendedores?situacaoContato=I&")
+        ids_vendedores += api_pega_todos_id("/vendedores?situacaoContato=S&")
+        ids_vendedores += api_pega_todos_id("/vendedores?situacaoContato=E&")
+        ids_vendedores = list(set(ids_vendedores))
         ids_vendedores.sort()
 
         ROTA = "/vendedores/"
         log.info(f"Passará por {len(ids_vendedores)} vendedores")
         for idVendedor in tqdm(ids_vendedores, desc="Busca vendedores"):
             log.info(f"Solicita vendedor {idVendedor} na API")
-            conta = solicita_vendedor(rota=ROTA+f"{idVendedor}", api=api)
+            conta = solicita_vendedor(rota=ROTA+f"{idVendedor}")
 
             log.info("Insere conta")
-            db_inserir_uma_linha(
-                tabela=tabela, colunas=colunas, valores=conta,
-                db=self.db,  conn=conn)
+            db_inserir_uma_linha(tabela, colunas, conta, conn)
 
         log.info("Fim de preencher contas receitas despesas")
 
-    def preencher_contas_receitas_despesas(self, tabela: str, conn, api, fuso):
+    def preencher_contas_receitas_despesas(self, conn):
         """Preenche a tabela contas_receitas_despesas da database."""
-        colunas = self.tabelas_colunas[tabela][:]
-        contas_receber = api_pega_todos_id(api, "/contas/receber?")
+        tabela = "contas_receitas_despesas"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        contas_receber = api_pega_todos_id("/contas/receber?")
         contas_receber.sort()
-        contas_pagar = api_pega_todos_id(api, "/contas/pagar?")
+        contas_pagar = api_pega_todos_id("/contas/pagar?")
         contas_pagar.sort()
         ids_contas = [contas_receber, contas_pagar]
 
@@ -280,67 +264,53 @@ class PreencherContas():
             for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}",
                                 leave=True, position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
-                conta = solicita_conta(rota=ROTA[idx]+f"{idConta}", api=api,
-                                       conn=conn, db=self.db, fuso=fuso,
-                                       tabelas_colunas=self.tabelas_colunas)
+                conta = solicita_conta(ROTA[idx]+f"{idConta}", conn)
 
                 log.info("Insere conta")
-                db_inserir_uma_linha(
-                    tabela=tabela, colunas=colunas, valores=conta,
-                    db=self.db,  conn=conn)
+                db_inserir_uma_linha(tabela, colunas, conta, conn)
             conn.commit()
 
         log.info("Fim de preencher contas receitas despesas")
 
-    def preencher_modulo_contas(self, conn, api, fuso):
+    def preencher_modulo_contas(self, conn):
         """Preencher módulo de contas."""
         log.info("Inicio")
 
         log.info("Inicio preencher contas_situacao")
-        self.preencher_contas_situacao(
-            tabela="contas_situacao", conn=conn)
+        self.preencher_contas_situacao(conn)
 
         log.info("Inicio preencher tipos_pagamento")
-        self.preencher_tipos_pagamento(tabela="tipos_pagamento", conn=conn)
+        self.preencher_tipos_pagamento(conn)
 
         log.info("Inicio preencher formas_pagamento_padrao")
-        self.preencher_formas_pagamento_padrao(
-            tabela="formas_pagamento_padrao", conn=conn)
+        self.preencher_formas_pagamento_padrao(conn)
 
         log.info("Inicio preencher formas_pagamento_destino")
-        self.preencher_formas_pagamento_destino(
-            tabela="formas_pagamento_destino", conn=conn)
+        self.preencher_formas_pagamento_destino(conn)
 
         log.info("Inicio preencher formas_pagamento_finalidade")
-        self.preencher_formas_pagamento_finalidade(
-            tabela="formas_pagamento_finalidade", conn=conn)
+        self.preencher_formas_pagamento_finalidade(conn)
 
         log.info("Inicio preencher formas_pagamento")
-        self.preencher_formas_pagamento(tabela="formas_pagamento", conn=conn,
-                                        api=api)
+        self.preencher_formas_pagamento(conn)
 
         log.info("Inicio preencher contas_contabeis")
-        self.preencher_contas_contabeis(tabela="contas_contabeis", conn=conn,
-                                        api=api)
+        self.preencher_contas_contabeis(conn)
 
         log.info("Inicio preenche categorias_receitas_despesas_tipo")
-        self.preencher_categorias_receitas_despesas_tipo(
-            tabela="categorias_receitas_despesas_tipo", conn=conn)
+        self.preencher_categorias_receitas_despesas_tipo(conn)
 
         log.info("Inicio preencher categorias_receitas_despesas")
-        self.preencher_categorias_receitas_despesas(
-            tabela="categorias_receitas_despesas", conn=conn, api=api)
+        self.preencher_categorias_receitas_despesas(conn)
 
         log.info("Inicio preencher contas_tipo_ocorrencia")
-        self.preencher_contas_tipo_ocorrencia(tabela="contas_tipo_ocorrencia",
-                                              conn=conn)
+        self.preencher_contas_tipo_ocorrencia(conn)
 
         log.info("Inicio preencher vendedores")
-        self.preencher_vendedores(tabela="vendedores", conn=conn, api=api)
+        self.preencher_vendedores(conn)
 
         log.info("Inicio preencher contas_receitas_despesas")
-        self.preencher_contas_receitas_despesas(
-            tabela="contas_receitas_despesas", conn=conn, api=api, fuso=fuso)
+        self.preencher_contas_receitas_despesas(conn)
 
         log.info("Fim preencher contas")
 

@@ -5,6 +5,7 @@ Created on Sat Mar 30 13:58:54 2024.
 
 @author: vcsil
 """
+from config.constants import FUSO
 
 from datetime import datetime, timedelta
 import logging
@@ -25,8 +26,7 @@ def agendar_tarefa():
 
     outros    -- 4/4h
     """
-    fuso = pytz.timezone("America/Sao_Paulo")
-    agora = datetime.now(fuso)
+    agora = datetime.now(FUSO)
     current_day = agora.weekday()
     current_hour = agora.hour
 

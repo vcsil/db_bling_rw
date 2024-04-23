@@ -9,10 +9,16 @@ from config.env_valores import EnvValores
 from config.conexao_api import ConectaAPI
 from config.conexao_db import ConectaDB
 
+from tqdm import tqdm
 import logging
+import time
 import pytz
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
+
+for sec in tqdm(range(99), desc="Esperando configurações do postgres"):
+    time.sleep(1)
+    print(sec)
 
 FUSO = pytz.timezone("America/Sao_Paulo")
 
@@ -26,3 +32,7 @@ DB = ConectaDB(_env_db)  # Carrega as variáveis de ambiente necessárias
 
 log.info("Obtém nome de todas tabelas")
 TABELAS_COLUNAS = DB.cria_dict_tabelas_colunas()
+
+
+if __name__ == "__main__":
+    pass

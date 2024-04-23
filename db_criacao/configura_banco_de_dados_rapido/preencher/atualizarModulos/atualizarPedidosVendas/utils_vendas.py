@@ -15,21 +15,21 @@ from atualizarModulos.utils import (db_verifica_se_existe,
                                     db_atualizar_uma_linha,
                                     item_com_valores_atualizados)
 
-from config.constants import API, DB, FUSO, TABELAS_COLUNAS
+from config.constants import API, TABELAS_COLUNAS
 from datetime import datetime
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 # =-=-=-=-=-=-=-=-=- Funções utéis para preencher vendas. =-=-=-=-=-=-=-=-=-=
 
 
 def solicita_preenche_venda(rota: str, conn):
     """Solicita a conta e retorna os dados da conta manipulados."""
-    venda = API.solicita_na_api(rota)['data']
+    venda = API.solicita_na_api(rota)["data"]
 
     id_contato = venda["contato"]["id"]
-    _verifica_contato(id_contato, TABELAS_COLUNAS, API, DB, conn, FUSO)
+    _verifica_contato(id_contato, conn)
     existe_venda = db_verifica_se_existe("vendas", "id_bling", venda["id"],
                                          conn)
 
@@ -102,25 +102,24 @@ def _modifica_insere_valores_vendas(venda: dict, existe, conn):
                                    valores_venda["id_bling"], conn)
     else:
         db_inserir_uma_linha("vendas", list(valores_venda.keys()),
-                             valores_venda, DB, conn)
+                             valores_venda, conn)
 
 
 def _modifica_insere_etiqueta(etiqueta: dict, existe, id_venda, conn):
     log.info("Insere etiqueta de transporte da venda")
     etiqueta["nomePais"] = "Brasil"
     if possui_informacao(etiqueta):
-        id_pais = verifica_preenche_valor('endereco_paises', 'nome',
+        id_pais = verifica_preenche_valor("endereco_paises", "nome",
                                           etiqueta["nomePais"],
                                           TABELAS_COLUNAS["endereco_paises"],
-                                          conn=conn, db=DB)
-        endereco = manipula_dados_endereco(etiqueta, id_pais, DB, conn,
-                                           TABELAS_COLUNAS)
+                                          conn=conn)
+        endereco = manipula_dados_endereco(etiqueta, id_pais, conn)
 
         # Inserir na tabela enderecos
         valores = list(endereco.values())
         colunas = list(endereco.keys())
         id_endereco = verifica_preenche_valor("enderecos", colunas, valores,
-                                              ["id"]+colunas, DB, conn)
+                                              ["id"]+colunas, conn)
 
         nome = etiqueta["nome"]
         valores_etiqueta = {
@@ -132,12 +131,12 @@ def _modifica_insere_etiqueta(etiqueta: dict, existe, id_venda, conn):
             dict_transporte = db_pega_um_elemento("vendas", "id_bling",
                                                   [id_venda],
                                                   "transporte_id_etiqueta",
-                                                  DB, conn)
+                                                  conn)
             return dict_transporte["transporte_id_etiqueta"]
         else:
             return db_inserir_uma_linha("transporte_etiqueta",
                                         list(valores_etiqueta.keys()),
-                                        valores_etiqueta, DB, conn)["id"]
+                                        valores_etiqueta, conn)["id"]
 
     else:
         return None
@@ -169,8 +168,7 @@ def _modifica_insere_volumes(venda: dict, existe, conn):
             else:
                 db_inserir_uma_linha(tabela,
                                      colunas=list(valores_etiqueta.keys()),
-                                     valores=valores_etiqueta, db=DB,
-                                     conn=conn)
+                                     valores=valores_etiqueta, conn=conn)
 
 
 def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int, existe,
@@ -198,7 +196,7 @@ def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int, existe,
                                        conn=conn)
             else:
                 db_inserir_uma_linha(tabela, colunas=list(obj_item.keys()),
-                                     valores=obj_item, db=DB, conn=conn)
+                                     valores=obj_item, conn=conn)
 
 
 def _modifica_insere_parcelas(venda: dict, existe, conn):
@@ -245,7 +243,7 @@ def _modifica_insere_parcelas(venda: dict, existe, conn):
             else:
                 db_inserir_uma_linha(tabela="parcelas",
                                      colunas=list(obj_parcela.keys()),
-                                     valores=obj_parcela, db=DB, conn=conn)
+                                     valores=obj_parcela, conn=conn)
 
 
 def _busca_conta_receber(venda: dict, conn):
@@ -258,7 +256,7 @@ def _busca_conta_receber(venda: dict, conn):
 
     tabela = "contas_receitas_despesas"
     return db_pega_varios_elementos_controi_filtro(tabela, filtro,
-                                                   colunas_retorno, DB, conn)
+                                                   colunas_retorno, conn)
 
 
 if __name__ == "__main__":

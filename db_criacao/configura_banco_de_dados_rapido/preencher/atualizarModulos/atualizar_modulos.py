@@ -18,17 +18,16 @@ from atualizarModulos.utils import txt_fundo_amarelo
 
 from config.constants import FUSO, DB
 
-from colorama import Back, Style
 from datetime import datetime
 import logging
 
-log = logging.getLogger('root')
+log = logging.getLogger("root")
 
 
 def atualizar_modulos():
     """Preenche todos os módulos."""
     # Inicia conexão com Banco de Dados
-    log.info('Inicia atualização')
+    log.info("Inicia atualização")
     with DB.conectar_ao_banco() as conn:
 
         log.info("Começa atualizar contatos.")
@@ -53,11 +52,11 @@ def atualizar_modulos():
 
         agora = datetime.now(FUSO)
         db_inserir_uma_linha(
-            tabela="atualizacoes_modulos", db=DB, conn=conn,
-            colunas=["datetime"], valores={"datetime": agora})
+            tabela="atualizacoes_modulos", colunas=["datetime"],
+            valores={"datetime": agora}, conn=conn)
         conn.commit()
 
-    txt_fundo_amarelo(f'Atualizado {agora}')
+    txt_fundo_amarelo(f"Atualizado {agora}")
     log.info(f"Atualizado {agora}")
 
 
