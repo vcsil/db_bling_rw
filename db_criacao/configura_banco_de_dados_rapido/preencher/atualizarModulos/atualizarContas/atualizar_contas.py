@@ -11,7 +11,7 @@ from preencherModulos.preencherContas.utils_contas import (
     solicita_vendedor)
 from preencherModulos.utils import (
     db_inserir_varias_linhas, db_inserir_uma_linha, db_pega_varios_elementos,
-    formata_data)
+    api_pega_todos_id)
 
 from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
                                     txt_fundo_verde, db_verifica_se_existe,
@@ -19,7 +19,7 @@ from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
                                     db_atualizar_uma_linha)
 
 from config.constants import FUSO, TABELAS_COLUNAS
-from datetime import datetime
+from datetime import datetime, date
 from tqdm import tqdm
 import logging
 
@@ -241,11 +241,11 @@ class AtualizarContas():
 
         PARAM = "/contas/receber?"
         PARAM += f"tipoFiltroData=E&dataInicial={hoje}&dataFinal={hoje}&"
-        contas_receber = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
+        contas_receber = api_pega_todos_id(PARAM)
 
         PARAM = "/contas/pagar?"
         PARAM += f"dataEmissaoInicial={hoje}&dataEmissaoFinal={hoje}&"
-        contas_pagar = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
+        contas_pagar = api_pega_todos_id(PARAM)
 
         ids_contas = [contas_receber, contas_pagar]
 
@@ -268,7 +268,8 @@ class AtualizarContas():
                 parametros = ["vencimento", "data_emissao",
                               "vencimento_original", "competencia"]
                 for p in parametros:
-                    conta[p] = formata_data(conta[p])
+                    ano, mes, dia = conta[p].split("-")
+                    conta[p] = date(int(ano), int(mes), int(dia))
 
                 if conta_existe:
                     conta_modificada = item_com_valores_atualizados(conta,
