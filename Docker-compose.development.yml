@@ -17,7 +17,7 @@ services:
       - postgres:/var/lib/postgresql/data
     networks:
       - rw_network
-  
+
   rw_python:
     image: python:3.11
     build:
@@ -30,7 +30,7 @@ services:
       - rw_db
     volumes:
       - .:/home/myuser/code
-  
+
 volumes:
   postgres:
 
