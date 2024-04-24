@@ -58,7 +58,6 @@ class PreencherVendas():
                 situacao["id_bling"] = situacao.pop("id")
                 situacao["id_modulo"] = id_modulo
                 situacao.pop("idHerdado")
-                print(situacao)
 
                 log.info(f"Insere situacao {situacao['id_bling']}")
                 db_inserir_uma_linha(tabela, colunas, situacao, conn)
