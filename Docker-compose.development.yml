@@ -16,7 +16,7 @@ services:
       - ./db_criacao/configura_banco_de_dados_rapido/criar/init.sql:/docker-entrypoint-initdb.d/init.sql
       - postgres:/var/lib/postgresql/data
     networks:
-      - rw_network
+      - 01-bancodedados_default
 
   rw_python:
     image: python:3.11
@@ -35,5 +35,5 @@ volumes:
   postgres:
 
 networks:
-  rw_network:
+  01-bancodedados_default:
     driver: bridge
