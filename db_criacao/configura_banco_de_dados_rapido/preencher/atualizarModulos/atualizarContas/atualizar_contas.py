@@ -14,12 +14,12 @@ from preencherModulos.utils import (
     api_pega_todos_id)
 
 from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
-                                    txt_fundo_verde, db_verifica_se_existe,
-                                    item_com_valores_atualizados,
-                                    db_atualizar_uma_linha)
+                                    txt_fundo_verde)
+from atualizarModulos.atualizarContas.utils_contas import (atualiza_contas,
+                                                           atualiza_bordero)
 
 from config.constants import FUSO, TABELAS_COLUNAS
-from datetime import datetime, date
+from datetime import datetime
 from tqdm import tqdm
 import logging
 
@@ -260,32 +260,11 @@ class AtualizarContas():
                                 position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
 
-                conta_existe = db_verifica_se_existe(tabela, "id_bling",
-                                                     idConta, conn)
+                conta, borderos = solicita_conta(ROTA[idx]+f"{idConta}", conn)
 
-                conta = solicita_conta(ROTA[idx]+f"{idConta}", conn)
+                atualiza_contas(conta, conn)
+                atualiza_bordero(idConta, borderos, conn)
 
-                parametros = ["vencimento", "data_emissao",
-                              "vencimento_original", "competencia"]
-                for p in parametros:
-                    ano, mes, dia = conta[p].split("-")
-                    conta[p] = date(int(ano), int(mes), int(dia))
-
-                if conta_existe:
-                    conta_modificada = item_com_valores_atualizados(conta,
-                                                                    tabela,
-                                                                    "id_bling",
-                                                                    conn)
-                    if conta_modificada:
-                        db_atualizar_uma_linha(tabela, colunas,
-                                               conta_modificada,
-                                               "id_bling", idConta, conn)
-                        continue
-                    else:
-                        continue
-
-                log.info("Insere conta")
-                db_inserir_uma_linha(tabela, colunas, conta, conn)
             conn.commit()
 
         log.info("Fim de preencher contas receitas despesas")
