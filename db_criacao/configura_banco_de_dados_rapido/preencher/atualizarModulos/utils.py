@@ -181,7 +181,10 @@ def item_com_valores_atualizados(item_api, tabela, coluna_busca, conn):
     # Caso ele não exista no banco de dados ainda
     if not item_db:
         item_api["alterado_em"] = datetime.now(FUSO)
-        db_inserir_uma_linha(tabela, colunas=TABELAS_COLUNAS[tabela],
+        colunas = TABELAS_COLUNAS[tabela][:]
+        if "id" in colunas:
+            colunas.remove("id")
+        db_inserir_uma_linha(tabela, colunas=colunas,
                              valores=item_api, conn=conn)
         return False
 
