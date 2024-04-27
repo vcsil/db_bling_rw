@@ -85,7 +85,7 @@ def _modifica_insere_etiqueta(etiqueta: dict, conn):
     log.info("Insere etiqueta de transporte da venda")
     etiqueta["nomePais"] = "Brasil"
     if possui_informacao(etiqueta):
-        list_colunas = TABELAS_COLUNAS["endereco_paises"]
+        list_colunas = TABELAS_COLUNAS["endereco_paises"][:]
         id_pais = verifica_preenche_valor("endereco_paises", "nome",
                                           etiqueta["nomePais"], list_colunas,
                                           conn)

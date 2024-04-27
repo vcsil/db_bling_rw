@@ -111,7 +111,7 @@ def _modifica_insere_etiqueta(etiqueta: dict, existe, id_venda, conn):
     if possui_informacao(etiqueta):
         id_pais = verifica_preenche_valor("endereco_paises", "nome",
                                           etiqueta["nomePais"],
-                                          TABELAS_COLUNAS["endereco_paises"],
+                                          TABELAS_COLUNAS["endereco_paises"][:],
                                           conn=conn)
         endereco = manipula_dados_endereco(etiqueta, id_pais, conn)
 
