@@ -124,7 +124,6 @@ def _modifica_valores_conta(conta: dict, conn):
         "id_portador": id_portador if id_portador else None,
         "id_categoria_receita_despesa": conta["categoria"]["id"],
         "id_vendedor": id_vendedor if id_vendedor else None,
-        "id_bordero": conta["borderos"][0] if conta["borderos"] else None,
         "id_tipo_ocorrencia": _manipula_valor_opcional(conta, "ocorrencia",
                                                        "tipo"),
         "considerar_dias_uteis": _manipula_valor_opcional(
@@ -165,7 +164,7 @@ def _manipula_bordero(id_borderos: list, id_conta, conn):
         _manipula_pagamentos(bordero["pagamentos"], bordero["id"], conn)
         _manipula_relacao_contas_borderos(id_conta, id_bordero, conn)
 
-    return id_bordero
+    return
 
 
 def _manipula_pagamentos(pagamentos: list, id_bordero, conn):

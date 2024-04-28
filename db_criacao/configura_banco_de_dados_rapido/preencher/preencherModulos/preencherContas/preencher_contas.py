@@ -315,6 +315,7 @@ class PreencherContas():
 
         log.info("Inicio preencher vendedores")
         self.preencher_vendedores(conn)
+        conn.commit()
 
         log.info("Inicio preencher contas_receitas_despesas")
         self.preencher_contas_receitas_despesas(conn)
