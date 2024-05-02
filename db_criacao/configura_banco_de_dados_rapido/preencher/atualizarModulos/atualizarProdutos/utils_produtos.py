@@ -93,7 +93,7 @@ def manipula_insere_variacao(id_pai, variacoes, conn):
 def manipula_variacao_excluidas(id_produto, variacoes_api, conn):
     """Verifica se existe variações no banco de dados que foram excl na api."""
     tabela = "produto_variacao"
-    colunas = TABELAS_COLUNAS[tabela]
+    colunas = TABELAS_COLUNAS[tabela][:]
     filtro = f"WHERE id_produto_pai='{id_produto}'"
 
     variacoes_db = db_pega_varios_elementos_controi_filtro(tabela, filtro,

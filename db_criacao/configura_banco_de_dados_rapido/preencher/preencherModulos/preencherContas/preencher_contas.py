@@ -7,7 +7,7 @@ Created on Wed Jan 10 19:01:03 2024.
 """
 from preencherModulos.preencherContas.utils_contas import (
     solicita_formas_pagamento, solicita_categeoria, solicita_conta,
-    solicita_vendedor)
+    solicita_vendedor, _manipula_bordero)
 from preencherModulos.utils import (
     db_inserir_varias_linhas, api_pega_todos_id, db_inserir_uma_linha)
 from config.constants import API, TABELAS_COLUNAS
@@ -268,10 +268,13 @@ class PreencherContas():
             for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}",
                                 leave=True, position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
-                conta = solicita_conta(ROTA[idx]+f"{idConta}", conn)
+                conta, borderos = solicita_conta(ROTA[idx]+f"{idConta}", conn)
 
                 log.info("Insere conta")
                 db_inserir_uma_linha(tabela, colunas, conta, conn)
+
+                log.info("Insere bordero")
+                _manipula_bordero(borderos, conta["id_bling"], conn)
             conn.commit()
 
         log.info("Fim de preencher contas receitas despesas")
@@ -312,6 +315,7 @@ class PreencherContas():
 
         log.info("Inicio preencher vendedores")
         self.preencher_vendedores(conn)
+        conn.commit()
 
         log.info("Inicio preencher contas_receitas_despesas")
         self.preencher_contas_receitas_despesas(conn)

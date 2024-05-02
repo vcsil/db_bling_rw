@@ -142,7 +142,7 @@ class PreencherContatos():
         log.info("Insere endereco de contatos")
         pais = regra_pais(dict_endereco["tipo"], dict_endereco["pais"]["nome"])
 
-        list_colunas = TABELAS_COLUNAS["endereco_paises"]
+        list_colunas = TABELAS_COLUNAS["endereco_paises"][:]
         for tipo_endereco in dict_endereco["endereco"].keys():
             endereco = dict_endereco["endereco"][tipo_endereco]
             if tipo_endereco == "geral":

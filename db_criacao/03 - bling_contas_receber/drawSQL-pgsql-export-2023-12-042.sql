@@ -179,7 +179,6 @@ CREATE TABLE "contas_receitas_despesas"(
     "id_portador"                   BIGINT              REFERENCES "contas_contabeis"("id_bling"),
     "id_categoria_receita_despesa"  BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling"),
     "id_vendedor"                   BIGINT              REFERENCES "vendedores"("id_bling"),
-    "id_bordero"                    BIGINT,
     "id_tipo_ocorrencia"            INTEGER             REFERENCES "contas_tipo_ocorrencia"("id"),
     "considerar_dias_uteis"         BOOLEAN,
     "dia_vencimento"                DATE                DEFAULT NOW(),
@@ -196,4 +195,38 @@ COMMENT ON COLUMN
     "contas_receitas_despesas"."numero_banco" IS '"Adicionado automaticamente com o número preenchido no cadastro do banco"';
 COMMENT ON COLUMN
     "contas_receitas_despesas"."id_tipo_ocorrencia" IS '`1` Única `2` Parcelada `3` Mensal `4` Bimestral `5` Trimestral `6` Semestral `7` Anual `8` Quinzenal `9` Semanal';
+
+---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+CREATE TABLE "borderos"(
+        "id_bling"                      BIGINT PRIMARY KEY  NOT NULL
+    ,   "data"                          DATE                NOT NULL
+    ,   "historico"                     TEXT
+    ,   "id_portador"                   BIGINT              NOT NULL REFERENCES "contas_contabeis"("id_bling")
+    ,   "id_categoria_receita_despesa"  BIGINT              NOT NULL REFERENCES "categorias_receitas_despesas"("id_bling")
+);
+
+---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+CREATE TABLE "pagamentos"(
+        "id"                SERIAL PRIMARY KEY  NOT NULL
+    ,   "id_bordero"        BIGINT              NOT NULL REFERENCES "borderos"("id_bling")
+    ,   "id_contato"        BIGINT              NOT NULL REFERENCES "contatos"("id_bling")
+    ,   "numero_documento"  VARCHAR(63)
+    ,   "valor_pago"        INTEGER             NOT NULL
+    ,   "juros"             INTEGER             NOT NULL
+    ,   "desconto"          INTEGER             NOT NULL
+    ,   "acrescimo"         INTEGER             NOT NULL
+    ,   "tarifa"            INTEGER             NOT NULL
+);
+
+---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+CREATE TABLE "contas_borderos_relacao"(
+        "id"            SERIAL PRIMARY KEY  NOT NULL
+    ,   "id_conta"      BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
+    ,   "id_bordero"    BIGINT              NOT NULL REFERENCES "borderos"("id_bling")
+);
+
+
 

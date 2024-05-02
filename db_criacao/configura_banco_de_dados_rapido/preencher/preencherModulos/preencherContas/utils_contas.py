@@ -5,8 +5,10 @@ Created on Thu Jan 11 00:48:45 2024.
 
 @author: vcsil
 """
-from config.constants import API
-from preencherModulos.utils import _verifica_contato
+from config.constants import API, TABELAS_COLUNAS
+from preencherModulos.utils import (_verifica_contato, db_inserir_uma_linha,
+                                    db_inserir_varias_linhas,
+                                    db_pega_um_elemento)
 
 import logging
 
@@ -95,12 +97,12 @@ def solicita_conta(rota: str, conn):
     conta = API.solicita_na_api(rota)["data"]
     _verifica_contato(conta["contato"]["id"], conn)
     log.info("Manipula dados da forma de pagamento")
-    valores_forma_pagamento = _modifica_valores_conta(conta)
+    valores_forma_pagamento = _modifica_valores_conta(conta, conn)
 
-    return valores_forma_pagamento
+    return valores_forma_pagamento, conta["borderos"]
 
 
-def _modifica_valores_conta(conta: dict):
+def _modifica_valores_conta(conta: dict, conn):
     id_portador = conta["portador"]["id"]
     formaPagamento = conta["formaPagamento"]["id"]
     numero_documento = conta["numeroDocumento"]
@@ -122,7 +124,6 @@ def _modifica_valores_conta(conta: dict):
         "id_portador": id_portador if id_portador else None,
         "id_categoria_receita_despesa": conta["categoria"]["id"],
         "id_vendedor": id_vendedor if id_vendedor else None,
-        "id_bordero": _manipula_bordero(conta["borderos"]),
         "id_tipo_ocorrencia": _manipula_valor_opcional(conta, "ocorrencia",
                                                        "tipo"),
         "considerar_dias_uteis": _manipula_valor_opcional(
@@ -137,11 +138,69 @@ def _modifica_valores_conta(conta: dict):
     return valores_conta
 
 
-def _manipula_bordero(bordero: list):
-    id_bordero = None
-    for id_b in bordero:
-        id_bordero = id_b
-    return id_bordero
+def _manipula_bordero(id_borderos: list, id_conta, conn):
+    tabela = "borderos"
+    colunas = TABELAS_COLUNAS[tabela][:]
+
+    PARAM = "/borderos/"
+    for id_bordero in id_borderos:
+        bordero_existe = db_pega_um_elemento(tabela, "id_bling", [id_bordero],
+                                             "id_bling", conn)
+        if bordero_existe:
+            _manipula_relacao_contas_borderos(id_conta, id_bordero, conn)
+            return bordero_existe["id_bling"]
+
+        bordero = API.solicita_na_api(PARAM+str(id_bordero))["data"]
+
+        bordero_db = {
+            "id_bling": bordero["id"],
+            "data": bordero["data"],
+            "historico": bordero["historico"],
+            "id_portador": bordero["portador"]["id"],
+            "id_categoria_receita_despesa": bordero["categoria"]["id"],
+        }
+        db_inserir_uma_linha(tabela, colunas, bordero_db, conn)
+
+        _manipula_pagamentos(bordero["pagamentos"], bordero["id"], conn)
+        _manipula_relacao_contas_borderos(id_conta, id_bordero, conn)
+
+    return
+
+
+def _manipula_pagamentos(pagamentos: list, id_bordero, conn):
+    tabela = "pagamentos"
+    colunas = TABELAS_COLUNAS[tabela][:]
+    colunas.remove("id")
+
+    list_pagamentos = []
+    for pagamento in pagamentos:
+        pagamento_db = {
+            "id_bordero": id_bordero,
+            "id_contato": pagamento["contato"]["id"],
+            "numero_documento": pagamento["numeroDocumento"],
+            "valor_pago": round(pagamento["valorPago"]*100),
+            "juros": round(pagamento["juros"]*100),
+            "desconto": round(pagamento["desconto"]*100),
+            "acrescimo": round(pagamento["acrescimo"]*100),
+            "tarifa": round(pagamento["tarifa"]*100),
+        }
+        list_pagamentos.append(pagamento_db)
+
+    db_inserir_varias_linhas(tabela, colunas, list_pagamentos, conn)
+    return
+
+
+def _manipula_relacao_contas_borderos(id_conta, id_bordero, conn):
+    tabela = "contas_borderos_relacao"
+    colunas = TABELAS_COLUNAS[tabela][:]
+    colunas.remove("id")
+
+    contas_borderos_relacao = {
+        "id_conta": id_conta,
+        "id_bordero": id_bordero,
+    }
+    db_inserir_uma_linha(tabela, colunas, contas_borderos_relacao, conn)
+    return
 
 
 def _manipula_valor_opcional(conta: dict, principal: str, secundario: str):
