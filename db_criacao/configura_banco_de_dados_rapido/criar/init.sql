@@ -117,7 +117,7 @@ CREATE TABLE "contatos"(
     "fantasia"                          VARCHAR(63),
     "id_tipo_contato"                   INTEGER             NOT NULL  REFERENCES "contatos_tipo"("id"),
     "id_indicador_inscricao_estadual"   INTEGER             NOT NULL  REFERENCES "contatos_indicador_inscricao_estadual"("id"),
-    "inscricao_estadual"                VARCHAR(12),
+    "inscricao_estadual"                VARCHAR(13),
     "rg"                                VARCHAR(10),
     "orgao_emissor"                     VARCHAR(55),
     "email"                             VARCHAR(255),
