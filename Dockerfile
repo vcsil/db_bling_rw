@@ -50,7 +50,7 @@ RUN mkdir /home/myuser/code
 WORKDIR /home/myuser/code
 COPY . .
 
-EXPOSE 5000
+# EXPOSE 5000
 
 # make sure all messages always reach console
 ENV PYTHONUNBUFFERED=1
