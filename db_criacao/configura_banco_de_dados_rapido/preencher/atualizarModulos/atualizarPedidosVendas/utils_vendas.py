@@ -9,7 +9,7 @@ Created on Fri Mar 29 15:34:54 2024.
 from preencherModulos.utils import (
     possui_informacao, db_inserir_uma_linha,  manipula_dados_endereco,
     verifica_preenche_valor, _verifica_contato, db_pega_um_elemento,
-    db_pega_varios_elementos_controi_filtro)
+    db_pega_varios_elementos_controi_filtro, db_pega_varios_elementos)
 
 from atualizarModulos.utils import (db_verifica_se_existe,
                                     db_atualizar_uma_linha,
@@ -171,13 +171,13 @@ def _modifica_insere_volumes(venda: dict, existe, conn):
                                      valores=valores_etiqueta, conn=conn)
 
 
-def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int, existe,
-                                    conn):
+def _modifica_insere_itens_produtos(venda_itens_api: list, id_venda: int,
+                                    existe, conn):
     log.info("Insere produtos da venda")
     tabela = "vendas_itens_produtos"
 
-    if len(venda_itens) > 0:
-        for item in venda_itens:
+    if len(venda_itens_api) > 0:
+        for item in venda_itens_api:
             id_produto = item["produto"]["id"]
             obj_item = {
                 "id_bling": item["id"],
@@ -187,16 +187,38 @@ def _modifica_insere_itens_produtos(venda_itens: list, id_venda: int, existe,
                 "valor": round(item["valor"]*100),
                 "quantidade": item["quantidade"]
             }
+            venda_item_exite = db_verifica_se_existe(tabela, "id_bling",
+                                                     obj_item["id_bling"],
+                                                     conn)
 
-            if existe:
+            if not venda_item_exite:
+                db_inserir_uma_linha(tabela, colunas=list(obj_item.keys()),
+                                     valores=obj_item, conn=conn)
+            else:
                 db_atualizar_uma_linha(tabela, colunas=list(obj_item.keys()),
                                        valores=obj_item,
                                        coluna_filtro="id_bling",
                                        valor_filtro=obj_item["id_bling"],
                                        conn=conn)
-            else:
-                db_inserir_uma_linha(tabela, colunas=list(obj_item.keys()),
-                                     valores=obj_item, conn=conn)
+
+        if existe:
+            venda_itens_db = db_pega_varios_elementos(tabela,
+                                                      TABELAS_COLUNAS[tabela],
+                                                      conn, "id_venda",
+                                                      [id_venda])
+            venda_itens_db = list(
+                filter(lambda item_db: item_db["id_bling"]
+                       not in [item["id"] for item in venda_itens_api],
+                       venda_itens_db))
+            # Produtos que estão no DB e não estão na API significam que foram
+            # removidos do pedido.
+            for item_removido in venda_itens_db:
+                item_removido["quantidade"] = 0
+                db_atualizar_uma_linha(tabela, list(item_removido.keys()),
+                                       item_removido, "id_bling",
+                                       item_removido["id_bling"], conn)
+
+    return
 
 
 def _modifica_insere_parcelas(venda: dict, existe, conn):
