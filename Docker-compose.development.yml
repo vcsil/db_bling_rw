@@ -41,6 +41,8 @@ services:
       - rw-db-development
     volumes:
       - .:/home/myuser/code
+    networks:
+      - rw_network-development
 
 volumes:
   rw-postgres-development:
