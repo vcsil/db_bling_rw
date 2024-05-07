@@ -66,12 +66,16 @@ def _modifica_valores_deposito(deposito: dict):
 def solicita_ids_produtos() -> list:
     """Solicita e retorna o ID de todos os produtos (excluidos inclusos)."""
     # Pega todos produtos
-    ids_produtos = api_pega_todos_id("/produtos?criterio=5&tipo=T&")
+    ids_todos_produtos = api_pega_todos_id("/produtos?criterio=5&tipo=T&")
     # Pega variações de produtos
     ids_variacoes = api_pega_todos_id("/produtos?criterio=5&tipo=V&")
+    # Pega excluidos
+    ids_excluidos = api_pega_todos_id("/produtos?criterio=4&tipo=T&")
 
     # Remover as ids das variações
-    ids_produtos = list(set(ids_produtos) - set(ids_variacoes))
+    ids_produtos = list(set(ids_todos_produtos) - set(ids_variacoes))
+    # Adiciona excluidos
+    ids_produtos = list(set(ids_produtos + ids_excluidos))
     ids_produtos.sort()
 
     return ids_produtos
