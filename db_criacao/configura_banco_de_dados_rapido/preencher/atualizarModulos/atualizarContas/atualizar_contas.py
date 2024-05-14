@@ -263,19 +263,17 @@ class AtualizarContas():
         """Atualizar módulo de contas."""
         log.info("Inicio")
 
-# =============================================================================
-#         log.info("Inicio atualizar formas_pagamento")
-#         self.atualizar_formas_pagamento(conn)
-# 
-#         log.info("Inicio atualizar contas_contabeis")
-#         self.atualizar_contas_contabeis(conn)
-# 
-#         log.info("Inicio atualizar categorias_receitas_despesas")
-#         self.atualizar_categorias_receitas_despesas(conn)
-# 
-#         log.info("Inicio atualizar vendedores")
-#         self.atualizar_vendedores(conn)
-# =============================================================================
+        log.info("Inicio atualizar formas_pagamento")
+        self.atualizar_formas_pagamento(conn)
+
+        log.info("Inicio atualizar contas_contabeis")
+        self.atualizar_contas_contabeis(conn)
+
+        log.info("Inicio atualizar categorias_receitas_despesas")
+        self.atualizar_categorias_receitas_despesas(conn)
+
+        log.info("Inicio atualizar vendedores")
+        self.atualizar_vendedores(conn)
 
         log.info("Inicio atualizar contas_receitas_despesas")
         self.atualizar_contas_receitas_despesas(conn)
