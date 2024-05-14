@@ -10,16 +10,15 @@ from preencherModulos.preencherContas.utils_contas import (
     solicita_formas_pagamento, solicita_categeoria, solicita_conta,
     solicita_vendedor)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, db_inserir_uma_linha, db_pega_varios_elementos,
-    api_pega_todos_id)
+    db_inserir_varias_linhas, db_inserir_uma_linha, db_pega_varios_elementos)
 
 from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
                                     txt_fundo_verde)
-from atualizarModulos.atualizarContas.utils_contas import (atualiza_contas,
-                                                           atualiza_bordero)
+from atualizarModulos.atualizarContas.utils_contas import (
+    atualiza_contas, atualiza_bordero, solicita_novos_ids_completo,
+    solicita_contas_receber, solicita_contas_pagar)
 
-from config.constants import FUSO, TABELAS_COLUNAS
-from datetime import datetime
+from config.constants import TABELAS_COLUNAS
 from tqdm import tqdm
 import logging
 
@@ -31,8 +30,8 @@ log = logging.getLogger("root")
 class AtualizarContas():
     """Atualiza módulo de contas."""
 
-    def __init__(self):
-        pass
+    def __init__(self, DATA_AGORA):
+        self.DATA_AGORA = DATA_AGORA
 
     def _atualizar_contas_situacao(self, conn, id_situacao):
         """Atualiza a tabela contas_situacao da database."""
@@ -155,7 +154,8 @@ class AtualizarContas():
         colunas = TABELAS_COLUNAS[tabela][:]
 
         PARAM = "/categorias/receitas-despesas?&tipo=0&situacao=0&"
-        ids_categorias = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
+        ids_categorias = solicita_novos_ids_completo(PARAM, tabela, "id_bling",
+                                                     conn)
 
         if len(ids_categorias) == 0:
             return
@@ -234,18 +234,8 @@ class AtualizarContas():
         """Atualiza a tabela contas_receitas_despesas da database."""
         log.info("Inicia atualização de contas receitas despesas")
 
-        tabela = "contas_receitas_despesas"
-        colunas = TABELAS_COLUNAS[tabela][:]
-
-        hoje = str(datetime.now(FUSO).date())
-
-        PARAM = "/contas/receber?"
-        PARAM += f"tipoFiltroData=E&dataInicial={hoje}&dataFinal={hoje}&"
-        contas_receber = api_pega_todos_id(PARAM)
-
-        PARAM = "/contas/pagar?"
-        PARAM += f"dataEmissaoInicial={hoje}&dataEmissaoFinal={hoje}&"
-        contas_pagar = api_pega_todos_id(PARAM)
+        contas_receber = solicita_contas_receber(self.DATA_AGORA)
+        contas_pagar = solicita_contas_pagar(self.DATA_AGORA)
 
         ids_contas = [contas_receber, contas_pagar]
 

@@ -13,8 +13,7 @@ from atualizarModulos.atualizarPedidosVendas.utils_vendas import (
     solicita_preenche_venda)
 from atualizarModulos.utils import solicita_item_novos, txt_fundo_verde
 
-from config.constants import FUSO, TABELAS_COLUNAS
-from datetime import datetime
+from config.constants import TABELAS_COLUNAS
 from tqdm import tqdm
 import logging
 
@@ -26,8 +25,8 @@ log = logging.getLogger('root')
 class AtualizarVendas():
     """Atualiza módulo de produtos."""
 
-    def __init__(self):
-        pass
+    def __init__(self, DATA_AGORA):
+        self.DATA_AGORA = DATA_AGORA
 
     def atualizar_modulos(self, conn):
         """Atualiza a tabela modulos da database."""
@@ -103,7 +102,7 @@ class AtualizarVendas():
 
     def atualizar_pedidos_vendas(self, conn):
         """Atualiza a tabela vendas da database."""
-        hoje = str(datetime.now(FUSO).date())
+        hoje = self.DATA_AGORA
         PARAM = f"/pedidos/vendas?dataAlteracaoInicial={hoje}&"
         ids_vendas_alter = api_pega_todos_id(PARAM)
         ids_vendas_alter.sort()

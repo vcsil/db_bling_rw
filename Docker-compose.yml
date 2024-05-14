@@ -41,6 +41,8 @@ services:
       - rw-db-production
     volumes:
       - .:/home/myuser/code
+    networks:
+      - rw_network-production
 
 volumes:
   rw-postgres-production:

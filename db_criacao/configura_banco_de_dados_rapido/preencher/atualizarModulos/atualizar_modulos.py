@@ -28,6 +28,8 @@ def atualizar_modulos():
     """Preenche todos os módulos."""
     # Inicia conexão com Banco de Dados
     log.info("Inicia atualização")
+    DATA_AGORA = datetime.now(FUSO)
+
     with DB.conectar_ao_banco() as conn:
 
         log.info("Começa atualizar contatos.")
@@ -36,17 +38,17 @@ def atualizar_modulos():
         conn.commit()
 
         log.info("Começa a atualizar produtos.")
-        AtualizarProdutos().atualizar_modulo_produtos(conn)
+        AtualizarProdutos(DATA_AGORA).atualizar_modulo_produtos(conn)
         log.info("Comita produtos")
         conn.commit()
 
         log.info("Começa atualizar contas a receber.")
-        AtualizarContas().atualizar_modulo_contas(conn)
+        AtualizarContas(DATA_AGORA).atualizar_modulo_contas(conn)
         log.info("Comita contas a receber")
         conn.commit()
 
         log.info("Começa atualizar pedidos de venda.")
-        AtualizarVendas().atualizar_modulo_vendas(conn)
+        AtualizarVendas(DATA_AGORA).atualizar_modulo_vendas(conn)
         log.info("Comita vendas")
         conn.commit()
 
