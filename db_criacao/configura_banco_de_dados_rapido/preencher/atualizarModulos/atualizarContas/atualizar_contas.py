@@ -30,8 +30,8 @@ log = logging.getLogger("root")
 class AtualizarContas():
     """Atualiza módulo de contas."""
 
-    def __init__(self):
-        pass
+    def __init__(self, DATA_AGORA):
+        self.DATA_AGORA = DATA_AGORA
 
     def _atualizar_contas_situacao(self, conn, id_situacao):
         """Atualiza a tabela contas_situacao da database."""
@@ -234,8 +234,8 @@ class AtualizarContas():
         """Atualiza a tabela contas_receitas_despesas da database."""
         log.info("Inicia atualização de contas receitas despesas")
 
-        contas_receber = solicita_contas_receber()
-        contas_pagar = solicita_contas_pagar()
+        contas_receber = solicita_contas_receber(self.DATA_AGORA)
+        contas_pagar = solicita_contas_pagar(self.DATA_AGORA)
 
         ids_contas = [contas_receber, contas_pagar]
 

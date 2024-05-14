@@ -14,9 +14,9 @@ from preencherModulos.preencherContas.utils_contas import (
 from atualizarModulos.utils import (item_com_valores_atualizados,
                                     db_atualizar_uma_linha,
                                     db_verifica_se_existe)
-from config.constants import TABELAS_COLUNAS, API, FUSO
+from config.constants import TABELAS_COLUNAS, API
 
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import logging
 
 log = logging.getLogger("root")
@@ -107,16 +107,16 @@ def solicita_novos_ids_completo(PARAM, tabela_busca, coluna, conn):
     return ids
 
 
-def solicita_contas_receber():
+def solicita_contas_receber(DATA_AGORA):
     """Solicita ids das contas a recebe para serem atualizadas."""
-    hoje = datetime.now(FUSO)
     PARAM = "/contas/receber?"
     PARAM += "&".join(list(map(lambda n: "situacoes[]="+str(n), range(1, 6))))
 
     # Atualizará as contas dos últimos 20 dias na última hora do dia.
-    intervalo_dias = 20 if datetime.now(FUSO).hour >= 23 else 0
-    data_busca = str((hoje - timedelta(days=intervalo_dias)).date())
-    PARAM_BUSCA = f"&dataInicial={data_busca}&dataFinal={str(hoje.date())}&"
+    intervalo_dias = 20 if DATA_AGORA.hour >= 23 else 0
+    data_busca = str((DATA_AGORA - timedelta(days=intervalo_dias)).date())
+    PARAM_BUSCA = f"&dataInicial={data_busca}&"
+    PARAM_BUSCA += f"dataFinal={str(DATA_AGORA.date())}&"
 
     # Busca pela data de emissão
     PARAM_BUSCA1 = PARAM_BUSCA + "tipoFiltroData=E&"
@@ -129,27 +129,26 @@ def solicita_contas_receber():
     return contas_receber
 
 
-def solicita_contas_pagar():
+def solicita_contas_pagar(DATA_AGORA):
     """Solicita ids das contas a pagar para serem atualizadas."""
     PARAM = "/contas/pagar?"
 
-    hoje = datetime.now(FUSO)
-    intervalo_dias = 10 if datetime.now(FUSO).hour >= 23 else 0
-    data_busca = str((hoje - timedelta(days=intervalo_dias)).date())
+    intervalo_dias = 10 if DATA_AGORA.hour >= 23 else 0
+    data_busca = str((DATA_AGORA - timedelta(days=intervalo_dias)).date())
 
     # Busca pela data de emissão
     PARAM1 = f"dataEmissaoInicial={data_busca}&"
-    PARAM1 += f"dataEmissaoFinal={str(hoje.date())}&"
+    PARAM1 += f"dataEmissaoFinal={str(DATA_AGORA.date())}&"
     contas_pagar = api_pega_todos_id(PARAM+PARAM1)
 
     # Busca pela data de pagamento
     PARAM2 = f"dataPagamentoInicial={data_busca}&"
-    PARAM2 += f"dataPagamentoFinal={str(hoje.date())}&"
+    PARAM2 += f"dataPagamentoFinal={str(DATA_AGORA.date())}&"
     contas_pagar += api_pega_todos_id(PARAM+PARAM2)
 
     # Busca pela data de vencimento
     PARAM3 = f"dataVencimentoInicial={data_busca}&"
-    PARAM3 += f"dataVencimentoFinal={str(hoje.date())}&"
+    PARAM3 += f"dataVencimentoFinal={str(DATA_AGORA.date())}&"
     contas_pagar += api_pega_todos_id(PARAM+PARAM3)
 
     contas_pagar = list(set(contas_pagar))

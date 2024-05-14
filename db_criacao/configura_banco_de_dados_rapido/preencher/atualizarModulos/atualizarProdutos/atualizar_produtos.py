@@ -19,8 +19,7 @@ from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids,
     txt_fundo_verde, slice_array, txt_fundo_azul, txt_amarelo)
 
-from config.constants import TABELAS_COLUNAS, API, FUSO
-from datetime import datetime
+from config.constants import TABELAS_COLUNAS, API
 from tqdm import tqdm
 import logging
 
@@ -32,8 +31,8 @@ log = logging.getLogger("root")
 class AtualizarProdutos():
     """Preenche módulo de produtos."""
 
-    def __init__(self):
-        pass
+    def __init__(self, DATA_AGORA):
+        self.DATA_AGORA = DATA_AGORA
 
     def _atualiza_produtos_tipos(self, sigla, conn):
         """Atualiza a tabela produtos_tipos da database."""
@@ -203,7 +202,7 @@ class AtualizarProdutos():
         colunas.remove("criado_em")
 
         # Pega os produtos alterados no dia de hoje
-        hoje = str(datetime.now(FUSO).date())
+        hoje = str(self.DATA_AGORA.date())
         param = "/produtos?criterio=1&tipo=P&"
         param += f"dataAlteracaoInicial={hoje}&dataAlteracaoFinal={hoje}&"
         ids_produtos_alterado = api_pega_todos_id(param)
