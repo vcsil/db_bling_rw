@@ -5,7 +5,9 @@ Created on Fri Apr 26 22:58:45 2024.
 
 @author: vcsil.
 """
-from preencherModulos.utils import (db_inserir_uma_linha, db_pega_um_elemento)
+from preencherModulos.utils import (db_inserir_uma_linha, db_pega_um_elemento,
+                                    api_pega_todos_id,
+                                    db_pega_varios_elementos)
 from preencherModulos.preencherContas.utils_contas import (
     _manipula_relacao_contas_borderos, _manipula_pagamentos)
 
@@ -90,3 +92,16 @@ def _atualiza_relacao_conta_bordero(id_conta, id_bordero, conn):
         _manipula_relacao_contas_borderos(id_conta, id_bordero, conn)
 
     return
+
+
+def solicita_novos_ids_completo(PARAM, tabela_busca, coluna, conn):
+    """Passa por todas as páginas da API."""
+    ids_api = api_pega_todos_id(PARAM)
+
+    ids_db = db_pega_varios_elementos(tabela_busca, coluna, conn)
+    ids_db = [item[coluna] for item in ids_db]
+
+    ids = list(set(ids_api) - set(ids_db))
+    ids.sort()
+
+    return ids

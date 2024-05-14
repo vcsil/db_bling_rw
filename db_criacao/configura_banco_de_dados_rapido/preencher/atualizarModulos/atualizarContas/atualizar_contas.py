@@ -15,8 +15,8 @@ from preencherModulos.utils import (
 
 from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
                                     txt_fundo_verde)
-from atualizarModulos.atualizarContas.utils_contas import (atualiza_contas,
-                                                           atualiza_bordero)
+from atualizarModulos.atualizarContas.utils_contas import (
+    atualiza_contas, atualiza_bordero, solicita_novos_ids_completo)
 
 from config.constants import FUSO, TABELAS_COLUNAS
 from datetime import datetime
@@ -155,7 +155,8 @@ class AtualizarContas():
         colunas = TABELAS_COLUNAS[tabela][:]
 
         PARAM = "/categorias/receitas-despesas?&tipo=0&situacao=0&"
-        ids_categorias = solicita_novos_ids(PARAM, tabela, "id_bling", conn)
+        ids_categorias = solicita_novos_ids_completo(PARAM, tabela, "id_bling",
+                                                     conn)
 
         if len(ids_categorias) == 0:
             return
