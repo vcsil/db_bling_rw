@@ -14,9 +14,9 @@ from preencherModulos.preencherContas.utils_contas import (
 from atualizarModulos.utils import (item_com_valores_atualizados,
                                     db_atualizar_uma_linha,
                                     db_verifica_se_existe)
-from config.constants import TABELAS_COLUNAS, API
+from config.constants import TABELAS_COLUNAS, API, FUSO
 
-from datetime import date
+from datetime import date, datetime, timedelta
 import logging
 
 log = logging.getLogger("root")
@@ -105,3 +105,52 @@ def solicita_novos_ids_completo(PARAM, tabela_busca, coluna, conn):
     ids.sort()
 
     return ids
+
+
+def solicita_contas_receber():
+    """Solicita ids das contas a recebe para serem atualizadas."""
+    hoje = datetime.now(FUSO)
+    PARAM = "/contas/receber?"
+    PARAM += "&".join(list(map(lambda n: "situacoes[]="+str(n), range(1, 6))))
+
+    # Atualizará as contas dos últimos 20 dias na última hora do dia.
+    intervalo_dias = 20 if datetime.now(FUSO).hour >= 23 else 0
+    data_busca = str((hoje - timedelta(days=intervalo_dias)).date())
+    PARAM_BUSCA = f"&dataInicial={data_busca}&dataFinal={str(hoje.date())}&"
+
+    # Busca pela data de emissão
+    PARAM_BUSCA1 = PARAM_BUSCA + "tipoFiltroData=E&"
+    contas_receber1 = api_pega_todos_id(PARAM + PARAM_BUSCA1)
+    # Busca pela data de vencimento
+    PARAM_BUSCA2 = PARAM_BUSCA + "tipoFiltroData=V&"
+    contas_receber2 = api_pega_todos_id(PARAM + PARAM_BUSCA2)
+
+    contas_receber = list(set(contas_receber1 + contas_receber2))
+    return contas_receber
+
+
+def solicita_contas_pagar():
+    """Solicita ids das contas a pagar para serem atualizadas."""
+    PARAM = "/contas/pagar?"
+
+    hoje = datetime.now(FUSO)
+    intervalo_dias = 10 if datetime.now(FUSO).hour >= 23 else 0
+    data_busca = str((hoje - timedelta(days=intervalo_dias)).date())
+
+    # Busca pela data de emissão
+    PARAM1 = f"dataEmissaoInicial={data_busca}&"
+    PARAM1 += f"dataEmissaoFinal={str(hoje.date())}&"
+    contas_pagar = api_pega_todos_id(PARAM+PARAM1)
+
+    # Busca pela data de pagamento
+    PARAM2 = f"dataPagamentoInicial={data_busca}&"
+    PARAM2 += f"dataPagamentoFinal={str(hoje.date())}&"
+    contas_pagar += api_pega_todos_id(PARAM+PARAM2)
+
+    # Busca pela data de vencimento
+    PARAM3 = f"dataVencimentoInicial={data_busca}&"
+    PARAM3 += f"dataVencimentoFinal={str(hoje.date())}&"
+    contas_pagar += api_pega_todos_id(PARAM+PARAM3)
+
+    contas_pagar = list(set(contas_pagar))
+    return contas_pagar

@@ -10,16 +10,15 @@ from preencherModulos.preencherContas.utils_contas import (
     solicita_formas_pagamento, solicita_categeoria, solicita_conta,
     solicita_vendedor)
 from preencherModulos.utils import (
-    db_inserir_varias_linhas, db_inserir_uma_linha, db_pega_varios_elementos,
-    api_pega_todos_id)
+    db_inserir_varias_linhas, db_inserir_uma_linha, db_pega_varios_elementos)
 
 from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
                                     txt_fundo_verde)
 from atualizarModulos.atualizarContas.utils_contas import (
-    atualiza_contas, atualiza_bordero, solicita_novos_ids_completo)
+    atualiza_contas, atualiza_bordero, solicita_novos_ids_completo,
+    solicita_contas_receber, solicita_contas_pagar)
 
-from config.constants import FUSO, TABELAS_COLUNAS
-from datetime import datetime
+from config.constants import TABELAS_COLUNAS
 from tqdm import tqdm
 import logging
 
@@ -235,18 +234,8 @@ class AtualizarContas():
         """Atualiza a tabela contas_receitas_despesas da database."""
         log.info("Inicia atualização de contas receitas despesas")
 
-        tabela = "contas_receitas_despesas"
-        colunas = TABELAS_COLUNAS[tabela][:]
-
-        hoje = str(datetime.now(FUSO).date())
-
-        PARAM = "/contas/receber?"
-        PARAM += f"tipoFiltroData=E&dataInicial={hoje}&dataFinal={hoje}&"
-        contas_receber = api_pega_todos_id(PARAM)
-
-        PARAM = "/contas/pagar?"
-        PARAM += f"dataEmissaoInicial={hoje}&dataEmissaoFinal={hoje}&"
-        contas_pagar = api_pega_todos_id(PARAM)
+        contas_receber = solicita_contas_receber()
+        contas_pagar = solicita_contas_pagar()
 
         ids_contas = [contas_receber, contas_pagar]
 
@@ -274,17 +263,19 @@ class AtualizarContas():
         """Atualizar módulo de contas."""
         log.info("Inicio")
 
-        log.info("Inicio atualizar formas_pagamento")
-        self.atualizar_formas_pagamento(conn)
-
-        log.info("Inicio atualizar contas_contabeis")
-        self.atualizar_contas_contabeis(conn)
-
-        log.info("Inicio atualizar categorias_receitas_despesas")
-        self.atualizar_categorias_receitas_despesas(conn)
-
-        log.info("Inicio atualizar vendedores")
-        self.atualizar_vendedores(conn)
+# =============================================================================
+#         log.info("Inicio atualizar formas_pagamento")
+#         self.atualizar_formas_pagamento(conn)
+# 
+#         log.info("Inicio atualizar contas_contabeis")
+#         self.atualizar_contas_contabeis(conn)
+# 
+#         log.info("Inicio atualizar categorias_receitas_despesas")
+#         self.atualizar_categorias_receitas_despesas(conn)
+# 
+#         log.info("Inicio atualizar vendedores")
+#         self.atualizar_vendedores(conn)
+# =============================================================================
 
         log.info("Inicio atualizar contas_receitas_despesas")
         self.atualizar_contas_receitas_despesas(conn)
