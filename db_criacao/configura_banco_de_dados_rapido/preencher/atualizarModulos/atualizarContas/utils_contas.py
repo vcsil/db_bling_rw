@@ -61,7 +61,7 @@ def atualiza_bordero(id_conta, id_borderos, conn):
         bordero_existe = db_pega_um_elemento(tabela, "id_bling", [id_bordero],
                                              "id_bling", conn)
         if bordero_existe:
-            _atualiza_relacao_conta_bordero
+            _atualiza_relacao_conta_bordero(id_conta, id_bordero, conn)
             return bordero_existe["id_bling"]
 
         bordero = API.solicita_na_api(PARAM+str(id_bordero))["data"]
