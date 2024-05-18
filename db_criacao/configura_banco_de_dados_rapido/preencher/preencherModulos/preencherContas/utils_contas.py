@@ -99,23 +99,32 @@ def solicita_conta(rota: str, conn):
     log.info("Manipula dados da forma de pagamento")
     valores_forma_pagamento = _modifica_valores_conta(conta, conn)
 
-    return valores_forma_pagamento, conta["borderos"]
+    origem_conta_receber = conta.pop("origem", None)
+
+    return valores_forma_pagamento, conta["borderos"], origem_conta_receber
 
 
 def _modifica_valores_conta(conta: dict, conn):
     id_portador = conta["portador"]["id"]
     formaPagamento = conta["formaPagamento"]["id"]
     numero_documento = conta["numeroDocumento"]
+    id_transacao = conta.pop("idTransacao", None)
+    link_qr_code_pix = conta.pop("linkQRCodePix", None)
+    link_boleto = conta.pop("linkBoleto", None)
     id_vendedor = _manipula_valor_opcional(conta, "vendedor", "id")
+
     valores_conta = {
         "id_bling": conta["id"],
         "id_situacao": conta["situacao"],
         "vencimento": conta["vencimento"],
         "valor": round(conta["valor"]*100),
+        "id_transacao": id_transacao if id_transacao else None,
+        "link_qr_code_pix": link_qr_code_pix if link_qr_code_pix else None,
+        "link_boleto": link_boleto if link_boleto else None,
+        "data_emissao": conta["dataEmissao"],
         "id_contato": conta["contato"]["id"],
         "id_forma_pagamento": formaPagamento if formaPagamento else None,
         "saldo": round(conta["saldo"]*100),
-        "data_emissao": conta["dataEmissao"],
         "vencimento_original": conta["vencimentoOriginal"],
         "numero_documento": numero_documento if numero_documento else None,
         "competencia": conta["competencia"],
@@ -138,7 +147,8 @@ def _modifica_valores_conta(conta: dict, conn):
     return valores_conta
 
 
-def _manipula_bordero(id_borderos: list, id_conta, conn):
+def manipula_bordero(id_borderos: list, id_conta, conn):
+    """Preenche a tabela de boderos."""
     tabela = "borderos"
     colunas = TABELAS_COLUNAS[tabela][:]
 
@@ -213,6 +223,28 @@ def _manipula_valor_opcional(conta: dict, principal: str, secundario: str):
         return valor
 
     return None
+
+
+def manipula_origem_conta_receber(origem: dict, id_conta, conn, insere=True):
+    """Manipula e insere linha relacionado a origem da conta a receber."""
+    tabela = "contas_origens"
+    colunas = TABELAS_COLUNAS[tabela][:]
+
+    valores_origem = {
+        "id_bling": origem["id"],
+        "id_conta": id_conta,
+        "tipo_origem": origem["tipoOrigem"],
+        "numero": origem["numero"],
+        "data_emissao": origem["dataEmissao"],
+        "valor": round(origem["valor"]*100),
+        "id_conta_origem_situacao": origem["situacao"],
+        "url": origem["url"]
+    }
+
+    if insere:
+        db_inserir_uma_linha(tabela, colunas, valores_origem, conn)
+
+    return valores_origem
 
 
 if __name__ == "__main__":

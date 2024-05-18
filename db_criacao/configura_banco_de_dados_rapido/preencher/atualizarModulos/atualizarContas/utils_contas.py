@@ -9,7 +9,8 @@ from preencherModulos.utils import (db_inserir_uma_linha, db_pega_um_elemento,
                                     api_pega_todos_id,
                                     db_pega_varios_elementos)
 from preencherModulos.preencherContas.utils_contas import (
-    _manipula_relacao_contas_borderos, _manipula_pagamentos)
+    _manipula_relacao_contas_borderos, _manipula_pagamentos,
+    manipula_origem_conta_receber)
 
 from atualizarModulos.utils import (item_com_valores_atualizados,
                                     db_atualizar_uma_linha,
@@ -153,3 +154,29 @@ def solicita_contas_pagar(DATA_AGORA):
 
     contas_pagar = list(set(contas_pagar))
     return contas_pagar
+
+
+def atualiza_origem_conta(id_conta, origem: dict, conn):
+    """Verifica atualizações na origem da conta."""
+    if not origem:
+        return
+
+    tabela = "contas_origens"
+    colunas = TABELAS_COLUNAS[tabela][:]
+
+    origem_existe = db_verifica_se_existe(tabela, ["id_bling", "id_conta"],
+                                          [origem["id"], id_conta], conn)
+
+    if origem_existe:
+        origem_api = manipula_origem_conta_receber(origem, id_conta, conn,
+                                                   False)
+
+        origem_modificada = item_com_valores_atualizados(origem_api, tabela,
+                                                         "id_bling", conn)
+        if origem_modificada:
+            db_atualizar_uma_linha(tabela, colunas, origem_modificada,
+                                   "id_bling", origem_api["id_bling"], conn)
+    else:
+        origem = manipula_origem_conta_receber(origem, id_conta, conn, True)
+
+    return

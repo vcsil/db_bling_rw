@@ -7,7 +7,7 @@ Created on Wed Jan 10 19:01:03 2024.
 """
 from preencherModulos.preencherContas.utils_contas import (
     solicita_formas_pagamento, solicita_categeoria, solicita_conta,
-    solicita_vendedor, _manipula_bordero)
+    solicita_vendedor, manipula_bordero, manipula_origem_conta_receber)
 from preencherModulos.utils import (
     db_inserir_varias_linhas, api_pega_todos_id, db_inserir_uma_linha)
 from config.constants import API, TABELAS_COLUNAS
@@ -32,11 +32,13 @@ class PreencherContas():
         colunas = TABELAS_COLUNAS[tabela][:]
 
         valores = [
-            {"id": 1, "nome": "Em aberto"},
-            {"id": 2, "nome": "Recebido"},
-            {"id": 3, "nome": "Parcialmente recebido"},
+            {"id": 1, "nome": "Aberto"},
+            {"id": 2, "nome": "Pago"},
+            {"id": 3, "nome": "Parcial"},
             {"id": 4, "nome": "Devolvido"},
             {"id": 5, "nome": "Cancelado"},
+            {"id": 6, "nome": "Devolvido parcial"},
+            {"id": 7, "nome": "Confirmado"},
         ]
 
         log.info("Insere situação contas receber")
@@ -253,6 +255,29 @@ class PreencherContas():
 
         log.info("Fim de preencher contas receitas despesas")
 
+    def preencher_contas_origem_situacoes(self, conn):
+        """Preenche a tabela contas_origem_situacoes da database."""
+        tabela = "contas_origem_situacoes"
+        colunas = TABELAS_COLUNAS[tabela][:]
+
+        valores = [
+            {"id": 0, "nome": "Em aberto"},
+            {"id": 1, "nome": "Atendido"},
+            {"id": 2, "nome": "Cancelado"},
+            {"id": 3, "nome": "Em andamento"},
+            {"id": 5, "nome": "Faturado parcialmente"},
+            {"id": 6, "nome": "Atendido parcialmente"},
+            {"id": 7, "nome": "Aguardando pagamento"},
+            {"id": 8, "nome": "Pagamento confirmado"},
+            {"id": 10, "nome": "Em digitação"},
+            {"id": 11, "nome": "Verificado"},
+            {"id": 12, "nome": "Checkout parcial"},
+        ]
+
+        log.info("Insere situacoes de origens de contas")
+        db_inserir_varias_linhas(tabela, colunas, valores, conn)
+        log.info("Fim de preencher situacoes de origens de contas")
+
     def preencher_contas_receitas_despesas(self, conn):
         """Preenche a tabela contas_receitas_despesas da database."""
         tabela = "contas_receitas_despesas"
@@ -268,13 +293,20 @@ class PreencherContas():
             for idConta in tqdm(ids_contas[idx], desc=f"{ROTA[idx]}",
                                 leave=True, position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
-                conta, borderos = solicita_conta(ROTA[idx]+f"{idConta}", conn)
+                conta, borderos, origem = solicita_conta(
+                                                ROTA[idx]+f"{idConta}", conn)
 
                 log.info("Insere conta")
                 db_inserir_uma_linha(tabela, colunas, conta, conn)
 
                 log.info("Insere bordero")
-                _manipula_bordero(borderos, conta["id_bling"], conn)
+                manipula_bordero(borderos, conta["id_bling"], conn)
+
+                log.info("Insere Origem")
+                if origem:
+                    manipula_origem_conta_receber(origem, conta["id_bling"],
+                                                  conn)
+
             conn.commit()
 
         log.info("Fim de preencher contas receitas despesas")
@@ -315,6 +347,9 @@ class PreencherContas():
 
         log.info("Inicio preencher vendedores")
         self.preencher_vendedores(conn)
+
+        log.info("Inicio preencher contas_origem_situacoes")
+        self.preencher_contas_origem_situacoes(conn)
         conn.commit()
 
         log.info("Inicio preencher contas_receitas_despesas")

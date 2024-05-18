@@ -16,7 +16,7 @@ from atualizarModulos.utils import (solicita_novos_ids, solicita_item_novos,
                                     txt_fundo_verde)
 from atualizarModulos.atualizarContas.utils_contas import (
     atualiza_contas, atualiza_bordero, solicita_novos_ids_completo,
-    solicita_contas_receber, solicita_contas_pagar)
+    solicita_contas_receber, solicita_contas_pagar, atualiza_origem_conta)
 
 from config.constants import TABELAS_COLUNAS
 from tqdm import tqdm
@@ -250,10 +250,12 @@ class AtualizarContas():
                                 position=1):
                 log.info(f"Solicita dados da conta {idConta} na API")
 
-                conta, borderos = solicita_conta(ROTA[idx]+f"{idConta}", conn)
+                conta, borderos, origem = solicita_conta(
+                                                ROTA[idx]+f"{idConta}", conn)
 
                 atualiza_contas(conta, conn)
                 atualiza_bordero(idConta, borderos, conn)
+                atualiza_origem_conta(idConta, origem, conn)
 
             conn.commit()
 
