@@ -106,12 +106,20 @@ def _modifica_valores_conta(conta: dict, conn):
     id_portador = conta["portador"]["id"]
     formaPagamento = conta["formaPagamento"]["id"]
     numero_documento = conta["numeroDocumento"]
+    id_transacao = conta.pop("idTransacao", None)
+    link_qr_code_pix = conta.pop("linkQRCodePix", None)
+    link_boleto = conta.pop("linkBoleto", None)
     id_vendedor = _manipula_valor_opcional(conta, "vendedor", "id")
+
     valores_conta = {
         "id_bling": conta["id"],
         "id_situacao": conta["situacao"],
         "vencimento": conta["vencimento"],
         "valor": round(conta["valor"]*100),
+        "id_transacao": id_transacao if id_transacao else None,
+        "link_qr_code_pix": link_qr_code_pix if link_qr_code_pix else None,
+        "link_boleto": link_boleto if link_boleto else None,
+        "data_emissao": conta["dataEmissao"],
         "id_contato": conta["contato"]["id"],
         "id_forma_pagamento": formaPagamento if formaPagamento else None,
         "saldo": round(conta["saldo"]*100),
