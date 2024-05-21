@@ -48,6 +48,7 @@ def atualiza_contas(conta, conn):
         return
 
     log.info("Insere conta")
+    colunas.remove("alterado_em")
     db_inserir_uma_linha(tabela, colunas, conta, conn)
     return
 
@@ -163,19 +164,28 @@ def atualiza_origem_conta(id_conta, origem: dict, conn):
 
     tabela = "contas_origens"
     colunas = TABELAS_COLUNAS[tabela][:]
+    colunas_busca = ["id_origem", "id_conta"]
 
-    origem_existe = db_verifica_se_existe(tabela, ["id_bling", "id_conta"],
+    origem_existe = db_verifica_se_existe(tabela, colunas_busca,
                                           [origem["id"], id_conta], conn)
 
     if origem_existe:
+        # Controi objeto para fazer comparação com o banco de dados
         origem_api = manipula_origem_conta_receber(origem, id_conta, conn,
                                                    False)
+        origem_api["id"] = db_pega_um_elemento(tabela, colunas_busca,
+                                               [origem["id"], id_conta],
+                                               ["id"], conn)["id"]
+
+        # Formata o formato da data
+        ano, mes, dia = origem_api["data_emissao"].split("-")
+        origem_api["data_emissao"] = date(int(ano), int(mes), int(dia))
 
         origem_modificada = item_com_valores_atualizados(origem_api, tabela,
-                                                         "id_bling", conn)
+                                                         "id", conn)
         if origem_modificada:
             db_atualizar_uma_linha(tabela, colunas, origem_modificada,
-                                   "id_bling", origem_api["id_bling"], conn)
+                                   "id", origem_api["id"], conn)
     else:
         origem = manipula_origem_conta_receber(origem, id_conta, conn, True)
 

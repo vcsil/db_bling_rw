@@ -566,7 +566,8 @@ CREATE TABLE "contas_origem_situacoes"(
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "contas_origens"(
-        "id_bling"                  BIGINT PRIMARY KEY  NOT NULL
+        "id"                        SERIAL PRIMARY KEY  NOT NULL
+    ,   "id_origem"                 BIGINT              NOT NULL
     ,   "id_conta"                  BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
     ,   "tipo_origem"               VARCHAR(63)
     ,   "numero"                    VARCHAR(63)

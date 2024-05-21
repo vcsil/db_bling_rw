@@ -143,6 +143,7 @@ def _modifica_valores_conta(conta: dict, conn):
                                                     "numeroParcelas"),
         "data_limite": _manipula_valor_opcional(conta, "ocorrencia",
                                                 "dataLimite"),
+        "alterado_em": None,
     }
     return valores_conta
 
@@ -229,9 +230,10 @@ def manipula_origem_conta_receber(origem: dict, id_conta, conn, insere=True):
     """Manipula e insere linha relacionado a origem da conta a receber."""
     tabela = "contas_origens"
     colunas = TABELAS_COLUNAS[tabela][:]
+    colunas.remove("id")
 
     valores_origem = {
-        "id_bling": origem["id"],
+        "id_origem": origem["id"],
         "id_conta": id_conta,
         "tipo_origem": origem["tipoOrigem"],
         "numero": origem["numero"],
