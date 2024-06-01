@@ -571,7 +571,7 @@ CREATE TABLE "contas_origens"(
     ,   "id_conta"                  BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
     ,   "tipo_origem"               VARCHAR(63)
     ,   "numero"                    VARCHAR(63)
-    ,   "data_emissao"              DATE                NOT NULL
+    ,   "data_emissao"              DATE
     ,   "valor"                     INTEGER             NOT NULL
     ,   "id_conta_origem_situacao"  INTEGER             NOT NULL REFERENCES "contas_origem_situacoes"("id")
     ,   "url"                       TEXT
