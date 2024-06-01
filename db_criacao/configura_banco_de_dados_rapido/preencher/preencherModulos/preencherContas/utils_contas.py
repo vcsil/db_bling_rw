@@ -224,7 +224,8 @@ def _manipula_valor_opcional(conta: dict, principal: str, secundario: str):
         valor = dict2.pop(secundario, None)
 
         if secundario == "diaVencimento":
-            valor = _soma_data(conta["dataEmissao"], valor).date()
+            if valor:
+                valor = _soma_data(conta["dataEmissao"], valor).date()
 
         if secundario == "dataLimite":
             ano = valor.split("-")[0]
