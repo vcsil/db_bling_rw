@@ -7,7 +7,7 @@ Created on Thu Jan 11 00:48:45 2024.
 """
 from config.constants import API, TABELAS_COLUNAS
 from preencherModulos.utils import (_verifica_contato, db_inserir_uma_linha,
-                                    db_inserir_varias_linhas,
+                                    db_inserir_varias_linhas, formata_data,
                                     db_pega_um_elemento)
 
 import logging
@@ -237,7 +237,7 @@ def manipula_origem_conta_receber(origem: dict, id_conta, conn, insere=True):
         "id_conta": id_conta,
         "tipo_origem": origem["tipoOrigem"],
         "numero": origem["numero"],
-        "data_emissao": origem["dataEmissao"],
+        "data_emissao": formata_data(origem["dataEmissao"]),
         "valor": round(origem["valor"]*100),
         "id_conta_origem_situacao": origem["situacao"],
         "url": origem["url"]
