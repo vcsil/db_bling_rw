@@ -97,7 +97,8 @@ COMMENT ON COLUMN
     "formas_pagamento_destino"."nome" IS '`1` Conta a receber/pagar
     `2` Ficha financeira
     `3` Caixa e bancos';
-,---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+
+---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "formas_pagamento_finalidade"(
     "id"    SERIAL PRIMARY KEY  NOT NULL,
@@ -205,7 +206,7 @@ COMMENT ON COLUMN
 CREATE TABLE "contas_origem_situacoes"(
         "id"      SERIAL PRIMARY KEY  NOT NULL
     ,   "nome"    VARCHAR(31)         NOT NULL
-)
+);
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -219,7 +220,7 @@ CREATE TABLE "contas_origens"(
     ,   "valor"                     INTEGER             NOT NULL
     ,   "id_conta_origem_situacao"  INTEGER             NOT NULL REFERENCES "contas_origem_situacoes"("id")
     ,   "url"                       TEXT
-)
+);
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 

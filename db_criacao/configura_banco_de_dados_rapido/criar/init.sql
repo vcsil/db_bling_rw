@@ -561,7 +561,7 @@ COMMENT ON COLUMN
 CREATE TABLE "contas_origem_situacoes"(
         "id"      SERIAL PRIMARY KEY  NOT NULL
     ,   "nome"    VARCHAR(31)         NOT NULL
-)
+);
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
@@ -575,7 +575,7 @@ CREATE TABLE "contas_origens"(
     ,   "valor"                     INTEGER             NOT NULL
     ,   "id_conta_origem_situacao"  INTEGER             NOT NULL REFERENCES "contas_origem_situacoes"("id")
     ,   "url"                       TEXT
-)
+);
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
