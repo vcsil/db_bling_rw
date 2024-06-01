@@ -10,6 +10,7 @@ from preencherModulos.utils import (_verifica_contato, db_inserir_uma_linha,
                                     db_inserir_varias_linhas, formata_data,
                                     db_pega_um_elemento)
 
+from datetime import timedelta
 import logging
 
 log = logging.getLogger("root")
@@ -221,9 +222,23 @@ def _manipula_valor_opcional(conta: dict, principal: str, secundario: str):
 
     if dict2:
         valor = dict2.pop(secundario, None)
+
+        if secundario == "diaVencimento":
+            valor = _soma_data(conta["dataEmissao"], valor).date()
+
+        if secundario == "dataLimite":
+            ano = valor.split("-")[0]
+            if ano == "0000":
+                valor = None
+
         return valor
 
     return None
+
+
+def _soma_data(data, dias):
+    data = formata_data(data)
+    return data + timedelta(days=dias)
 
 
 def manipula_origem_conta_receber(origem: dict, id_conta, conn, insere=True):
