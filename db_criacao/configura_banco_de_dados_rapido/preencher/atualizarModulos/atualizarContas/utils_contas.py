@@ -177,10 +177,6 @@ def atualiza_origem_conta(id_conta, origem: dict, conn):
                                                [origem["id"], id_conta],
                                                ["id"], conn)["id"]
 
-        # Formata o formato da data
-        ano, mes, dia = origem_api["data_emissao"].split("-")
-        origem_api["data_emissao"] = date(int(ano), int(mes), int(dia))
-
         origem_modificada = item_com_valores_atualizados(origem_api, tabela,
                                                          "id", conn)
         if origem_modificada:
