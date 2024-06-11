@@ -9,7 +9,7 @@ CREATE TABLE "contas_contabeis"(
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "categorias_receitas_despesas_tipo"(
-    "id"    BIGINT PRIMARY KEY  NOT NULL,
+    "id"    INTEGER PRIMARY KEY  NOT NULL,
     "nome"  VARCHAR(25)         NOT NULL CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN

@@ -264,7 +264,7 @@ CREATE TABLE "produtos"(
     "descricao_complementar"    TEXT,
     "link_externo"              TEXT,
     "observacoes"               TEXT,
-    "id_categoria_produto"      INTEGER             NOT NULL REFERENCES "produtos_categorias"("id_bling"),
+    "id_categoria_produto"      BIGINT              NOT NULL REFERENCES "produtos_categorias"("id_bling"),
     "estoque_minimo"            INTEGER             NOT NULL DEFAULT 0,
     "estoque_maximo"            INTEGER             NOT NULL DEFAULT 0,
     "estoque_crossdocking"      INTEGER             NOT NULL DEFAULT 0,
@@ -364,7 +364,7 @@ CREATE TABLE "contas_contabeis"(
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "categorias_receitas_despesas_tipo"(
-    "id"    BIGINT PRIMARY KEY  NOT NULL,
+    "id"    INTEGER PRIMARY KEY  NOT NULL,
     "nome"  VARCHAR(25)         NOT NULL CHECK ("nome" <> '')
 );
 COMMENT ON COLUMN
@@ -678,8 +678,8 @@ CREATE TABLE "vendas"(
     "transporte_quantidade_volumes" INTEGER,
     "transporte_peso_bruto"         INTEGER,
     "transporte_prazo_entrega"      INTEGER,
-    "transporte_id_contato"         INTEGER             REFERENCES "contatos"("id_bling"),
-    "transporte_id_etiqueta"        BIGINT              REFERENCES "transporte_etiqueta"("id"),
+    "transporte_id_contato"         BIGINT              REFERENCES "contatos"("id_bling"),
+    "transporte_id_etiqueta"        INTEGER             REFERENCES "transporte_etiqueta"("id"),
     "alterado_em"                   TIMESTAMPTZ         DEFAULT current_timestamp
 );
 COMMENT ON COLUMN

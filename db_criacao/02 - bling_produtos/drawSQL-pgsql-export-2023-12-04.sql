@@ -114,7 +114,7 @@ CREATE TABLE "produtos"(
     "descricao_complementar"    TEXT,
     "link_externo"              TEXT,
     "observacoes"               TEXT,
-    "id_categoria_produto"      INTEGER             NOT NULL REFERENCES "produtos_categorias"("id_bling"),
+    "id_categoria_produto"      BIGINT              NOT NULL REFERENCES "produtos_categorias"("id_bling"),
     "estoque_minimo"            INTEGER             NOT NULL DEFAULT 0,
     "estoque_maximo"            INTEGER             NOT NULL DEFAULT 0,
     "estoque_crossdocking"      INTEGER             NOT NULL DEFAULT 0,
