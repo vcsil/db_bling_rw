@@ -90,7 +90,8 @@ def solicita_produto(idProduto: int, conn, inserir_produto: bool = False):
         return (produto, False)
 
     log.info("Manipula dados do produto")
-    valores_produto = _modifica_valores_produto(produto, conn)
+    valores_produto = _modifica_valores_produto(produto, conn,
+                                                criacao=inserir_produto)
 
     # Se o produto tiver variações, vai enviar o dict das variações separado.
     if len(produto["variacoes"]) > 0:
@@ -108,7 +109,8 @@ def solicita_produto(idProduto: int, conn, inserir_produto: bool = False):
         return (False, valores_produto)
 
 
-def _modifica_valores_produto(produto: dict, conn, id_pai=None):
+def _modifica_valores_produto(produto: dict, conn, id_pai: bool = None,
+                              criacao: bool = False):
     id_tipo_producao = _pega_tipo_producao(produto, conn)
 
     valores_produto = {
@@ -149,7 +151,7 @@ def _modifica_valores_produto(produto: dict, conn, id_pai=None):
         "ncm": produto["tributacao"]["ncm"],
         "cest": produto["tributacao"]["cest"],
         "id_midia_principal": _formata_midia(produto["midia"], produto["id"],
-                                             conn),
+                                             criacao, conn),
         "criado_em": datetime.now(FUSO),
         "alterado_em": None
     }
@@ -192,17 +194,34 @@ def _formata_dimensoes(dimensoes_api, conn):
     return id_dimensao
 
 
-def _formata_midia(midias, id_produto, conn):
+def _formata_midia(midias, id_produto, criacao, conn):
+
+    if not (criacao):
+        return db_pega_um_elemento("produtos", ["id_bling"], [id_produto],
+                                   ["id_midia_principal"],
+                                   conn)["id_midia_principal"]
+
+    _formata_midia_video(conn, midias["video"])
+
+    midia_principal = _formata_midia_imagem(conn, midias["imagens"],
+                                            id_produto)
+
+    return midia_principal if midia_principal else None
+
+
+def _formata_midia_video(conn, video):
+    colunas = ["tipo", "url", "url_miniatura", "validade"]
+
+    if video["url"] != "":
+        video = {"tipo": False, "url": video["url"], "url_miniatura": None,
+                 "validade": datetime.now(FUSO)}
+        db_inserir_uma_linha("produtos_midias", colunas, [video], conn)
+
+
+def _formata_midia_imagem(conn, imagens, id_produto):
     colunas = ["tipo", "url", "url_miniatura", "validade"]
     formato_data = "%Y-%m-%d %H:%M:%S"
 
-    if midias["video"]["url"] != "":
-        video = midias["video"]
-        video = {"tipo": False, "url": video["url"], "url_miniatura": None,
-                 "validade": None}
-        db_inserir_uma_linha("produtos_midias", colunas, [video], conn)
-
-    imagens = midias["imagens"]
     midia_principal = False
     for origem in list(imagens.keys()):  # Externa ou interna
         for obj_imagem in imagens[origem]:  # dict da imagem
@@ -222,7 +241,7 @@ def _formata_midia(midias, id_produto, conn):
             if not (midia_principal):
                 midia_principal = id_foto
 
-    return midia_principal if midia_principal else None
+    return midia_principal
 
 
 def _insere_produto(produto: dict, colunas: list, conn):
