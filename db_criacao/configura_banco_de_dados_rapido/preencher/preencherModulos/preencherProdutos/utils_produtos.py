@@ -194,6 +194,7 @@ def _formata_dimensoes(dimensoes_api, conn):
 
 def _formata_midia(midias, id_produto, conn):
     colunas = ["tipo", "url", "url_miniatura", "validade"]
+    formato_data = "%Y-%m-%d %H:%M:%S"
 
     if midias["video"]["url"] != "":
         video = midias["video"]
@@ -205,9 +206,12 @@ def _formata_midia(midias, id_produto, conn):
     midia_principal = False
     for origem in list(imagens.keys()):  # Externa ou interna
         for obj_imagem in imagens[origem]:  # dict da imagem
-            imagem = {"tipo": True, "url": obj_imagem["link"],
-                      "url_miniatura": obj_imagem["linkMiniatura"],
-                      "validade": obj_imagem["validade"]}
+            imagem = {
+                "tipo": True, "url": obj_imagem["link"],
+                "url_miniatura": obj_imagem["linkMiniatura"],
+                "validade": datetime.strptime(obj_imagem["validade"],
+                                              formato_data).astimezone(FUSO)
+                }
             id_foto = db_inserir_uma_linha("produtos_midias", colunas, imagem,
                                            conn)["id"]
 
