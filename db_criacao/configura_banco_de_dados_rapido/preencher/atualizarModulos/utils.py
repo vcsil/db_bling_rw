@@ -91,6 +91,52 @@ def db_atualizar_uma_linha(tabela, colunas, valores, coluna_filtro,
                                valor_filtro, conn)
 
 
+def db_deletar_uma_linha(tabela, coluna_filtro, valor_filtro, conn):
+    """
+    Faz um DELETE de uma linha de dados no banco de dados.
+
+    Parameters
+    ----------
+    tabela : str
+        Nome da tabela que será alterada.
+    coluna_filtro : str
+        Coluna para buscar valor.
+    valor_filtro : str
+        Valor identificar linha que vai ser deletada.
+    conn : Connection
+        Conexão com banco de dados.
+
+    Returns
+    -------
+    None.
+
+    """
+    return DB.delete_one_in_db(tabela, coluna_filtro, valor_filtro, conn)
+
+
+def db_deletar_varias_linhas(tabela, coluna_filtro, valores_filtro, conn):
+    """
+    Faz um DELETE de varias linhas de dados no banco de dados.
+
+    Parameters
+    ----------
+    tabela : str
+        Nome da tabela que será alterada.
+    coluna_filtro : str
+        Coluna para buscar valor.
+     valores_filtro: List[str || int]
+        Lista com valores para identificar linhas que serão deletadas.
+    conn : Connection
+        Conexão com banco de dados.
+
+    Returns
+    -------
+    None.
+
+    """
+    return DB.delete_many_in_db(tabela, coluna_filtro, valores_filtro, conn)
+
+
 def db_verifica_se_existe(tabela_busca, coluna_busca, valor_busca, conn):
     """
     Utilizado para verificar se um elemento já existe a partir do seu ID.

@@ -14,7 +14,10 @@ from preencherModulos.utils import (
 
 from atualizarModulos.atualizarProdutos.utils_produtos import (
     atualizar_estoque_fornecedor, solicita_produto_para_atualizar,
-    manipula_insere_variacao, atualiza_estoque, manipula_variacao_excluidas)
+    manipula_insere_variacao, atualiza_estoque, manipula_variacao_excluidas,
+    solicita_produtos_com_midias_vencidas, solicita_midias_produtos,
+    manipula_midias_atualizadas, cria_atualiza_midia_produtos,
+    atualiza_midia_produtos)
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, solicita_novos_ids,
     txt_fundo_verde, slice_array, txt_fundo_azul, txt_amarelo)
@@ -283,6 +286,39 @@ class AtualizarProdutos():
 
         return
 
+    def atualizar_midia(self, conn):
+        """Atualiza as mídias que passaram da validade."""
+        tabela = "produtos_midias"
+        colunas = TABELAS_COLUNAS[tabela][:]
+        colunas.remove("criado_em")
+        colunas.remove("id")
+
+        ids_produtos = solicita_produtos_com_midias_vencidas(conn)
+
+        for id_produto in tqdm(ids_produtos, "Atualizando midias", position=1):
+            # Solicita o produto na api e pega as mídias atualizadas.
+            produto_api = API.solicita_na_api(f"/produtos/{id_produto}")
+            midias_api = produto_api["data"]["midia"]
+
+            # Formata as mídias atualizadas:
+            imagens_api = manipula_midias_atualizadas(conn,
+                                                      midias_api["imagens"])
+            if not imagens_api:
+                continue
+
+            # Solicida mídias salvas no banco de dados.
+            midias_db = solicita_midias_produtos(conn, id_produto)
+
+            # Se tiver mais mídias novas do que no bd vai ser preciso criar
+            if len(imagens_api) > len(midias_db):
+                cria_atualiza_midia_produtos(conn, imagens_api, midias_db,
+                                             id_produto)
+                continue
+
+            atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto)
+
+        return
+
     def atualizar_modulo_produtos(self, conn):
         """Preencher módulo de produtos."""
         log.info("Inicio")
@@ -302,6 +338,10 @@ class AtualizarProdutos():
         conn.commit()
 
         self.atualizar_estoque(conn=conn)
+
+        log.info("Inicia atualização das midias vencidas")
+        self.atualizar_midia(conn)
+        conn.commit()
 
         log.info("Fim produtos")
 

@@ -421,6 +421,112 @@ class ConectaDB():
             conn.rollback()
             sys.exit()
 
+    def delete_one_in_db(
+            self,
+            tabela: str,
+            coluna_filtro,
+            valor_filtro,
+            conn
+    ):
+        """
+        Faz um DELETE de uma linha de dados no banco de dados.
+
+        Parameters
+        ----------
+        tabela : str
+            Nome da tabela que sofrera a alteracao.
+        coluna_filtro:
+            Coluna para buscar valor.
+        valor_filtro:
+            Valor para identificar linha que vai ser excluida.
+        conn : Connection
+            Conexão com banco de dados.
+
+        Returns
+        -------
+        None.
+
+        """
+        query = "DELETE FROM {table} "
+        query += "WHERE {column} = {value} RETURNING *"
+        query = (sql.SQL(query).format(
+            table=sql.Identifier(tabela),
+            column=sql.Identifier(coluna_filtro),
+            value=sql.Literal(valor_filtro),
+            )
+        )
+        try:
+            txt = f"Deleta uma linha na tabela '{tabela}' com o valor "
+            txt += f"'{valor_filtro}' na coluna '{coluna_filtro}'"
+            log.info(txt)
+            # with conn.transaction():
+            # print(query.as_string(conn))
+            dados_excluidos = conn.execute(query).fetchone()
+            log.info("Sucesso na exclusão")
+            return dados_excluidos
+        except Error as e:
+            _, _, traceback_obj = sys.exc_info()
+            print(f"SQLState: {e.sqlstate}")
+            print(f"Erro no banco de dados: {e}\n{type(e)}")
+            print(f"{traceback_obj}\n")
+            log.error(f"SQLState: {e.sqlstate} {e}")
+            log.error(f"{query.as_string(conn)}")
+            conn.rollback()
+            sys.exit()
+
+    def delete_many_in_db(
+            self,
+            tabela: str,
+            coluna_filtro,
+            valores_filtro,
+            conn
+    ):
+        """
+        Faz um DELETE de varias linhas de dados no banco de dados.
+
+        Parameters
+        ----------
+        tabela : str
+            Nome da tabela que sofrera a alteracao.
+        coluna_filtro:
+            Coluna para buscar valor.
+        valores_filtro:
+            Valores para identificar linhas que serão excluidas.
+        conn : Connection
+            Conexão com banco de dados.
+
+        Returns
+        -------
+        None.
+
+        """
+        query = "DELETE FROM {table} "
+        query += "WHERE ({column}) IN ({values}) RETURNING *"
+        query = (sql.SQL(query).format(
+            table=sql.Identifier(tabela),
+            column=sql.Identifier(coluna_filtro),
+            values=sql.SQL(', ').join(map(sql.Literal, valores_filtro))
+            )
+        )
+        try:
+            txt = f"Deleta linhas na tabela '{tabela}' com os valores "
+            txt += f"'{valores_filtro}' na coluna '{coluna_filtro}'"
+            log.info(txt)
+            # with conn.transaction():
+            # print(query.as_string(conn))
+            dados_excluidos = conn.execute(query).fetchone()
+            log.info("Sucesso na exclusão")
+            return dados_excluidos
+        except Error as e:
+            _, _, traceback_obj = sys.exc_info()
+            print(f"SQLState: {e.sqlstate}")
+            print(f"Erro no banco de dados: {e}\n{type(e)}")
+            print(f"{traceback_obj}\n")
+            log.error(f"SQLState: {e.sqlstate} {e}")
+            log.error(f"{query.as_string(conn)}")
+            conn.rollback()
+            sys.exit()
+
     def pega_nome_tabelas(self) -> List[str]:
         """
         Pega nome da todas as tabelas do banco de dados.

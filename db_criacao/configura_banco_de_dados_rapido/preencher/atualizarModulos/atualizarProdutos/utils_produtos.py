@@ -13,10 +13,11 @@ from preencherModulos.preencherProdutos.utils_produtos import (
     _modifica_valores_produto)
 
 from atualizarModulos.utils import (
-    db_atualizar_uma_linha, db_verifica_se_existe,
+    db_atualizar_uma_linha, db_verifica_se_existe, db_deletar_varias_linhas,
     item_com_valores_atualizados)
 
-from config.constants import API, TABELAS_COLUNAS
+from config.constants import API, TABELAS_COLUNAS, FUSO
+from datetime import datetime
 import logging
 
 log = logging.getLogger('root')
@@ -190,6 +191,115 @@ def atualiza_estoque(saldo_estoque, conn):
                                    colunas=colunas_prod_est,
                                    coluna_busca=["id_produto", "id_deposito"],
                                    conn=conn)
+
+
+def solicita_produtos_com_midias_vencidas(conn):
+    """Solicita os ids dos produtos com mídias vencidas."""
+    colunas_retorno = ["id_bling"]
+
+    query = "AS pm"
+    query += " JOIN produtos_midias_relacao AS pmr ON pmr.id_image = pm.id"
+    query += " JOIN produtos AS p ON p.id_bling = pmr.id_produto"
+    query += " WHERE validade < CURRENT_TIMESTAMP"
+
+    produtos_com_midias_desatualizadas = (
+        db_pega_varios_elementos_controi_filtro("produtos_midias",
+                                                query,
+                                                colunas_retorno, conn))
+    ids_produtos = [item["id_bling"] for item
+                    in produtos_com_midias_desatualizadas]
+    ids_produtos = list(set(ids_produtos))
+    ids_produtos.sort()
+
+    return ids_produtos
+
+
+def solicita_midias_produtos(conn, id_produto):
+    """Retorna todas ids das mídias do produto."""
+    colunas_retorno = ["id_image"]
+
+    query = "AS pmr"
+    query += " JOIN produtos AS p ON p.id_bling = pmr.id_produto"
+    query += f" WHERE p.id_bling={id_produto}"
+
+    ids_midias_desatualizadas = (
+        db_pega_varios_elementos_controi_filtro("produtos_midias_relacao",
+                                                query,
+                                                colunas_retorno, conn))
+    ids_midias = [item["id_image"] for item
+                  in ids_midias_desatualizadas]
+    ids_midias = list(set(ids_midias))
+    ids_midias.sort()
+
+    return ids_midias
+
+
+def manipula_midias_atualizadas(conn, imagens):
+    """Cria dict das imagens adequadas para o banco de dados."""
+    formato_data = "%Y-%m-%d %H:%M:%S"
+
+    midias_atualizadas = []
+    for origem in list(imagens.keys()):  # Externa ou interna
+        for obj_imagem in imagens[origem]:  # dict da imagem
+            imagem = {
+                "tipo": True, "url": obj_imagem["link"],
+                "url_miniatura": obj_imagem["linkMiniatura"],
+                "validade": datetime.strptime(obj_imagem["validade"],
+                                              formato_data).astimezone(FUSO)
+                }
+            midias_atualizadas.append(imagem)
+
+    return midias_atualizadas
+
+
+def cria_atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto):
+    """Atualiza as midias e adiciona novas mídias adicionadas."""
+    tabela = "produtos_midias"
+    colunas = TABELAS_COLUNAS[tabela][:]
+    colunas.remove("criado_em")
+    colunas.remove("id")
+
+    # Atualiza imagens
+    for id_midias_db in midias_db:
+        db_atualizar_uma_linha(tabela, colunas, imagens_api.pop(0),
+                               ["id"], id_midias_db, conn)
+
+    # Insere imagens novas do produto
+    for dict_imagem in imagens_api:
+        id_foto = db_inserir_uma_linha(tabela, colunas,
+                                       dict_imagem, conn)["id"]
+
+        midia_relacao = {"id_produto": id_produto,
+                         "id_image": id_foto}
+        db_inserir_uma_linha("produtos_midias_relacao",
+                             ["id_produto", "id_image"],
+                             midia_relacao, conn)
+
+    return
+
+
+def atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto):
+    """Atualiza midias dos produtosno banco de dados."""
+    tabela = "produtos_midias"
+    colunas = TABELAS_COLUNAS[tabela][:]
+    colunas.remove("criado_em")
+    colunas.remove("id")
+
+    id_midia_principal = midias_db[0]
+
+    # Atualiza imagens
+    for dict_imagem in imagens_api:
+        db_atualizar_uma_linha(tabela, colunas, dict_imagem,
+                               ["id"], midias_db.pop(0), conn)
+
+    agora = datetime.now(FUSO)
+    db_atualizar_uma_linha("produtos", ["id_midia_principal", "alterado_em"],
+                           {"id_midia_principal": id_midia_principal,
+                            "alterado_em": agora},
+                           "id_bling", id_produto, conn)
+    # Excluir imagens que sobraram e estão vencidas.
+    if midias_db:
+        db_deletar_varias_linhas(tabela, "id", midias_db, conn)
 
 
 if __name__ == "__main__":
