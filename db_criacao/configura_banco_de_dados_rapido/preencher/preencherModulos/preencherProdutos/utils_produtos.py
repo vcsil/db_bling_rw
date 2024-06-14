@@ -91,7 +91,7 @@ def solicita_produto(idProduto: int, conn, inserir_produto: bool = False):
 
     log.info("Manipula dados do produto")
     valores_produto = _modifica_valores_produto(produto, conn,
-                                                criacao=inserir_produto)
+                                                inserir_produto=inserir_produto)
 
     # Se o produto tiver variações, vai enviar o dict das variações separado.
     if len(produto["variacoes"]) > 0:
@@ -110,7 +110,7 @@ def solicita_produto(idProduto: int, conn, inserir_produto: bool = False):
 
 
 def _modifica_valores_produto(produto: dict, conn, id_pai: bool = None,
-                              criacao: bool = False):
+                              inserir_produto: bool = False):
     id_tipo_producao = _pega_tipo_producao(produto, conn)
 
     valores_produto = {
@@ -151,7 +151,7 @@ def _modifica_valores_produto(produto: dict, conn, id_pai: bool = None,
         "ncm": produto["tributacao"]["ncm"],
         "cest": produto["tributacao"]["cest"],
         "id_midia_principal": _formata_midia(produto["midia"], produto["id"],
-                                             criacao, conn),
+                                             inserir_produto, conn),
         "criado_em": datetime.now(FUSO),
         "alterado_em": None
     }
@@ -194,12 +194,14 @@ def _formata_dimensoes(dimensoes_api, conn):
     return id_dimensao
 
 
-def _formata_midia(midias, id_produto, criacao, conn):
+def _formata_midia(midias, id_produto, inserir_produto, conn):
 
-    if not (criacao):
-        return db_pega_um_elemento("produtos", ["id_bling"], [id_produto],
-                                   ["id_midia_principal"],
-                                   conn)["id_midia_principal"]
+    # Produto que não é para inserir já existe no banco de dados
+    if not (inserir_produto):
+        midia = db_pega_um_elemento("produtos", ["id_bling"], [id_produto],
+                                    ["id_midia_principal"], conn)
+
+        return midia["id_midia_principal"] if midia else midia
 
     _formata_midia_video(conn, midias["video"])
 
@@ -261,7 +263,8 @@ def solicita_insere_variacao(
     colunas_produto_variacao = TABELAS_COLUNAS["produto_variacao"][:]
     colunas_produto_variacao.remove("id")
 
-    produto_variacao, produto = _solicita_variacao(dict_variacao, id_Pai, conn)
+    produto_variacao, produto = _solicita_variacao(dict_variacao, id_Pai, conn,
+                                                   True)
 
     log.info(f"Insere produto {dict_variacao['id']} no banco de dados")
     db_inserir_uma_linha("produtos", colunas_produtos, produto, conn)
@@ -271,9 +274,11 @@ def solicita_insere_variacao(
                          produto_variacao, conn)
 
 
-def _solicita_variacao(variacao: dict, id_pai: int, conn):
+def _solicita_variacao(variacao: dict, id_pai: int, conn,
+                       inserir_produto: bool = False):
     """Monta objeto variacao."""
-    valores_produto = _modifica_valores_produto(variacao, conn, id_pai)
+    valores_produto = _modifica_valores_produto(variacao, conn, id_pai,
+                                                inserir_produto)
 
     produto_variacao = _modifica_produto_variacao(variacao, id_pai)
     return (produto_variacao, valores_produto)
