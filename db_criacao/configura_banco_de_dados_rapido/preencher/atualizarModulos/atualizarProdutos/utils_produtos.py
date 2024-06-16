@@ -76,7 +76,9 @@ def solicita_produto_para_atualizar(idProduto, conn):
 
 def manipula_insere_variacao(id_pai, variacoes, conn):
     """Solicita, verifica modificações, manipula e insere variacao."""
+    list_ids_variacoes = []
     for variacao in variacoes:
+        list_ids_variacoes.append(variacao["id"])
         produto_variacao, variacao = _solicita_variacao(variacao, id_pai, conn)
 
         # Verifica se a variação já existe no banco de dados
@@ -89,6 +91,8 @@ def manipula_insere_variacao(id_pai, variacoes, conn):
             _atualiza_variacao(produto_variacao, variacao, conn)
         else:
             _cria_variacao(produto_variacao, variacao, conn)
+
+    return list_ids_variacoes
 
 
 def manipula_variacao_excluidas(id_produto, variacoes_api, conn):
@@ -114,7 +118,7 @@ def manipula_variacao_excluidas(id_produto, variacoes_api, conn):
                                    variacao_modificada, "id_bling",
                                    id_variacao, conn)
 
-    return
+    return ids_variacoes
 
 
 def _solicita_manipula_variacao_excluida(id_pai, id_produto, conn):
@@ -214,7 +218,7 @@ def solicita_produtos_com_midias_vencidas(conn):
     return ids_produtos
 
 
-def solicita_midias_produtos(conn, id_produto):
+def solicita_ids_midias_produtos(conn, id_produto):
     """Retorna todas ids das mídias do produto."""
     colunas_retorno = ["id_image"]
 
@@ -252,22 +256,23 @@ def manipula_midias_atualizadas(conn, imagens):
     return midias_atualizadas
 
 
-def cria_atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto):
+def cria_atualiza_midia_produtos(conn, imagens_api, ids_midias_db, id_produto):
     """Atualiza as midias e adiciona novas mídias adicionadas."""
     tabela = "produtos_midias"
     colunas = TABELAS_COLUNAS[tabela][:]
     colunas.remove("criado_em")
     colunas.remove("id")
 
-    # Atualiza imagens
-    for id_midias_db in midias_db:
+    # Atualiza imagens do banco de dados com as da API
+    for id_midia_db in ids_midias_db:
         db_atualizar_uma_linha(tabela, colunas, imagens_api.pop(0),
-                               ["id"], id_midias_db, conn)
+                               ["id"], id_midia_db, conn)
 
     # Insere imagens novas do produto
     for dict_imagem in imagens_api:
         id_foto = db_inserir_uma_linha(tabela, colunas,
                                        dict_imagem, conn)["id"]
+        ids_midias_db.append(id_foto)
 
         midia_relacao = {"id_produto": id_produto,
                          "id_image": id_foto}
@@ -275,22 +280,33 @@ def cria_atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto):
                              ["id_produto", "id_image"],
                              midia_relacao, conn)
 
+    if ids_midias_db:
+        ids_midias_db.sort()
+        agora = datetime.now(FUSO)
+        dict_midia_principal = {"id_midia_principal": ids_midias_db.pop(0),
+                                "alterado_em": agora}
+
+        db_atualizar_uma_linha("produtos",
+                               ["id_midia_principal", "alterado_em"],
+                               dict_midia_principal, "id_bling", id_produto,
+                               conn)
+
     return
 
 
-def atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto):
-    """Atualiza midias dos produtosno banco de dados."""
+def atualiza_midia_produtos(conn, imagens_api, ids_midias_db, id_produto):
+    """Atualiza midias dos produtos no banco de dados."""
     tabela = "produtos_midias"
     colunas = TABELAS_COLUNAS[tabela][:]
     colunas.remove("criado_em")
     colunas.remove("id")
 
-    id_midia_principal = midias_db[0]
+    id_midia_principal = ids_midias_db[0]
 
     # Atualiza imagens
     for dict_imagem in imagens_api:
         db_atualizar_uma_linha(tabela, colunas, dict_imagem,
-                               ["id"], midias_db.pop(0), conn)
+                               ["id"], ids_midias_db.pop(0), conn)
 
     agora = datetime.now(FUSO)
     db_atualizar_uma_linha("produtos", ["id_midia_principal", "alterado_em"],
@@ -298,8 +314,10 @@ def atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto):
                             "alterado_em": agora},
                            "id_bling", id_produto, conn)
     # Excluir imagens que sobraram e estão vencidas.
-    if midias_db:
-        db_deletar_varias_linhas(tabela, "id", midias_db, conn)
+    if ids_midias_db:
+        db_deletar_varias_linhas(tabela, "id", ids_midias_db, conn)
+
+    return
 
 
 if __name__ == "__main__":

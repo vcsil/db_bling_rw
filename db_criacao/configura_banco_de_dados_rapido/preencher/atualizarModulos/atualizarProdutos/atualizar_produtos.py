@@ -15,7 +15,7 @@ from preencherModulos.utils import (
 from atualizarModulos.atualizarProdutos.utils_produtos import (
     atualizar_estoque_fornecedor, solicita_produto_para_atualizar,
     manipula_insere_variacao, atualiza_estoque, manipula_variacao_excluidas,
-    solicita_produtos_com_midias_vencidas, solicita_midias_produtos,
+    solicita_produtos_com_midias_vencidas, solicita_ids_midias_produtos,
     manipula_midias_atualizadas, cria_atualiza_midia_produtos,
     atualiza_midia_produtos)
 from atualizarModulos.utils import (
@@ -230,16 +230,27 @@ class AtualizarProdutos():
                 if produto:
                     db_atualizar_uma_linha(tabela, colunas, produto,
                                            ["id_bling"], [idProduto], conn)
+
+                # A verificação não lida no caso do produto ter recebido novas
+                # imagens. Portanto vamos fazer uma busca especifica.
+                self.atualizar_midia(conn, [idProduto])
+
             else:  # Manipula e insere
                 variacoes, produto = solicita_produto(idProduto, conn,
                                                       inserir_produto=True)
 
             if variacoes:
                 # Verifica a situação das variaçoes
-                manipula_variacao_excluidas(idProduto, variacoes, conn)
+                ids_variacao = manipula_variacao_excluidas(idProduto,
+                                                           variacoes, conn)
 
                 # Lida com as variações do produto Pai
-                manipula_insere_variacao(idProduto, variacoes, conn)
+                ids_variacao += manipula_insere_variacao(idProduto, variacoes,
+                                                         conn)
+
+                # A verificação não lida no caso do produto ter recebido novas
+                # imagens. Portanto vamos fazer uma busca especifica.
+                self.atualizar_midia(conn, ids_variacao)
             else:
                 # Caso seja produto sem variação, lida com o estoque.
                 if produto_existe:
@@ -286,14 +297,15 @@ class AtualizarProdutos():
 
         return
 
-    def atualizar_midia(self, conn):
+    def atualizar_midia(self, conn, ids_produtos=None):
         """Atualiza as mídias que passaram da validade."""
         tabela = "produtos_midias"
         colunas = TABELAS_COLUNAS[tabela][:]
         colunas.remove("criado_em")
         colunas.remove("id")
 
-        ids_produtos = solicita_produtos_com_midias_vencidas(conn)
+        if not (ids_produtos):
+            ids_produtos = solicita_produtos_com_midias_vencidas(conn)
 
         for id_produto in tqdm(ids_produtos, "Atualizando midias", position=1):
             # Solicita o produto na api e pega as mídias atualizadas.
@@ -307,15 +319,16 @@ class AtualizarProdutos():
                 continue
 
             # Solicida mídias salvas no banco de dados.
-            midias_db = solicita_midias_produtos(conn, id_produto)
+            ids_midias_db = solicita_ids_midias_produtos(conn, id_produto)
 
             # Se tiver mais mídias novas do que no bd vai ser preciso criar
-            if len(imagens_api) > len(midias_db):
-                cria_atualiza_midia_produtos(conn, imagens_api, midias_db,
+            if len(imagens_api) > len(ids_midias_db):
+                cria_atualiza_midia_produtos(conn, imagens_api, ids_midias_db,
                                              id_produto)
                 continue
 
-            atualiza_midia_produtos(conn, imagens_api, midias_db, id_produto)
+            atualiza_midia_produtos(conn, imagens_api, ids_midias_db,
+                                    id_produto)
 
         return
 
