@@ -15,7 +15,7 @@ from atualizarModulos.utils import (db_verifica_se_existe,
                                     db_atualizar_uma_linha,
                                     item_com_valores_atualizados)
 
-from config.constants import API, TABELAS_COLUNAS
+from config.constants import API, TABELAS_COLUNAS, FUSO
 from datetime import datetime
 import logging
 
@@ -57,7 +57,7 @@ def _modifica_insere_valores_vendas(venda: dict, existe, conn):
         "id_bling": venda["id"],
         "numero": venda["numero"],
         "numero_loja": numeroLoja if numeroLoja else None,
-        "data": datetime.strptime(venda["data"], "%Y-%m-%d"),
+        "data": datetime.strptime(venda["data"], "%Y-%m-%d").astimezone(FUSO),
         "data_saida": datetime.strptime(venda["dataSaida"], "%Y-%m-%d").date(),
         "data_prevista": dataPrevista if int(dataPrevista[0]) else None,
         "id_contato": venda["contato"]["id"],
@@ -90,7 +90,6 @@ def _modifica_insere_valores_vendas(venda: dict, existe, conn):
     log.info("Insere pedido de venda")
 
     if existe:
-        valores_venda.pop("data")
         valores_venda.pop("alterado_em")
         valores_venda_att = item_com_valores_atualizados(valores_venda,
                                                          "vendas", "id_bling",
