@@ -63,20 +63,30 @@ def atualiza_bordero(id_conta, id_borderos, conn):
     for id_bordero in id_borderos:
         bordero_existe = db_pega_um_elemento(tabela, "id_bling", [id_bordero],
                                              "id_bling", conn)
-        if bordero_existe:
-            _atualiza_relacao_conta_bordero(id_conta, id_bordero, conn)
-            return bordero_existe["id_bling"]
 
         bordero = API.solicita_na_api(PARAM+str(id_bordero))["data"]
-
-        bordero_db = {
+        ano, mes, dia = bordero["data"].split("-")
+        bordero["data"] = date(int(ano), int(mes), int(dia))
+        bordero_api = {
             "id_bling": bordero["id"],
             "data": bordero["data"],
             "historico": bordero["historico"],
             "id_portador": bordero["portador"]["id"],
             "id_categoria_receita_despesa": bordero["categoria"]["id"],
         }
-        db_inserir_uma_linha(tabela, colunas, bordero_db, conn)
+
+        if bordero_existe:
+            bordero_atualizado = item_com_valores_atualizados(bordero_api,
+                                                              "borderos",
+                                                              "id_bling", conn)
+            if bordero_atualizado:
+                db_atualizar_uma_linha("borderos", colunas, bordero_atualizado,
+                                       ["id_bling"], id_bordero, conn)
+
+                _atualiza_relacao_conta_bordero(id_conta, id_bordero, conn)
+            continue
+
+        db_inserir_uma_linha(tabela, colunas, bordero_api, conn)
 
         _manipula_pagamentos(bordero["pagamentos"], bordero["id"], conn)
         _atualiza_relacao_conta_bordero(id_conta, id_bordero, conn)
