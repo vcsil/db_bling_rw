@@ -136,7 +136,7 @@ def solicita_contas_pagar(DATA_AGORA):
     """Solicita ids das contas a pagar para serem atualizadas."""
     PARAM = "/contas/pagar?"
 
-    intervalo_dias = 10 if DATA_AGORA.hour >= 23 else 0
+    intervalo_dias = 20 if DATA_AGORA.hour >= 23 else 0
     data_busca = str((DATA_AGORA - timedelta(days=intervalo_dias)).date())
 
     # Busca pela data de emissão
