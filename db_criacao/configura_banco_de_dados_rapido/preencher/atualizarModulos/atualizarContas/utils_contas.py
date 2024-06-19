@@ -40,6 +40,7 @@ def atualiza_contas(conta, conn):
         conta[p] = date(int(ano), int(mes), int(dia))
 
     if conta_existe:
+        conta.pop("alterado_em")
         conta_modificada = item_com_valores_atualizados(conta, tabela,
                                                         "id_bling", conn)
         if conta_modificada:
