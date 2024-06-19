@@ -569,7 +569,7 @@ CREATE TABLE "contas_origem_situacoes"(
 CREATE TABLE "contas_origens"(
         "id"                        SERIAL PRIMARY KEY  NOT NULL
     ,   "id_origem"                 BIGINT              NOT NULL
-    ,   "id_conta"                  BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
+    ,   "id_conta"                  BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling") ON DELETE CASCADE
     ,   "tipo_origem"               VARCHAR(63)
     ,   "numero"                    VARCHAR(63)
     ,   "data_emissao"              DATE
@@ -592,7 +592,7 @@ CREATE TABLE "borderos"(
 
 CREATE TABLE "pagamentos"(
         "id"                SERIAL PRIMARY KEY  NOT NULL
-    ,   "id_bordero"        BIGINT              NOT NULL REFERENCES "borderos"("id_bling")
+    ,   "id_bordero"        BIGINT              NOT NULL REFERENCES "borderos"("id_bling")  ON DELETE CASCADE
     ,   "id_contato"        BIGINT              NOT NULL REFERENCES "contatos"("id_bling")
     ,   "numero_documento"  VARCHAR(63)
     ,   "valor_pago"        INTEGER             NOT NULL
@@ -606,8 +606,8 @@ CREATE TABLE "pagamentos"(
 
 CREATE TABLE "contas_borderos_relacao"(
         "id"            SERIAL PRIMARY KEY  NOT NULL
-    ,   "id_conta"      BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")
-    ,   "id_bordero"    BIGINT              NOT NULL REFERENCES "borderos"("id_bling")
+    ,   "id_conta"      BIGINT              NOT NULL REFERENCES "contas_receitas_despesas"("id_bling")  ON DELETE CASCADE
+    ,   "id_bordero"    BIGINT              NOT NULL REFERENCES "borderos"("id_bling")  ON DELETE CASCADE
 );
 
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
@@ -729,7 +729,7 @@ CREATE TABLE "parcelas"(
     "valor"                 INTEGER             NOT NULL,
     "observacoes"           VARCHAR(120)        CHECK ("observacoes" <> ''),
     "id_forma_pagamento"    BIGINT              NOT NULL REFERENCES "formas_pagamento"("id_bling"),
-    "id_conta_receber"      BIGINT              REFERENCES "contas_receitas_despesas"("id_bling")
+    "id_conta_receber"      BIGINT              REFERENCES "contas_receitas_despesas"("id_bling") ON DELETE CASCADE
 );
 COMMENT ON COLUMN
     "parcelas"."id_bling" IS 'id contas a receber';
