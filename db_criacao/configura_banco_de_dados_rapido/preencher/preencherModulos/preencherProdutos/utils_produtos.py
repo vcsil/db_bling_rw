@@ -9,10 +9,13 @@ from preencherModulos.utils import (formata_data, verifica_preenche_valor,
                                     db_pega_um_elemento, db_inserir_uma_linha,
                                     db_inserir_varias_linhas,
                                     api_pega_todos_id)
-from config.constants import API, FUSO, TABELAS_COLUNAS
+from config.constants import API, FUSO, TABELAS_COLUNAS, IMAGE_DIR
 
 from datetime import datetime
+from tqdm import tqdm
+import requests
 import logging
+import os
 
 log = logging.getLogger("root")
 
@@ -195,7 +198,6 @@ def _formata_dimensoes(dimensoes_api, conn):
 
 
 def _formata_midia(midias, id_produto, inserir_produto, conn):
-
     # Produto que não é para inserir já existe no banco de dados
     if not (inserir_produto):
         midia = db_pega_um_elemento("produtos", ["id_bling"], [id_produto],
@@ -221,17 +223,21 @@ def _formata_midia_video(conn, video):
 
 
 def _formata_midia_imagem(conn, imagens, id_produto):
-    colunas = ["tipo", "url", "url_miniatura", "validade"]
+    colunas = ["tipo", "url", "url_miniatura", "validade", "diretorio_local"]
     formato_data = "%Y-%m-%d %H:%M:%S"
 
     midia_principal = False
     for origem in list(imagens.keys()):  # Externa ou interna
         for obj_imagem in imagens[origem]:  # dict da imagem
+            path = download_localmente(imagens[origem].index(obj_imagem),
+                                       id_produto, obj_imagem["link"])
+
             imagem = {
                 "tipo": True, "url": obj_imagem["link"],
                 "url_miniatura": obj_imagem["linkMiniatura"],
                 "validade": datetime.strptime(obj_imagem["validade"],
-                                              formato_data).astimezone(FUSO)
+                                              formato_data).astimezone(FUSO),
+                "diretorio_local": path
                 }
             id_foto = db_inserir_uma_linha("produtos_midias", colunas, imagem,
                                            conn)["id"]
@@ -244,6 +250,35 @@ def _formata_midia_imagem(conn, imagens, id_produto):
                 midia_principal = id_foto
 
     return midia_principal
+
+
+def download_localmente(id_foto, id_produto, image_url):
+    """Gerencia o download da imagem."""
+    # Diretorio local para salvar as imagens
+    local_directory = f"{IMAGE_DIR}{id_produto}"
+
+    # Verifica se o diretório já existe.
+    if not os.path.exists(local_directory):
+        os.makedirs(local_directory)
+
+    file_name = os.path.basename(str(id_foto)+".jpeg")
+    local_path = os.path.join(local_directory, file_name)
+    print(f"\nBaixando {id_foto} para {local_path}")
+    download_image(image_url, local_path)
+    return local_path.split("..")[-1]
+
+
+def download_image(url, local_path):
+    """Responsável por fazer o download da imagem."""
+    response = requests.get(url, stream=True)
+    total_size = int(response.headers.get('content-length', 0))
+    block_size = 1024  # 1 Kibibyte
+    t = tqdm(total=total_size, unit='iB', unit_scale=True)
+    with open(local_path, 'wb') as file:
+        for data in response.iter_content(block_size):
+            t.update(len(data))
+            file.write(data)
+    t.close()
 
 
 def _insere_produto(produto: dict, colunas: list, conn):

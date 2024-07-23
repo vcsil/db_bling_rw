@@ -33,6 +33,8 @@ DB = ConectaDB(_env_db)  # Carrega as variáveis de ambiente necessárias
 log.info("Obtém nome de todas tabelas")
 TABELAS_COLUNAS = DB.cria_dict_tabelas_colunas()
 
+log.info("Define diretório para salvar fotos.")
+IMAGE_DIR = "../../../local_images/"
 
 if __name__ == "__main__":
     pass

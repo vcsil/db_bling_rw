@@ -10,7 +10,8 @@ from preencherModulos.preencherProdutos.utils_produtos import (
     solicita_insere_variacao, solicita_produto, insere_segunda_tentativa)
 from preencherModulos.utils import (
     db_inserir_varias_linhas, db_inserir_uma_linha, api_pega_todos_id,
-    db_pega_varios_elementos, db_pega_varios_elementos_controi_filtro)
+    db_pega_varios_elementos, db_pega_varios_elementos_controi_filtro,
+    db_pega_um_elemento)
 
 from atualizarModulos.atualizarProdutos.utils_produtos import (
     atualizar_estoque_fornecedor, solicita_produto_para_atualizar,
@@ -23,6 +24,7 @@ from atualizarModulos.utils import (
     txt_fundo_verde, slice_array, txt_fundo_azul, txt_amarelo)
 
 from config.constants import TABELAS_COLUNAS, API
+from datetime import date, timedelta
 from tqdm import tqdm
 import logging
 
@@ -144,7 +146,7 @@ class AtualizarProdutos():
 
         log.info("Fim de atualizar produtos depositos")
 
-    def atualiza_lista_produtos(self, conn):
+    def atualiza_produtos_novos(self, conn):
         """Insere produtos novos, cadastrados recentemente. Compara os ID."""
         tabela = "produtos"
 
@@ -308,12 +310,18 @@ class AtualizarProdutos():
             ids_produtos = solicita_produtos_com_midias_vencidas(conn)
 
         for id_produto in tqdm(ids_produtos, "Atualizando midias", position=1):
+            alterad = db_pega_um_elemento("produtos", "id_bling", [id_produto],
+                                          "alterado_em", conn)["alterado_em"]
+            diferenca_tempo = self.DATA_AGORA - alterad
+            if (diferenca_tempo < timedelta(hours=6)):
+                continue
+
             # Solicita o produto na api e pega as mídias atualizadas.
             produto_api = API.solicita_na_api(f"/produtos/{id_produto}")
             midias_api = produto_api["data"]["midia"]
 
             # Formata as mídias atualizadas:
-            imagens_api = manipula_midias_atualizadas(conn,
+            imagens_api = manipula_midias_atualizadas(conn, id_produto,
                                                       midias_api["imagens"])
             if not imagens_api:
                 continue
@@ -343,8 +351,8 @@ class AtualizarProdutos():
         self._atualiza_produtos_depositos(conn=conn)
         conn.commit()
 
-        log.info("Inicio atualizar lista de produtos")
-        self.atualiza_lista_produtos(conn=conn)
+        log.info("Inicio inserir novos produtos")
+        self.atualiza_produtos_novos(conn=conn)
 
         log.info("Inicio atualizar valores de produtos")
         self.atualiza_valores_produtos(conn=conn)

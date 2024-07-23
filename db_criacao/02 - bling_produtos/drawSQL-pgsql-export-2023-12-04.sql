@@ -77,12 +77,13 @@ CREATE TABLE "dimensoes"(
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_midias"(
-    "id"    		SERIAL PRIMARY KEY  NOT NULL,
-    "tipo"  		BOOLEAN             NOT NULL,
-    "url"   		TEXT                NOT NULL,
-    "url_miniatura" TEXT,
-    "validade" 		TIMESTAMPTZ	        NOT NULL,
-    "criado_em"	    TIMESTAMPTZ	        NOT NULL DEFAULT current_timestamp
+    "id"    		    SERIAL PRIMARY KEY  NOT NULL,
+    "tipo"  		    BOOLEAN             NOT NULL,
+    "url"   		    TEXT                NOT NULL,
+    "url_miniatura"     TEXT,
+    "diretorio_local"   TEXT                DEFAULT NULL,
+    "validade" 		    TIMESTAMPTZ	        NOT NULL,
+    "criado_em"	        TIMESTAMPTZ	        NOT NULL DEFAULT current_timestamp
 );
 COMMENT ON COLUMN
     "produtos_midias"."tipo" IS 'True: Foto
@@ -200,7 +201,7 @@ CREATE TABLE "produto_variacao"(
 ---*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
 
 CREATE TABLE "produtos_midias_relacao"(
-    "id"            SERIAL PRIMARY KEY  NOT NULL,
-    "id_produto"    BIGINT              NOT NULL REFERENCES "produtos"("id_bling")  ON DELETE CASCADE,
-    "id_image"      INTEGER             NOT NULL REFERENCES "produtos_midias"("id")  ON DELETE CASCADE
+    	"id"            SERIAL PRIMARY KEY  NOT NULL
+    ,	"id_produto"    BIGINT              NOT NULL --REFERENCES "produtos"("id_bling")  ON DELETE CASCADE
+    ,	"id_image"      INTEGER             NOT NULL REFERENCES "produtos_midias"("id")  ON DELETE CASCADE
 );

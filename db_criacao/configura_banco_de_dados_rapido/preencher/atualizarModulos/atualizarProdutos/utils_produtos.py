@@ -10,7 +10,7 @@ from preencherModulos.utils import (db_inserir_uma_linha,
 from preencherModulos.preencherProdutos.utils_produtos import (
     _solicita_estoque_fornecedor, produto_insere_saldo_estoque,
     solicita_produto, _solicita_variacao, _modifica_produto_estoque,
-    _modifica_valores_produto)
+    _modifica_valores_produto, download_localmente)
 
 from atualizarModulos.utils import (
     db_atualizar_uma_linha, db_verifica_se_existe, db_deletar_varias_linhas,
@@ -68,6 +68,7 @@ def solicita_produto_para_atualizar(idProduto, conn):
                                           inserir_produto=False)
 
     produto.pop("criado_em")
+    produto.pop("alterado_em")
     produto_modificado = item_com_valores_atualizados(produto, "produtos",
                                                       "id_bling", conn)
 
@@ -238,18 +239,22 @@ def solicita_ids_midias_produtos(conn, id_produto):
     return ids_midias
 
 
-def manipula_midias_atualizadas(conn, imagens):
+def manipula_midias_atualizadas(conn, id_produto, imagens):
     """Cria dict das imagens adequadas para o banco de dados."""
     formato_data = "%Y-%m-%d %H:%M:%S"
 
     midias_atualizadas = []
+    id_foto = 0
     for origem in list(imagens.keys()):  # Externa ou interna
         for obj_imagem in imagens[origem]:  # dict da imagem
+            path = download_localmente(id_foto, id_produto, obj_imagem["link"])
+
             imagem = {
                 "tipo": True, "url": obj_imagem["link"],
                 "url_miniatura": obj_imagem["linkMiniatura"],
                 "validade": datetime.strptime(obj_imagem["validade"],
-                                              formato_data).astimezone(FUSO)
+                                              formato_data).astimezone(FUSO),
+                "diretorio_local": path
                 }
             midias_atualizadas.append(imagem)
 
@@ -318,7 +323,6 @@ def atualiza_midia_produtos(conn, imagens_api, ids_midias_db, id_produto):
         db_deletar_varias_linhas(tabela, "id", ids_midias_db, conn)
 
     return
-
 
 if __name__ == "__main__":
     pass
