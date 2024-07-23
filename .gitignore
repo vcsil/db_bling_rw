@@ -102,3 +102,7 @@ __pycache__/
 .devcontainer/
 .github
 .vscode
+
+
+# Arquivo de imagens
+local_images/*
