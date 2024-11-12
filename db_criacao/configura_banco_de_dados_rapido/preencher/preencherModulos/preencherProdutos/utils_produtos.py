@@ -115,6 +115,7 @@ def solicita_produto(idProduto: int, conn, inserir_produto: bool = False):
 def _modifica_valores_produto(produto: dict, conn, id_pai: bool = None,
                               inserir_produto: bool = False):
     id_tipo_producao = _pega_tipo_producao(produto, conn)
+    tem_estoque = "estoque" in produto.keys()
 
     valores_produto = {
         "id_bling": produto["id"],
@@ -146,10 +147,10 @@ def _modifica_valores_produto(produto: dict, conn, id_pai: bool = None,
         "link_externo": produto["linkExterno"],
         "observacoes": produto["observacoes"],
         "id_categoria_produto": produto["categoria"]["id"],
-        "estoque_minimo": produto["estoque"]["minimo"],
-        "estoque_maximo": produto["estoque"]["maximo"],
-        "estoque_crossdocking": produto["estoque"]["crossdocking"],
-        "estoque_localizacao": produto["estoque"]["localizacao"],
+        "estoque_minimo": produto["estoque"]["minimo"] if tem_estoque else 0,
+        "estoque_maximo": produto["estoque"]["maximo"] if tem_estoque else 0,
+        "estoque_crossdocking": produto["estoque"]["crossdocking"] if tem_estoque else 0,
+        "estoque_localizacao": produto["estoque"]["localizacao"] if tem_estoque else None,
         "id_dimensoes": _formata_dimensoes(produto["dimensoes"], conn),
         "ncm": produto["tributacao"]["ncm"],
         "cest": produto["tributacao"]["cest"],
