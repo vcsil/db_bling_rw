@@ -1,6 +1,6 @@
 services:
-  rw-db-development:
-    container_name: rw-db-development
+  development-rw_db:
+    container_name: development-rw_db
     image: postgres:14-alpine
     restart: always
     env_file:
@@ -19,12 +19,12 @@ services:
       TZ: ${POSTGRES_TZ}
     volumes:
       - ./db_criacao/configura_banco_de_dados_rapido/criar/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - rw-postgres-development:/var/lib/postgresql/data
+      - development-rw_postgres:/var/lib/postgresql/data
     networks:
-      - rw_network-development
+      - development-rw_network
 
-  rw-python-development:
-    container_name: rw-python-development
+  development-rw_python:
+    container_name: development-rw_python
     image: python:3.11
     restart: always
     build:
@@ -38,15 +38,15 @@ services:
         max-size: '5m'
         max-file: '1'
     depends_on:
-      - rw-db-development
+      - development-rw_db
     volumes:
       - .:/home/myuser/code
     networks:
-      - rw_network-development
+      - development-rw_network
 
 volumes:
-  rw-postgres-development:
+  development-rw_postgres:
 
 networks:
-  rw_network-development:
+  development-rw_network:
     external: true

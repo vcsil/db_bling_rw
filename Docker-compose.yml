@@ -1,6 +1,6 @@
 services:
-  rw-db-production:
-    container_name: rw-db-production
+  production-rw_db:
+    container_name: production-rw_db
     image: postgres:14.10
     restart: always
     env_file:
@@ -19,12 +19,12 @@ services:
       TZ: ${POSTGRES_TZ}
     volumes:
       - ./db_criacao/configura_banco_de_dados_rapido/criar/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - rw-postgres-production:/var/lib/postgresql/data
+      - production-rw_postgres:/var/lib/postgresql/data
     networks:
-      - rw_network-production
+      - production-rw_network
 
-  rw-python-production:
-    container_name: rw-python-production
+  production-rw_python:
+    container_name: production-rw_python
     image: python:3.11
     restart: always
     build:
@@ -38,15 +38,15 @@ services:
         max-size: '5m'
         max-file: '1'
     depends_on:
-      - rw-db-production
+      - production-rw_db
     volumes:
       - .:/home/myuser/code
     networks:
-      - rw_network-production
+      - production-rw_network
 
 volumes:
-  rw-postgres-production:
+  production-rw_postgres:
 
 networks:
-  rw_network-production:
+  production-rw_network:
     external: true
