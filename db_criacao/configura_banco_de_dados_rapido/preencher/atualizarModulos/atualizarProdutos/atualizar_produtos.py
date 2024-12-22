@@ -260,6 +260,8 @@ class AtualizarProdutos():
                 else:
                     produto_insere_saldo_estoque(idProduto, conn)
 
+            conn.commit()
+
     def atualizar_estoque(self, conn):
         """Utiliado para atualizar a quantidade de produtos em estoque."""
         BATCH_SIZE = 271
@@ -312,9 +314,10 @@ class AtualizarProdutos():
         for id_produto in tqdm(ids_produtos, "Atualizando midias", position=1):
             alterad = db_pega_um_elemento("produtos", "id_bling", [id_produto],
                                           "alterado_em", conn)["alterado_em"]
-            diferenca_tempo = self.DATA_AGORA - alterad
-            if (diferenca_tempo < timedelta(hours=6)):
-                continue
+            if alterad:
+                diferenca_tempo = self.DATA_AGORA - alterad
+                if (diferenca_tempo < timedelta(hours=6)):
+                    continue
 
             # Solicita o produto na api e pega as mídias atualizadas.
             produto_api = API.solicita_na_api(f"/produtos/{id_produto}")
@@ -337,6 +340,7 @@ class AtualizarProdutos():
 
             atualiza_midia_produtos(conn, imagens_api, ids_midias_db,
                                     id_produto)
+            conn.commit()
 
         return
 

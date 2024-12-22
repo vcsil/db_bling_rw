@@ -90,7 +90,7 @@ def solicita_produto(idProduto: int, conn, inserir_produto: bool = False):
 
     # Se o produto for uma variação
     if ("variacao" in produto.keys()):
-        return (produto, False)
+        return ([produto], False)
 
     log.info("Manipula dados do produto")
     valores_produto = _modifica_valores_produto(produto, conn,
