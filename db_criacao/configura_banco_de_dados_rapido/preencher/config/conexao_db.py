@@ -38,7 +38,7 @@ class ConectaDB():
             user={self._env["POSTGRES_USER"]}
             password={self._env["POSTGRES_PASSWORD"]}
             host={self._env["POSTGRES_HOST"]}
-            port={self._env["POSTGRES_PORT"]}
+            port={self._env["POSTGRES_HOST_PORT"]}
         """
         try:
             log.info('Inicia conexão com banco de dados')
