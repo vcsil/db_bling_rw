@@ -266,7 +266,7 @@ def download_localmente(id_foto, id_produto, image_url):
     local_path = os.path.join(local_directory, file_name)
     print(f"\nBaixando {id_foto} para {local_path}")
     download_image(image_url, local_path)
-    return local_path.split("..")[-1]
+    return local_path.split("..")[-1].split("/02-Front/public")[-1]
 
 
 def download_image(url, local_path):
