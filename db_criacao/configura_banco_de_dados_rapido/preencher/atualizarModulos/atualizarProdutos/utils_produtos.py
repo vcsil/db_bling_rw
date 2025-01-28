@@ -67,12 +67,14 @@ def solicita_produto_para_atualizar(idProduto, conn):
     variacoes, produto = solicita_produto(idProduto, conn,
                                           inserir_produto=False)
 
-    produto.pop("criado_em")
-    produto.pop("alterado_em")
-    produto_modificado = item_com_valores_atualizados(produto, "produtos",
-                                                      "id_bling", conn)
+    if produto:
+        produto.pop("criado_em")
+        produto.pop("alterado_em")
+        produto_modificado = item_com_valores_atualizados(produto, "produtos",
+                                                          "id_bling", conn)
+        return variacoes, produto_modificado
 
-    return variacoes, produto_modificado
+    return variacoes, produto
 
 
 def manipula_insere_variacao(id_pai, variacoes, conn):
