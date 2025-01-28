@@ -19,6 +19,7 @@ log = logging.getLogger("root")
 for sec in tqdm(range(99), desc="Esperando configurações do postgres",
                 position=1):
     time.sleep(1)
+print("Passou")
 
 FUSO = pytz.timezone("America/Sao_Paulo")
 
