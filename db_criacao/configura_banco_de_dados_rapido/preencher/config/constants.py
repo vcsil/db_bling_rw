@@ -35,7 +35,7 @@ log.info("Obtém nome de todas tabelas")
 TABELAS_COLUNAS = DB.cria_dict_tabelas_colunas()
 
 log.info("Define diretório para salvar fotos.")
-IMAGE_DIR = "../../../local_images/"
+IMAGE_DIR = "../../../../02-Front/public/local_images/"
 
 if __name__ == "__main__":
     pass
