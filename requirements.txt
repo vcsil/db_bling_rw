@@ -1,7 +1,7 @@
 psycopg==3.2.3
 psycopg-binary==3.2.3
 tqdm==4.66.5
-python-dotenv==1.0.0
+python-dotenv==1.0.1
 pytz==2024.1
 Requests==2.32.3
 selenium==4.24.0
