@@ -1,1 +1,0 @@
-bling_renata_wist
