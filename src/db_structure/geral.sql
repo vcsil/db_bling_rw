@@ -825,7 +825,7 @@ CREATE TABLE "logistica_servicos"(
     "frete_item"            INTEGER             NOT NULL,
     "estimativa_entrega"    INTEGER             NOT NULL,
     "id_codigo_servico"     VARCHAR(100)        NOT NULL,
-    "logistica_id"          BIGINT              NOT NULL REFERENCES "logistica"("id_bling"),
+    "logistica_id"          BIGINT              NOT NULL REFERENCES "logisticas"("id_bling"),
     "transportador_id"      INTEGER             NOT NULL REFERENCES "contatos"("id_bling")
 );
 

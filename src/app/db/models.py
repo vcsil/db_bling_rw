@@ -218,7 +218,7 @@ class Contatos(Base):  # 10
 
     __table_args__ = (
         CheckConstraint("nome <> ''"),
-        CheckConstraint("sexo IN (1, 2, 3"),
+        CheckConstraint("sexo IN (1, 2, 3)"),
     )
 
     id_bling: Mapped[int] = mapped_column(BigInteger, primary_key=True,
@@ -265,7 +265,7 @@ class Contatos(Base):  # 10
         DateTime(timezone=True), nullable=False,
         server_default=text("current_timestamp"))
     alterado_em: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), server_default=text("NULL"))
+        DateTime(timezone=True))
 
     situacao_contato: Mapped["ContatosSituacao"] = relationship(
         "ContatosSituacao", backref="contatos")
@@ -446,7 +446,7 @@ class ProdutosMidias(Base):  # 19
     url: Mapped[str] = mapped_column(Text, nullable=False)
     url_miniatura: Mapped[Optional[str]] = mapped_column(Text)
     diretorio_local: Mapped[Optional[str]] = mapped_column(
-        Text, server_default=text("NULL"))
+        Text)
     validade: Mapped[datetime] = mapped_column(DateTime(timezone=True),
                                                nullable=False)
     criado_em: Mapped[datetime] = mapped_column(
@@ -489,9 +489,8 @@ class Produtos(Base):  # 20
     id_formato_produto: Mapped[int] = mapped_column(
         Integer, ForeignKey("produtos_formatos.id"), nullable=False)
 
-    id_produto_pai: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("produtos.id_bling"),
-        server_default=text("NULL"))
+    id_produto_pai: Mapped[Optional[int]] = mapped_column(
+        BigInteger, ForeignKey("produtos.id_bling"))
 
     descricao_curta: Mapped[Optional[str]] = mapped_column(Text)
     data_validade: Mapped[Optional[date]] = mapped_column(Date)
@@ -566,8 +565,8 @@ class Produtos(Base):  # 20
     criado_em: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), nullable=False,
         server_default=text("current_timestamp"))
-    alterado_em: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=text("NULL"))
+    alterado_em: Mapped[Optional[datetime]] = mapped_column(
+        DateTime(timezone=True))
 
     tipo_produto: Mapped["ProdutosTipos"] = relationship(
         "ProdutosTipos", backref="produtos")
@@ -687,11 +686,14 @@ class ProdutosMidiasRelacao(Base):  # 25
 
     id: Mapped[int] = mapped_column(Integer, Identity(), primary_key=True,
                                     nullable=False)
-    id_produto: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    id_produto: Mapped[int] = mapped_column(
+        BigInteger, ForeignKey("produtos.id_bling"), nullable=False)
     id_image: Mapped[int] = mapped_column(
         Integer, ForeignKey("produtos_midias.id", ondelete='CASCADE'),
         nullable=False)
 
+    produto: Mapped["Produtos"] = relationship(
+        "Produtos", backref="produtos")
     image: Mapped["ProdutosMidias"] = relationship(
         "ProdutosMidias", backref="produtos_midias_relacao")
 
@@ -1496,7 +1498,7 @@ class LogisticaServicos(Base):  # 55
     id_codigo_servico: Mapped[str] = mapped_column(String(100), nullable=False)
 
     logistica_id: Mapped[int] = mapped_column(
-        BigInteger, ForeignKey("logistica.id_bling"), nullable=False)
+        BigInteger, ForeignKey("logisticas.id_bling"), nullable=False)
 
     transportador_id: Mapped[int] = mapped_column(
         Integer, ForeignKey("contatos.id_bling"), nullable=False)
