@@ -106,3 +106,5 @@ __pycache__/
 
 # Arquivo de imagens
 local_images/*
+AIchat/*
+.env2
