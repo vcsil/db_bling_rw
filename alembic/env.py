@@ -25,7 +25,9 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 settings = get_settings()
-config.set_main_option("sqlalchemy.url", get_sync_database_url(settings))
+config.set_main_option("sqlalchemy.url",
+                       get_sync_database_url(settings).replace("%", "%%"))
+
 
 target_metadata = Base.metadata
 

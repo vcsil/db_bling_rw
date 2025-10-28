@@ -38,31 +38,27 @@ def _choose_port(settings: Settings) -> int:
 def get_async_database_url(settings: Settings) -> str:
     """Build the async database URL based on the project settings."""
 
-    return str(
-        URL.create(
+    return URL.create(
             "postgresql+psycopg_async",
             username=settings.postgres_user,
             password=settings.postgres_password,
             host=settings.postgres_host,
             port=_choose_port(settings),
             database=settings.postgres_db,
-        )
-    )
+        ).render_as_string(hide_password=False)
 
 
 def get_sync_database_url(settings: Settings) -> str:
     """Build the sync database URL for tools like Alembic."""
 
-    return str(
-        URL.create(
+    return URL.create(
             "postgresql+psycopg",
             username=settings.postgres_user,
             password=settings.postgres_password,
             host=settings.postgres_host,
             port=_choose_port(settings),
             database=settings.postgres_db,
-        )
-    )
+        ).render_as_string(hide_password=False)
 
 
 @lru_cache()
