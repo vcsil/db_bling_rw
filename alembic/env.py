@@ -7,9 +7,9 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy.engine import Connection
 
-from app.core.settings import get_settings
-from app.db import Base, get_engine
-from app.db.session import get_sync_database_url
+from src.app.core.settings import get_settings
+from src.app.db import Base, get_engine
+from src.app.db.session import get_sync_database_url
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -21,7 +21,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.core.settings import Settings, get_settings
+from src.app.core.settings import Settings, get_settings
 
 
 _LOCALHOST_IDENTIFIERS = {"localhost", "127.0.0.1"}
