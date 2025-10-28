@@ -251,9 +251,6 @@ class Contatos(Base):  # 10
     orgao_emissor: Mapped[Optional[str]] = mapped_column(String(55))
     email: Mapped[Optional[str]] = mapped_column(String(255))
 
-    id_vendedor: Mapped[Optional[str]] = mapped_column(
-        Integer, ForeignKey("vendedores.id_bling"))
-
     data_nascimento: Mapped[Optional[date]] = mapped_column(Date)
     sexo: Mapped[int] = mapped_column(
         Integer, nullable=False, comment="1 Masculino\n2 Feminino\n3 Outro",)
@@ -274,8 +271,6 @@ class Contatos(Base):  # 10
     indicador_inscricao_estadual: Mapped[
         "ContatosIndicadorInscricaoEstadual"] = relationship(
         "ContatosIndicadorInscricaoEstadual", backref="contatos")
-    vendedor: Mapped["Vendedores"] = relationship(
-        "Vendedores", backref="contatos")
     classificacao_contato: Mapped["ContatosClassificacao"] = relationship(
         "ContatosClassificacao", backref="contatos")
 
@@ -473,6 +468,7 @@ class Produtos(Base):  # 20
     id_bling: Mapped[int] = mapped_column(BigInteger, primary_key=True,
                                           nullable=False)
     nome: Mapped[str] = mapped_column(String(120), nullable=False)
+    codigo: Mapped[str] = mapped_column(String(120), nullable=False)
     preco: Mapped[int] = mapped_column(Integer, nullable=False)
 
     id_tipo_produto: Mapped[int] = mapped_column(
@@ -495,7 +491,7 @@ class Produtos(Base):  # 20
     descricao_curta: Mapped[Optional[str]] = mapped_column(Text)
     data_validade: Mapped[Optional[date]] = mapped_column(Date)
     unidade: Mapped[Optional[str]] = mapped_column(String(6),
-                                                   server_default=text('UN'))
+                                                   server_default=('UN'))
     peso_liquido: Mapped[int] = mapped_column(
         Integer, nullable=False, server_default=text("1"),
         comment='Peso líquido em KG')
@@ -530,7 +526,7 @@ class Produtos(Base):  # 20
         comment='Frete grátis\nValor default: `false`')
 
     marca: Mapped[str] = mapped_column(String(45), nullable=False,
-                                       server_default=text('RW'))
+                                       server_default=('RW'))
 
     descricao_complementar: Mapped[Optional[str]] = mapped_column(Text)
     link_externo: Mapped[Optional[str]] = mapped_column(Text)
@@ -555,9 +551,9 @@ class Produtos(Base):  # 20
         Integer, ForeignKey("dimensoes.id"), nullable=False)
 
     ncm: Mapped[str] = mapped_column(String(10),
-                                     server_default=text('7113.20.00'))
+                                     server_default=('7113.20.00'))
     cest: Mapped[str] = mapped_column(String(9),
-                                      server_default=text('28.058.00'))
+                                      server_default=('28.058.00'))
 
     id_midia_principal: Mapped[Optional[int]] = mapped_column(
         Integer, ForeignKey("produtos_midias.id"))
