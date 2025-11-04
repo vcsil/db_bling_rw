@@ -393,6 +393,20 @@ class ProdutosCategorias(Base):  # 16
                                           nullable=False)
     nome: Mapped[str] = mapped_column(String(120), nullable=False)
 
+    # relações "de volta", com nomes distintos
+    relacoes_como_pai = relationship(
+        "ProdutosCategoriasRelacao",
+        foreign_keys="[ProdutosCategoriasRelacao.id_categoria_pai]",
+        back_populates="categoria_pai",
+        cascade="all, delete-orphan",
+    )
+    relacao_como_filho = relationship(
+        "ProdutosCategoriasRelacao",
+        foreign_keys="[ProdutosCategoriasRelacao.id_categoria_filho]",
+        back_populates="categoria_filho",
+        uselist=False,  # seu filho é unique=True -> 1:1 p/ esse lado
+    )
+
 
 class ProdutosCategoriasRelacao(Base):  # 17
     """Relação entre as categorias dos produtos."""
@@ -407,10 +421,19 @@ class ProdutosCategoriasRelacao(Base):  # 17
         BigInteger, ForeignKey("produtos_categorias.id_bling"), nullable=False,
         unique=True)
 
-    categoria_pai: Mapped["ProdutosCategorias"] = relationship(
-        "ProdutosCategorias", backref="produtos_categorias_relacao")
-    categoria_filho: Mapped["ProdutosCategorias"] = relationship(
-        "ProdutosCategorias", backref="produtos_categorias_relacao")
+    categoria_pai = relationship(
+        "ProdutosCategorias",
+        foreign_keys=[id_categoria_pai],
+        back_populates="relacoes_como_pai",
+        primaryjoin=id_categoria_pai == ProdutosCategorias.id_bling,  # opcional, deixa explícito
+    )
+    categoria_filho = relationship(
+        "ProdutosCategorias",
+        foreign_keys=[id_categoria_filho],
+        back_populates="relacao_como_filho",
+        primaryjoin=id_categoria_filho == ProdutosCategorias.id_bling,  # opcional
+        uselist=False,
+    )
 
 
 class Dimensoes(Base):  # 18
