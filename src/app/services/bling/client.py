@@ -6,7 +6,6 @@ import logging
 import threading
 import time
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Iterator, List, Mapping, MutableMapping, Optional, Tuple, Type, TypeVar
 from urllib.parse import urljoin
 
@@ -14,6 +13,7 @@ import requests
 from pydantic import BaseModel, Field
 
 from app.core.settings import Settings, get_settings
+from app.services.bling.oauth import BlingOAuthClient, BlingOAuthError
 
 LOGGER = logging.getLogger(__name__)
 
@@ -25,32 +25,6 @@ class BlingAPIError(RuntimeError):
         super().__init__(message)
         self.status_code = status_code
         self.payload = payload
-
-
-class OAuthToken(BaseModel):
-    """Represents the OAuth2 token payload returned by Bling."""
-
-    access_token: str = Field(alias="access_token")
-    token_type: str = Field(alias="token_type")
-    expires_in: int = Field(alias="expires_in")
-    scope: Optional[str] = Field(default=None, alias="scope")
-    refresh_token: Optional[str] = Field(default=None, alias="refresh_token")
-    obtained_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-    model_config = {
-        "populate_by_name": True,
-    }
-
-    @property
-    def expires_at(self) -> datetime:
-        """Return the moment when the token expires."""
-
-        return self.obtained_at + timedelta(seconds=self.expires_in)
-
-    def is_expired(self, *, leeway: int = 60) -> bool:
-        """Check whether the token has expired, considering an optional leeway."""
-
-        return datetime.now(timezone.utc) >= (self.expires_at - timedelta(seconds=leeway))
 
 
 class BlingBaseModel(BaseModel):
@@ -161,7 +135,6 @@ class BlingClient:
     """High level client used to communicate with the Bling REST API."""
 
     DEFAULT_API_BASE_URL = "https://www.bling.com.br/Api/v3/"
-    TOKEN_ENDPOINT = "oauth/token"
     RETRYABLE_STATUS_CODES = {408, 425, 429, 500, 502, 503, 504}
 
     RESOURCE_MAP: Dict[str, BlingResourceConfig] = {
@@ -212,66 +185,14 @@ class BlingClient:
         self._metrics = metrics or BlingMetrics()
         self._logger = logger or LOGGER
 
-        self._token_lock = threading.Lock()
-        self._token: Optional[OAuthToken] = None
+        self._oauth_client = BlingOAuthClient(
+            settings=self._settings,
+            session=self._session,
+            timeout=self._timeout,
+            logger=self._logger,
+        )
         self._rate_lock = threading.Lock()
         self._last_request_ts = 0.0
-
-    # ------------------------------------------------------------------
-    # OAuth token handling
-    # ------------------------------------------------------------------
-    def _get_token(self, *, force_refresh: bool = False) -> OAuthToken:
-        with self._token_lock:
-            if force_refresh:
-                self._logger.info(
-                    "bling.oauth.refresh",
-                    extra={
-                        "event": "bling.oauth.refresh",
-                        "message": "Forcing OAuth token refresh",
-                    },
-                )
-                self._token = None
-            if self._token is None or self._token.is_expired():
-                self._token = self._fetch_token()
-            return self._token
-
-    def _fetch_token(self) -> OAuthToken:
-        oauth_url = urljoin(str(self._settings.oauth_baseurl), self.TOKEN_ENDPOINT)
-        payload = {
-            "grant_type": "password",
-            "client_id": self._settings.bling_client_id,
-            "client_secret": self._settings.bling_client_secret,
-            "username": self._settings.bling_usuario,
-            "password": self._settings.bling_senha_usuario,
-        }
-        self._logger.info(
-            "bling.oauth.request",
-            extra={
-                "event": "bling.oauth.request",
-                "url": oauth_url,
-            },
-        )
-        try:
-            response = self._session.post(oauth_url, data=payload, timeout=self._timeout)
-        except requests.RequestException as exc:  # pragma: no cover - network issues
-            raise BlingAPIError("Failed to obtain OAuth token") from exc
-        if response.status_code >= 400:
-            raise BlingAPIError(
-                f"OAuth token request failed with status {response.status_code}",
-                status_code=response.status_code,
-                payload=self._safe_json(response),
-            )
-        data = response.json()
-        data.setdefault("obtained_at", datetime.now(timezone.utc))
-        token = OAuthToken.model_validate(data)
-        self._logger.info(
-            "bling.oauth.success",
-            extra={
-                "event": "bling.oauth.success",
-                "expires_in": token.expires_in,
-            },
-        )
-        return token
 
     # ------------------------------------------------------------------
     # Public API
@@ -355,7 +276,10 @@ class BlingClient:
         force_refresh = False
         while attempt < self._max_retries:
             attempt += 1
-            token = self._get_token(force_refresh=force_refresh)
+            try:
+                token = self._oauth_client.get_token(force_refresh=force_refresh)
+            except BlingOAuthError as exc:
+                raise BlingAPIError(f"Failed to obtain OAuth token: {exc}") from exc
             request_headers = {"Authorization": f"Bearer {token.access_token}"}
             if headers:
                 request_headers.update(headers)
