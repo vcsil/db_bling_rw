@@ -12,7 +12,6 @@ from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_PATH: str = find_dotenv(usecwd=True) or ".env"
-load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -25,17 +24,32 @@ class Settings(BaseSettings):
         populate_by_name=True,
     )
 
+    timezone_app: Annotated[
+        str,
+        Field(alias="TIMEZONE_APP", default="UTC", min_length=1),
+    ]
+    timezone_business: Annotated[
+        str,
+        Field(alias="TIMEZONE_BUSINESS", default="America/Sao_Paulo", min_length=1),
+    ]
+
     bling_client_id: Annotated[str, Field(alias="BLING_CLIENT_ID", min_length=1)]
     bling_client_secret: Annotated[str, Field(alias="BLING_CLIENT_SECRET", min_length=1)]
     bling_usuario: Annotated[str, Field(alias="BLING_USUARIO", min_length=1)]
     bling_senha_usuario: Annotated[str, Field(alias="BLING_SENHA_USUARIO", min_length=1)]
-    bling_refresh_token: Annotated[
+    bling_baseurl: Annotated[AnyHttpUrl, Field(alias="BLING_BASEURL")]
+
+    bling_oauth_access_token: Annotated[
         Optional[str],
-        Field(alias="BLING_REFRESH_TOKEN", default=None, min_length=1),
+        Field(alias="BLING_OAUTH_ACCESS_TOKEN", default=None, min_length=1),
     ]
-    bling_redirect_uri: Annotated[
-        Optional[AnyHttpUrl],
-        Field(alias="BLING_REDIRECT_URI", default=None),
+    bling_oauth_expires_in: Annotated[
+        Optional[str],
+        Field(alias="BLING_OAUTH_EXPIRES_IN", default=None, min_length=1),
+    ]
+    bling_oauth_refresh_token: Annotated[
+        Optional[str],
+        Field(alias="BLING_OAUTH_REFRESH_TOKEN", default=None, min_length=1),
     ]
     bling_oauth_scope: Annotated[
         Optional[str],
@@ -62,8 +76,6 @@ class Settings(BaseSettings):
         Field(alias="POSTGRES_TZ", default="America/Sao_Paulo", min_length=1),
     ]
 
-    oauth_baseurl: Annotated[AnyHttpUrl, Field(alias="OAUTH_BASEURL")]
-
     @field_validator(
         "bling_client_id",
         "bling_client_secret",
@@ -71,6 +83,7 @@ class Settings(BaseSettings):
         "bling_senha_usuario",
         "postgres_user",
         "postgres_password",
+        "postgres_host",
         "postgres_db",
         mode="after",
     )
@@ -80,7 +93,12 @@ class Settings(BaseSettings):
             raise ValueError("Value cannot be blank or whitespace only")
         return value
 
-    @field_validator("postgres_tz", mode="after")
+    @field_validator(
+        "timezone_app",
+        "timezone_business",
+        "postgres_tz",
+        mode="after"
+    )
     @classmethod
     def _validate_timezone(cls, value: str) -> str:
         try:

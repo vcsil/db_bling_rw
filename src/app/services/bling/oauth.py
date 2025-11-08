@@ -1,20 +1,20 @@
 """Utilitários de autenticação OAuth para a API do Bling."""
 from __future__ import annotations
 
-import base64
-import json
+from urllib.parse import parse_qs, urlencode, urljoin, urlsplit
+from datetime import datetime, timedelta
+from typing import Any, Dict, Mapping, Optional
+
+from pydantic import BaseModel, Field
+import requests
+
+import threading
 import logging
 import secrets
-import threading
-from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Mapping, Optional
-from urllib.parse import parse_qs, urlencode, urljoin, urlsplit
-
-import requests
-from dotenv import find_dotenv
-from pydantic import BaseModel, Field
+import json
 
 from app.core.settings import Settings, get_settings, set_settings
+from app.core.timeutil import time_now, time_to_business
 
 LOGGER = logging.getLogger(__name__)
 
@@ -27,11 +27,11 @@ class OAuthToken(BaseModel):
     """Representa o payload do token OAuth2 retornado pelo Bling."""
 
     access_token: str = Field(alias="access_token")
-    token_type: str = Field(alias="token_type")
     expires_in: int = Field(alias="expires_in")
+    token_type: str = Field(alias="token_type")
     scope: Optional[str] = Field(default=None, alias="scope")
     refresh_token: Optional[str] = Field(default=None, alias="refresh_token")
-    obtained_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+    obtained_at: datetime = Field(default_factory=time_now)
 
     model_config = {
         "populate_by_name": True,
@@ -40,13 +40,14 @@ class OAuthToken(BaseModel):
     @property
     def expires_at(self) -> datetime:
         """Retorna o momento exato em que o token expira."""
+        expires_time = self.obtained_at + timedelta(seconds=self.expires_in)
 
-        return self.obtained_at + timedelta(seconds=self.expires_in)
+        return time_to_business(expires_time)
 
     def is_expired(self, *, leeway: int = 60) -> bool:
         """Indica se o token já expirou considerando uma folga opcional."""
 
-        return datetime.now(timezone.utc) >= (self.expires_at - timedelta(seconds=leeway))
+        return time_now() >= (self.expires_at - timedelta(seconds=leeway))
 
 
 class BlingOAuthClient:
@@ -55,11 +56,11 @@ class BlingOAuthClient:
     AUTHORIZE_ENDPOINT = "oauth/authorize"
     TOKEN_ENDPOINT = "oauth/token"
 
-    ENV_ACCESS_TOKEN_KEY = "OAUTH_ACCESS_TOKEN"
-    ENV_EXPIRES_IN_KEY = "OAUTH_EXPIRES_IN"
-    ENV_EXPIRES_AT_KEY = "OAUTH_HOURS_EXPIRATION"
-    ENV_REFRESH_TOKEN_KEY = "OAUTH_REFRESH_TOKEN"
-    ENV_SCOPE_KEY = "OAUTH_SCOPE"
+    ENV_ACCESS_TOKEN_KEY = "BLING_OAUTH_ACCESS_TOKEN"
+    ENV_EXPIRES_IN_KEY = "BLING_OAUTH_EXPIRES_IN"
+    ENV_EXPIRES_AT_KEY = "BLING_OAUTH_HOURS_EXPIRATION"
+    ENV_REFRESH_TOKEN_KEY = "BLING_OAUTH_REFRESH_TOKEN"
+    ENV_SCOPE_KEY = "BLING_OAUTH_SCOPE"
 
     def __init__(
         self,
@@ -74,11 +75,11 @@ class BlingOAuthClient:
         self._session = session or requests.Session()
         self._timeout = timeout
         self._logger = logger or LOGGER
-        self._env_path = env_path or self._default_env_path()
+        self._env_path = env_path or None
 
         self._token_lock = threading.Lock()
         self._token: Optional[OAuthToken] = None
-        self._refresh_token = self._settings.bling_refresh_token
+        self._refresh_token = self._settings.bling_oauth_refresh_token
 
     # ------------------------------------------------------------------
     # Fluxo público
@@ -87,26 +88,17 @@ class BlingOAuthClient:
         self,
         *,
         state: Optional[str] = None,
-        scope: Optional[str] = None,
-        redirect_uri: Optional[str] = None,
     ) -> str:
         """Monta a URL de autorização conforme a documentação oficial."""
 
-        base_url = urljoin(str(self._settings.oauth_baseurl), self.AUTHORIZE_ENDPOINT)
+        base_url = urljoin(str(self._settings.bling_baseurl), self.AUTHORIZE_ENDPOINT)
         params: Dict[str, Any] = {
             "response_type": "code",
             "client_id": self._settings.bling_client_id,
         }
         final_state = state or secrets.token_urlsafe(16)
         params["state"] = final_state
-        final_redirect = redirect_uri or (
-            str(self._settings.bling_redirect_uri) if self._settings.bling_redirect_uri else None
-        )
-        if final_redirect:
-            params["redirect_uri"] = final_redirect
-        final_scope = scope or self._settings.bling_oauth_scope
-        if final_scope:
-            params["scope"] = final_scope
+
         query = urlencode(params)
         return f"{base_url}?{query}"
 
@@ -114,22 +106,18 @@ class BlingOAuthClient:
         self,
         code: str,
         *,
-        redirect_uri: Optional[str] = None,
         save_to_env: bool = True,
     ) -> OAuthToken:
         """Troca um authorization code por um access token."""
-
+        # Monta estrutura da requisição
         payload: Dict[str, Any] = {
             "grant_type": "authorization_code",
             "code": code,
         }
-        final_redirect = redirect_uri or (
-            str(self._settings.bling_redirect_uri) if self._settings.bling_redirect_uri else None
-        )
-        if final_redirect:
-            payload["redirect_uri"] = final_redirect
 
+        # Solicita o token
         token = self._request_token(payload)
+
         self._refresh_token = token.refresh_token or self._refresh_token
         if save_to_env:
             self._persist_token(token)
@@ -159,14 +147,14 @@ class BlingOAuthClient:
         with self._token_lock:
             if force_refresh:
                 self._logger.info(
-                    "bling.oauth.refresh",
-                    extra={"event": "bling.oauth.refresh", "message": "Forçando renovação do token"},
+                    "Forçando renovação do token",
+                    extra={"event": "bling.oauth.refresh"},
                 )
                 self._token = None
             if self._token is None or self._token.is_expired():
                 self._logger.info(
-                    "bling.oauth.renew",
-                    extra={"event": "bling.oauth.renew", "message": "Obtendo novo token via refresh"},
+                    "Obtendo novo token via refresh",
+                    extra={"event": "bling.oauth.renew"},
                 )
                 self._token = self.refresh_access_token()
             return self._token
@@ -175,28 +163,29 @@ class BlingOAuthClient:
         self,
         *,
         state: Optional[str] = None,
-        scope: Optional[str] = None,
         headless: bool = True,
         save_to_env: bool = True,
     ) -> OAuthToken:
         """Executa o fluxo interativo de autorização via Selenium."""
 
         try:
-            from selenium import webdriver
             from selenium.common.exceptions import NoSuchElementException
+            from webdriver_manager.chrome import ChromeDriverManager
             from selenium.webdriver.chrome.service import Service
             from selenium.webdriver.common.by import By
-            from webdriver_manager.chrome import ChromeDriverManager
+            from selenium import webdriver
         except ImportError as exc:  # pragma: no cover - dependência opcional
             raise BlingOAuthError("Dependências do Selenium não instaladas") from exc
 
+        # Inicia o navegador
         options = self._build_chrome_options(headless=headless)
         service = Service(ChromeDriverManager().install())
         driver = webdriver.Chrome(service=service, options=options)
         driver.implicitly_wait(2)
 
+        # Construi a url
         final_state = state or secrets.token_urlsafe(16)
-        authorization_url = self.build_authorization_url(state=final_state, scope=scope)
+        authorization_url = self.build_authorization_url(state=final_state)
         self._logger.info(
             "bling.oauth.browser.start",
             extra={
@@ -205,36 +194,49 @@ class BlingOAuthClient:
                 "state": final_state,
             },
         )
+
+        # Acessa url
         driver.get(authorization_url)
 
-        driver.find_element(By.XPATH, "/html/body/div/div/div/form/div[2]/input").send_keys(
-            self._settings.bling_usuario
-        )
-        driver.find_element(By.XPATH, "/html/body/div/div/div/form/div[3]/input").send_keys(
-            self._settings.bling_senha_usuario
-        )
-        driver.find_element(By.XPATH, "/html/body/div/div/div/form/div[6]/button").click()
+        # campo_usuario
+        driver.find_element(
+            By.XPATH,"/html/body/div/div/div/form/div[2]/input"
+            ).send_keys(self._settings.bling_usuario)
+
+        # campo_senha
+        driver.find_element(
+            By.XPATH, "/html/body/div/div/div/form/div[3]/input"
+            ).send_keys(self._settings.bling_senha_usuario)
+
+        # botao_entrar
+        driver.find_element(
+            By.XPATH, "/html/body/div/div/div/form/div[6]/button"
+            ).click()
 
         try:
-            driver.find_element(By.XPATH, "/html/body/div/div/div/div/div[6]/form/button[2]").click()
+            # botao_autorizar
+            driver.find_element(
+                By.XPATH, "/html/body/div/div/div/div/div[6]/form/button[2]"
+                ).click()
         except NoSuchElementException:
             self._logger.info(
-                "bling.oauth.browser.reuse",
+                "Sessão previamente autorizada reutilizada",
                 extra={
                     "event": "bling.oauth.browser.reuse",
-                    "message": "Sessão previamente autorizada reutilizada",
                 },
             )
         finally:
             final_url = driver.current_url
             driver.quit()
 
+        # Pega as pertes necessárias da url de resposta
         parsed = urlsplit(final_url)
         params = parse_qs(parsed.query)
         codes = params.get("code")
         if not codes:
             raise BlingOAuthError("Código de autorização não encontrado na URL de retorno")
 
+        # Pega o token de acesso a partir do código de autorização.
         token = self.exchange_code_for_token(codes[0], save_to_env=save_to_env)
         self._logger.info(
             "bling.oauth.browser.success",
@@ -246,21 +248,24 @@ class BlingOAuthClient:
     # Implementação interna
     # ------------------------------------------------------------------
     def _request_token(self, payload: Mapping[str, Any]) -> OAuthToken:
-        token_url = urljoin(str(self._settings.oauth_baseurl), self.TOKEN_ENDPOINT)
-        headers = {
-            "Authorization": self._basic_authorization_header(),
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        }
+        # Monta estrutura de requisição
+        token_url = urljoin(str(self._settings.bling_baseurl), self.TOKEN_ENDPOINT)
+
+        # Codifica credenciais em base64
+        credentialbs4 = requests.auth.HTTPBasicAuth(
+            self._settings.bling_client_id, self._settings.bling_client_secret)
+
         self._logger.info(
             "bling.oauth.token.request",
             extra={"event": "bling.oauth.token.request", "payload": dict(payload)},
         )
         try:
+            # Solicita token de acesso
             response = self._session.post(
                 token_url,
-                json=dict(payload),
-                headers=headers,
+                data=payload,
+                headers={"Accept": "application/json",},
+                auth=credentialbs4,
                 timeout=self._timeout,
             )
         except requests.RequestException as exc:  # pragma: no cover - falha de rede
@@ -285,13 +290,12 @@ class BlingOAuthClient:
         else:
             raise BlingOAuthError("Resposta inesperada do endpoint OAuth do Bling")
 
-        data.setdefault("obtained_at", datetime.now(timezone.utc))
+        data.setdefault("obtained_at", time_now())
+        # Valida estrutura do token
         token = OAuthToken.model_validate(data)
         return token
 
     def _persist_token(self, token: OAuthToken) -> None:
-        if not self._env_path:
-            return
         try:
             set_settings(
                 {
@@ -308,15 +312,6 @@ class BlingOAuthClient:
                 "bling.oauth.persist.failed",
                 extra={"event": "bling.oauth.persist.failed", "error": str(exc)},
             )
-
-    def _basic_authorization_header(self) -> str:
-        credential = f"{self._settings.bling_client_id}:{self._settings.bling_client_secret}"
-        encoded = base64.b64encode(credential.encode("utf-8")).decode("ascii")
-        return f"Basic {encoded}"
-
-    def _default_env_path(self) -> Optional[str]:
-        path = find_dotenv(usecwd=True)
-        return path or None
 
     @staticmethod
     def _safe_json(response: requests.Response) -> Any:
