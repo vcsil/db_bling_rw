@@ -11,7 +11,7 @@ from dotenv import find_dotenv, load_dotenv, set_key
 from pydantic import AnyHttpUrl, Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-# Load the environment variables from the .env file as early as possible.
+ENV_PATH: str = find_dotenv(usecwd=True) or ".env"
 load_dotenv()
 
 
@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     """Centralised application configuration."""
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=ENV_PATH,
         env_file_encoding="utf-8",
         extra="ignore",
         populate_by_name=True,
@@ -110,6 +110,7 @@ def set_settings(
     written to the resolved ``.env`` path and the cached settings instance is
     refreshed to reflect the new values.
     """
+    load_dotenv(dotenv_path=ENV_PATH)
 
     merged_updates: dict[str, Optional[str]] = {}
     if updates:
@@ -119,7 +120,7 @@ def set_settings(
     if not merged_updates:
         return get_settings()
 
-    resolved_env_path = env_path or find_dotenv(usecwd=True) or ".env"
+    resolved_env_path = env_path or ENV_PATH
 
     try:
         for key, value in merged_updates.items():
