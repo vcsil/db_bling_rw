@@ -1,4 +1,19 @@
-"""Testes para app.core.settings."""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov  8 20:11:15 2025
+
+@author: vcsil
+
+Testes para app.core.settings.
+
+Garante que o módulo app.core.settings
+  (1) leia as variáveis de ambiente corretas com casting de tipos,
+  (2) rejeite timezones inválidos e
+  (3) atualize .env + invalide/recarregue o cache quando set_settings(...) 
+  for chamado
+tudo em ambiente controlado de testes.
+"""
 from __future__ import annotations
 
 from importlib import reload
@@ -28,7 +43,7 @@ def settings_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
         "BLING_CLIENT_SECRET": "segredo",
         "BLING_USUARIO": "usuario",
         "BLING_SENHA_USUARIO": "senha",
-        "BLING_BASEURL": "https://bling.example",
+        "BLING_BASEURL": "https://bling.example/",
         "POSTGRES_USER": "postgres",
         "POSTGRES_PASSWORD": "postgres",
         "POSTGRES_HOST": "localhost",
@@ -59,8 +74,28 @@ def test_get_settings_usa_variaveis_de_ambiente(settings_module) -> None:
     settings = settings_module.get_settings()
 
     assert settings.timezone_app == "UTC"
+    assert settings.timezone_business == "America/Sao_Paulo"
+    assert settings.postgres_tz == "America/Sao_Paulo"
     assert settings.bling_client_id == "cliente"
+    assert settings.bling_client_secret == "segredo"
+    assert settings.bling_usuario == "usuario"
+    assert settings.bling_senha_usuario == "senha"
+    assert str(settings.bling_baseurl) == "https://bling.example/"
+    assert settings.postgres_user == "postgres"
+    assert settings.postgres_password == "postgres"
+    assert settings.postgres_host == "localhost"
     assert settings.postgres_container_port == 5432
+    assert settings.postgres_host_port == 5432
+    assert settings.postgres_db == "bling"
+
+
+@pytest.mark.parametrize("tz", ["UTC", "America/Sao_Paulo"])
+def test_validacao_timezone_valido(settings_module, monkeypatch: pytest.MonkeyPatch, tz) -> None:
+    monkeypatch.setenv("TIMEZONE_APP", tz)
+    settings_module.get_settings.cache_clear()
+
+    s = settings_module.get_settings()
+    assert s.timezone_app == tz
 
 
 def test_validacao_timezone_invalido(settings_module, monkeypatch: pytest.MonkeyPatch) -> None:

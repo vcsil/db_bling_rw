@@ -142,7 +142,7 @@ def set_settings(
 
     try:
         for key, value in merged_updates.items():
-            set_key(resolved_env_path, key, "" if value is None else str(value))
+            set_key(resolved_env_path, key, "" if value is None else str(value), quote_mode="never")
     except OSError as exc:
         raise OSError(f"Falha ao persistir configurações em {resolved_env_path}") from exc
 

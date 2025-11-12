@@ -1,4 +1,17 @@
-"""Configurações globais de testes."""
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Nov  8 19:39:16 2025
+
+@author: vcsil
+
+Configurações globais de testes.
+
+Cria um “clone mínimo” do pacote python-dotenv e o injeta no cache de módulos
+do Python para que, durante os testes, qualquer import dotenv use esse stub
+(em vez do pacote real).
+"""
+
 from __future__ import annotations
 
 import os
@@ -22,9 +35,11 @@ def _stub_dotenv_module() -> None:
     def load_dotenv(*, dotenv_path: str | None = None, override: bool = False) -> bool:
         if not dotenv_path:
             return False
+
         caminho = Path(dotenv_path)
         if not caminho.exists():
             return False
+
         alterado = False
         for linha in caminho.read_text(encoding="utf-8").splitlines():
             if not linha or linha.lstrip().startswith("#") or "=" not in linha:
@@ -35,8 +50,9 @@ def _stub_dotenv_module() -> None:
                 alterado = True
         return alterado
 
-    def set_key(dotenv_path: str, key: str, value: str) -> tuple[str, str, bool]:
+    def set_key(dotenv_path: str, key: str, value: str, **kwargs) -> tuple[str, str, bool]:
         caminho = Path(dotenv_path)
+
         pares: dict[str, str] = {}
         if caminho.exists():
             for linha in caminho.read_text(encoding="utf-8").splitlines():
@@ -44,6 +60,7 @@ def _stub_dotenv_module() -> None:
                     continue
                 atual_chave, atual_valor = linha.split("=", 1)
                 pares[atual_chave] = atual_valor
+
         pares[key] = value
         conteudo = "\n".join(f"{k}={v}" for k, v in pares.items())
         caminho.write_text(conteudo, encoding="utf-8")
@@ -82,7 +99,9 @@ def _stub_dotenv_module() -> None:
     sys.modules["dotenv"] = module
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def _patch_dotenv() -> Iterator[None]:
     _stub_dotenv_module()
     yield
+
+_stub_dotenv_module()
