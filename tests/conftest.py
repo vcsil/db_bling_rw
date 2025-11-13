@@ -23,6 +23,20 @@ from typing import IO, Iterator
 import pytest
 
 
+def _ensure_src_in_path() -> None:
+    caminho_teste = Path(__file__).resolve()
+    for idx, parent in enumerate(caminho_teste.parents):
+
+        if idx > 1:
+            raise RuntimeError("Diretório 'src' não encontrado na hierarquia de testes")
+            
+        candidato = parent / "src"
+        if candidato.exists():
+            if str(candidato) not in sys.path:
+                sys.path.insert(0, str(candidato))
+            return
+
+
 def _stub_dotenv_module() -> None:
     if "dotenv" in sys.modules:
         return
@@ -105,3 +119,4 @@ def _patch_dotenv() -> Iterator[None]:
     yield
 
 _stub_dotenv_module()
+_ensure_src_in_path()

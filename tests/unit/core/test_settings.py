@@ -19,22 +19,14 @@ from __future__ import annotations
 from importlib import reload
 from pathlib import Path
 from types import ModuleType
-import sys
 
 import pytest
-
-
-def _ensure_src_in_path() -> None:
-    raiz = Path(__file__).resolve().parents[3] / "src"
-    if str(raiz) not in sys.path:
-        sys.path.insert(0, str(raiz))
 
 
 @pytest.fixture
 def settings_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Fornece o módulo de configurações com variáveis de ambiente controladas."""
 
-    _ensure_src_in_path()
     env_values = {
         "TIMEZONE_APP": "UTC",
         "TIMEZONE_BUSINESS": "America/Sao_Paulo",

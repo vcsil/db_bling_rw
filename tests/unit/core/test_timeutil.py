@@ -17,25 +17,15 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from importlib import reload
-from pathlib import Path
 from types import ModuleType
-import sys
 
 import pytest
 from zoneinfo import ZoneInfo
-
-
-def _ensure_src_in_path() -> None:
-    raiz = Path(__file__).resolve().parents[3] / "src"
-    if str(raiz) not in sys.path:
-        sys.path.insert(0, str(raiz))
-
 
 @pytest.fixture
 def timeutil_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
     """Carrega o módulo de utilitários de tempo com ambientes controlados."""
 
-    _ensure_src_in_path()
     monkeypatch.setenv("TIMEZONE_APP", "UTC")
     monkeypatch.setenv("TIMEZONE_BUSINESS", "America/Sao_Paulo")
     monkeypatch.setenv("POSTGRES_TZ", "America/Sao_Paulo")
