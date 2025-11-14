@@ -7,9 +7,7 @@ Created on Sat Nov  8 19:39:16 2025
 
 Configurações globais de testes.
 
-Cria um “clone mínimo” do pacote python-dotenv e o injeta no cache de módulos
-do Python para que, durante os testes, qualquer import dotenv use esse stub
-(em vez do pacote real).
+Cria um “clone mínimo” do pacote python-dotenv, requests
 """
 
 from __future__ import annotations
@@ -113,10 +111,54 @@ def _stub_dotenv_module() -> None:
     sys.modules["dotenv"] = module
 
 
+def _stub_requests_module() -> None:
+    if "requests" in sys.modules:
+        return
+
+    module = ModuleType("requests")
+
+    class RequestException(Exception):
+        """Exceção base para falhas simuladas do requests."""
+
+    class Session:
+        """Sessão HTTP mínima para ser usada como spec em mocks."""
+
+        def post(self, *args: object, **kwargs: object) -> object:  # pragma: no cover
+            raise NotImplementedError
+
+        def request(self, *args: object, **kwargs: object) -> object:  # pragma: no cover
+            raise NotImplementedError
+
+    auth_module = ModuleType("requests.auth")
+
+    class HTTPBasicAuth:  # pragma: no cover - comportamento trivial
+        def __init__(self, username: str, password: str) -> None:
+            self.username = username
+            self.password = password
+
+    auth_module.HTTPBasicAuth = HTTPBasicAuth
+
+    class Response:
+        status_code = 200
+        text = ""
+
+        def json(self) -> object:  # pragma: no cover - comportamento trivial
+            return {}
+
+    module.RequestException = RequestException
+    module.Session = Session
+    module.Response = Response
+    module.auth = auth_module
+
+    sys.modules["requests"] = module
+    sys.modules["requests.auth"] = auth_module
+
+
 @pytest.fixture(autouse=True, scope="session")
 def _patch_dotenv() -> Iterator[None]:
     _stub_dotenv_module()
     yield
 
 _stub_dotenv_module()
+_stub_requests_module()
 _ensure_src_in_path()
