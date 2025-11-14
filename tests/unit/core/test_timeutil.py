@@ -97,3 +97,12 @@ def test_iso_z_formata_com_sufixo_z(timeutil_module: ModuleType) -> None:
 
     assert resultado.endswith("Z")
     assert "T" in resultado
+
+
+def test_time_to_business_exige_tzinfo(timeutil_module: ModuleType) -> None:
+    dt_naive = datetime(2024, 5, 10, 12, 30)
+
+    # Deve levantar o mesmo ValueError da linha 29 de timeutil.py
+    with pytest.raises(ValueError, match="datetime naïve"):
+        timeutil_module.time_to_business(dt_naive)
+
