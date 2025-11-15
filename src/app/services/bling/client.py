@@ -277,7 +277,10 @@ class BlingClient:
         while attempt < self._max_retries:
             attempt += 1
             try:
-                token = self._oauth_client.get_token(force_refresh=force_refresh)
+                if self._oauth_client._token and not(self._oauth_client._token.is_expired()):
+                    token = self._oauth_client._token
+                else:
+                    token = self._oauth_client.get_token(force_refresh=force_refresh)
             except BlingOAuthError as exc:
                 raise BlingAPIError(f"Failed to obtain OAuth token: {exc}") from exc
             request_headers = {"Authorization": f"Bearer {token.access_token}"}

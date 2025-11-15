@@ -293,7 +293,16 @@ class BlingOAuthClient:
             raise BlingOAuthError("Falha ao se comunicar com o endpoint OAuth do Bling") from exc
 
         data = self._safe_json(response)
-        if response.status_code >= 400:
+
+        if response.status_code == 400:  # Caso o refresh token seja inválido
+            self._logger.info(
+                "bling.oauth.token.refresh.error",
+                extra={"event": "bling.oauth.token.refresh",
+                       "status_code": response.status_code,
+                       "payload": data},
+            )
+            return self.authorize_with_browser()
+        elif response.status_code >= 401:
             self._logger.error(
                 "bling.oauth.token.error",
                 extra={
@@ -364,4 +373,3 @@ __all__ = [
     "BlingOAuthError",
     "OAuthToken",
 ]
-
