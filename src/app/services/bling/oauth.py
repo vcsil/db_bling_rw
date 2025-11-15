@@ -50,6 +50,26 @@ class OAuthToken(BaseModel):
         return time_now() >= (self.expires_at - timedelta(seconds=leeway))
 
 
+def get_token_from_settings(settings: Settings, logger: logging.Logger) -> None:
+    try:
+        obtained = time_to_utc(settings.bling_oauth_hours_expiration)
+        obtained -= timedelta(seconds=settings.bling_oauth_expires_in)
+        token = OAuthToken(
+            access_token=settings.bling_oauth_access_token,
+            expires_in=settings.bling_oauth_expires_in,
+            token_type="Bearer",
+            scope=settings.bling_oauth_scope,
+            refresh_token=settings.bling_oauth_refresh_token,
+            obtained_at=obtained,
+        )
+        return token
+    except AttributeError as exc:
+        logger.warning(
+            "bling.oauth.get_token_from_settings credenciais incompletas",
+            extra={"event": "bling.oauth.get_token_from_settings", "error": str(exc)},
+        )
+        return None
+
 class BlingOAuthClient:
     """Cliente responsável por todo o fluxo OAuth com o Bling."""
 
@@ -78,7 +98,8 @@ class BlingOAuthClient:
         self._env_path = env_path or None
 
         self._token_lock = threading.Lock()
-        self._token: Optional[OAuthToken] = None
+        self._token: Optional[OAuthToken] = get_token_from_settings(
+            self._settings, self._logger)
         self._refresh_token = self._settings.bling_oauth_refresh_token
 
     # ------------------------------------------------------------------
