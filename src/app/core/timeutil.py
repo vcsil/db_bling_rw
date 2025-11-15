@@ -9,7 +9,7 @@ Created on Sat Nov  8 15:37:42 2025
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
 
-from app.core.settings import get_settings
+from src.app.core.settings import get_settings
 
 settings = get_settings()
 

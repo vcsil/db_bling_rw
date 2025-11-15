@@ -12,8 +12,8 @@ from urllib.parse import urljoin
 import requests
 from pydantic import BaseModel, Field
 
-from app.core.settings import Settings, get_settings
-from app.services.bling.oauth import BlingOAuthClient, BlingOAuthError
+from src.app.core.settings import Settings, get_settings
+from src.app.services.bling.oauth import BlingOAuthClient, BlingOAuthError
 
 LOGGER = logging.getLogger(__name__)
 
