@@ -44,6 +44,20 @@ def _stub_dotenv_module() -> None:
     def find_dotenv(*, usecwd: bool = False) -> str:
         return ""
 
+    def _parse_line(linha: str) -> tuple[str, str] | None:
+        if not linha or linha.lstrip().startswith("#") or "=" not in linha:
+            return None
+
+        chave, valor = linha.split("=", 1)
+        chave = chave.strip()
+        valor = valor.strip()
+
+        # remove aspas simétricas tipo 'valor' ou "valor"
+        if len(valor) >= 2 and valor[0] == valor[-1] and valor[0] in {"'", '"'}:
+            valor = valor[1:-1]
+
+        return chave, valor
+
     def load_dotenv(*, dotenv_path: str | None = None, override: bool = False) -> bool:
         if not dotenv_path:
             return False
@@ -54,9 +68,10 @@ def _stub_dotenv_module() -> None:
 
         alterado = False
         for linha in caminho.read_text(encoding="utf-8").splitlines():
-            if not linha or linha.lstrip().startswith("#") or "=" not in linha:
+            parsed = _parse_line(linha)
+            if not parsed:
                 continue
-            chave, valor = linha.split("=", 1)
+            chave, valor = parsed
             if override or chave not in os.environ:
                 os.environ[chave] = valor
                 alterado = True
@@ -68,9 +83,10 @@ def _stub_dotenv_module() -> None:
         pares: dict[str, str] = {}
         if caminho.exists():
             for linha in caminho.read_text(encoding="utf-8").splitlines():
-                if not linha or linha.lstrip().startswith("#") or "=" not in linha:
+                parsed = _parse_line(linha)
+                if not parsed:
                     continue
-                atual_chave, atual_valor = linha.split("=", 1)
+                atual_chave, atual_valor = parsed
                 pares[atual_chave] = atual_valor
 
         pares[key] = value
@@ -98,9 +114,10 @@ def _stub_dotenv_module() -> None:
 
         pares: dict[str, str] = {}
         for linha in linhas:
-            if not linha or linha.lstrip().startswith("#") or "=" not in linha:
+            parsed = _parse_line(linha)
+            if not parsed:
                 continue
-            chave, valor = linha.split("=", 1)
+            chave, valor = parsed
             pares[chave] = valor
         return pares
 

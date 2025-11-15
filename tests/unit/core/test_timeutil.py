@@ -43,6 +43,10 @@ def timeutil_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
 
     import app.core.settings as settings_module
 
+    # isolar do .env real
+    settings_module.ENV_PATH = "nonexistent.env"
+    settings_module.Settings.model_config["env_file"] = "nonexistent.env"
+
     reload(settings_module)
     settings_module.get_settings.cache_clear()
 

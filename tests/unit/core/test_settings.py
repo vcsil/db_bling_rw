@@ -54,10 +54,15 @@ def settings_module(monkeypatch: pytest.MonkeyPatch) -> ModuleType:
         "BLING_OAUTH_EXPIRES_IN",
         "BLING_OAUTH_REFRESH_TOKEN",
         "BLING_OAUTH_SCOPE",
+        "BLING_OAUTH_HOURS_EXPIRATION",
     }:
         monkeypatch.delenv(optional_key, raising=False)
 
     import app.core.settings as settings_module
+
+    # isolar do .env real
+    settings_module.ENV_PATH = "nonexistent.env"
+    settings_module.Settings.model_config["env_file"] = "nonexistent.env"
 
     reload(settings_module)
     settings_module.get_settings.cache_clear()

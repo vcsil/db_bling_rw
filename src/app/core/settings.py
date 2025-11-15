@@ -3,6 +3,7 @@
 """Application settings module."""
 from __future__ import annotations
 
+from datetime import datetime
 from functools import lru_cache
 from typing import Annotated, Mapping, Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -44,12 +45,16 @@ class Settings(BaseSettings):
         Field(alias="BLING_OAUTH_ACCESS_TOKEN", default=None, min_length=1),
     ]
     bling_oauth_expires_in: Annotated[
-        Optional[str],
-        Field(alias="BLING_OAUTH_EXPIRES_IN", default=None, min_length=1),
+        Optional[int],
+        Field(alias="BLING_OAUTH_EXPIRES_IN", default=None),
     ]
     bling_oauth_refresh_token: Annotated[
         Optional[str],
         Field(alias="BLING_OAUTH_REFRESH_TOKEN", default=None, min_length=1),
+    ]
+    bling_oauth_hours_expiration: Annotated[
+        Optional[datetime],
+        Field(alias="BLING_OAUTH_HOURS_EXPIRATION", default=None),
     ]
     bling_oauth_scope: Annotated[
         Optional[str],
@@ -105,6 +110,19 @@ class Settings(BaseSettings):
             ZoneInfo(value)
         except ZoneInfoNotFoundError as exc:
             raise ValueError(f"Unknown timezone: {value}") from exc
+        return value
+
+    @field_validator("bling_oauth_hours_expiration", mode="after")
+    @classmethod
+    def _validate_bling_oauth_hours_expiration(
+        cls,
+        value: Optional[datetime],
+    ) -> Optional[datetime]:
+        if value is not None and value.tzinfo is None:
+            raise ValueError(
+                "BLING_OAUTH_HOURS_EXPIRATION deve incluir offset de fuso horário, "
+                "por exemplo: 2025-11-11T22:47:02.402317-03:00"
+            )
         return value
 
 
