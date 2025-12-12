@@ -11,6 +11,7 @@ from urllib.parse import urljoin
 
 import requests
 from pydantic import BaseModel, Field
+from datetime import datetime, timezone
 
 from src.app.core.settings import Settings, get_settings
 from src.app.services.bling.oauth import BlingOAuthClient, BlingOAuthError
@@ -166,7 +167,8 @@ class BlingClient:
         settings: Optional[Settings] = None,
         session: Optional[requests.Session] = None,
         api_base_url: Optional[str] = None,
-        rate_limit_per_minute: int = 60,
+        rate_limit_per_second: int = 2,
+        daily_limit: int = 120_000,
         max_retries: int = 5,
         backoff_factor: float = 0.5,
         timeout: float = 30.0,
@@ -177,8 +179,8 @@ class BlingClient:
         self._session = session or requests.Session()
         self._session.headers.setdefault("Accept", "application/json")
         self._api_base_url = api_base_url or self.DEFAULT_API_BASE_URL
-        self._rate_limit_per_minute = max(rate_limit_per_minute, 0)
-        self._rate_limit_interval = (60.0 / self._rate_limit_per_minute) if self._rate_limit_per_minute else 0.0
+        self._rate_limit_per_second = max(rate_limit_per_second, 0)
+        self._rate_limit_interval = (60.0 / self._rate_limit_per_second) if self._rate_limit_per_second else 0.0
         self._max_retries = max(1, max_retries)
         self._backoff_factor = max(0.0, backoff_factor)
         self._timeout = timeout
@@ -191,8 +193,18 @@ class BlingClient:
             timeout=self._timeout,
             logger=self._logger,
         )
+
         self._rate_lock = threading.Lock()
         self._last_request_ts = 0.0
+
+        self._current_second_start = time.monotonic()
+        self._requests_in_current_second = 0
+
+        self._daily_limit = daily_limit
+        self._daily_count = 0
+        self._daily_reset_date = datetime.now(timezone.utc).date()
+        self._daily_lock = threading.Lock()
+
 
     # ------------------------------------------------------------------
     # Public API
@@ -374,15 +386,46 @@ class BlingClient:
         raise BlingAPIError("Maximum retries exceeded for request")
 
     def _respect_rate_limit(self) -> None:
-        if self._rate_limit_interval <= 0:
+        if self._rate_limit_per_second <= 0:
             return
+
         with self._rate_lock:
             now = time.monotonic()
-            elapsed = now - self._last_request_ts
-            wait_time = self._rate_limit_interval - elapsed
-            if wait_time > 0:
-                time.sleep(wait_time)
-            self._last_request_ts = time.monotonic()
+            elapsed = now - self._current_second_start
+
+            # Se passou de 1s, reseta a janela
+            if elapsed >= 1.0:
+                self._current_second_start = now
+                self._requests_in_current_second = 0
+
+            # Se já atingiu o limite, espera até virar o segundo
+            if self._requests_in_current_second >= self._rate_limit_per_second:
+                sleep_for = 1.0 - elapsed
+                if sleep_for > 0:
+                    time.sleep(sleep_for)
+                # Começa nova janela
+                self._current_second_start = time.monotonic()
+                self._requests_in_current_second = 0
+
+            self._requests_in_current_second += 1
+
+    def _respect_daily_limit(self) -> None:
+        if self._daily_limit <= 0:
+            return
+
+        with self._daily_lock:
+            today = datetime.now(timezone.utc).date()
+            if today != self._daily_reset_date:
+                # Virou o dia → reseta contador
+                self._daily_reset_date = today
+                self._daily_count = 0
+
+            if self._daily_count >= self._daily_limit:
+                raise BlingAPIError(
+                    "Daily API request limit reached in client; aborting to avoid 429 from Bling."
+                )
+
+            self._daily_count += 1
 
     def _sleep_backoff(self, attempt: int) -> None:
         if self._backoff_factor == 0:
