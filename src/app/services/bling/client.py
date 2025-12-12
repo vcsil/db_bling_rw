@@ -82,8 +82,8 @@ class BlingResourceConfig:
     path: str
     model: Type[BlingModelT]
     items_path: Tuple[str, ...] = ("data",)
-    page_param: str = "page"
-    limit_param: str = "limit"
+    page_param: str = "pagina"
+    limit_param: str = "limite"
     default_page_size: int = 100
 
     def extract_items(self, payload: Mapping[str, Any]) -> List[Mapping[str, Any]]:
@@ -286,51 +286,43 @@ class BlingClient:
         attempt = 0
         last_error: Optional[Exception] = None
         force_refresh = False
+
         while attempt < self._max_retries:
             attempt += 1
-            try:
-                if self._oauth_client._token and not(self._oauth_client._token.is_expired()):
-                    token = self._oauth_client._token
-                else:
-                    token = self._oauth_client.get_token(force_refresh=force_refresh)
-            except BlingOAuthError as exc:
-                raise BlingAPIError(f"Failed to obtain OAuth token: {exc}") from exc
-            request_headers = {"Authorization": f"Bearer {token.access_token}"}
-            if headers:
-                request_headers.update(headers)
             is_retry = attempt > 1
+
+            # 1) Token + headers
+            token = self._obtain_token(force_refresh=force_refresh)
+            request_headers = self._build_request_headers(token, headers)
+
+            # 2) Limites (diário e por segundo)
+            self._respect_daily_limit()
             self._respect_rate_limit()
-            start = time.perf_counter()
+
+            # 3) HTTP request com métricas e tratamento de erros de rede
             try:
-                response = self._session.request(
-                    method,
-                    url,
+                response, duration = self._perform_http_request(
+                    method=method,
+                    url=url,
                     params=params,
-                    json=json_body,
+                    json_body=json_body,
                     headers=request_headers,
-                    timeout=self._timeout,
+                    is_retry=is_retry,
                 )
             except requests.RequestException as exc:
-                duration = time.perf_counter() - start
-                self._metrics.record_request(duration=duration, status_code=0, is_retry=is_retry)
-                self._logger.error(
-                    "bling.request.error",
-                    exc_info=exc,
-                    extra={
-                        "event": "bling.request.error",
-                        "resource": resource,
-                        "attempt": attempt,
-                        "url": url,
-                    },
-                )
                 last_error = exc
-                if attempt >= self._max_retries:
-                    raise BlingAPIError("Exceeded maximum retries due to network errors") from exc
-                self._sleep_backoff(attempt)
+                self._handle_network_exception(exc, url, resource, attempt)
                 continue
-            duration = time.perf_counter() - start
-            self._metrics.record_request(duration=duration, status_code=response.status_code, is_retry=is_retry)
 
+            # 4) Métricas de resposta bem-sucedida (HTTP nível transporte)
+            self._metrics.record_request(
+                duration=duration,
+                status_code=response.status_code,
+                is_retry=is_retry,
+            )
+
+            # 5) Lógica de tratamento por status code
+            # 401: tenta renovar token uma vez
             if response.status_code == 401 and not force_refresh:
                 self._logger.warning(
                     "bling.request.unauthorized",
@@ -345,6 +337,7 @@ class BlingClient:
                 self._sleep_backoff(attempt)
                 continue
 
+            # Status codes "retriáveis" (408, 425, 429, 5xx)
             if response.status_code in self.RETRYABLE_STATUS_CODES:
                 self._logger.warning(
                     "bling.request.retry",
@@ -362,6 +355,7 @@ class BlingClient:
                 self._sleep_backoff(attempt)
                 continue
 
+            # 4xx/5xx não tratáveis: levantar erro de domínio
             if response.status_code >= 400:
                 payload = self._safe_json(response)
                 self._logger.error(
@@ -379,11 +373,96 @@ class BlingClient:
                     status_code=response.status_code,
                     payload=payload,
                 )
+
             return response
 
+        # Se chegou aqui, estourou número de tentativas
         if last_error is not None:  # pragma: no cover - defensive
             raise BlingAPIError("Maximum retries exceeded") from last_error
         raise BlingAPIError("Maximum retries exceeded for request")
+
+    def _obtain_token(self, *, force_refresh: bool):
+        """Obtém um token OAuth válido, usando cache quando possível."""
+        try:
+            # Usa token já carregado se ainda for válido
+            if self._oauth_client._token and not self._oauth_client._token.is_expired():
+                return self._oauth_client._token
+            # Caso contrário, delega para o fluxo normal do OAuthClient
+            return self._oauth_client.get_token(force_refresh=force_refresh)
+        except BlingOAuthError as exc:
+            raise BlingAPIError(f"Failed to obtain OAuth token: {exc}") from exc
+
+    def _build_request_headers(
+        self,
+        token,
+        extra_headers: Optional[Mapping[str, str]] = None,
+    ) -> Dict[str, str]:
+        """Monta os headers da requisição, incluindo Authorization."""
+        request_headers: Dict[str, str] = {
+            "Authorization": f"Bearer {token.access_token}",
+        }
+
+        if extra_headers:
+            request_headers.update(extra_headers)
+
+        return request_headers
+
+    def _perform_http_request(
+        self,
+        *,
+        method: str,
+        url: str,
+        params: Optional[Mapping[str, Any]],
+        json_body: Optional[Mapping[str, Any]],
+        headers: Mapping[str, str],
+        is_retry: bool,
+    ) -> Tuple[requests.Response, float]:
+        """Executa a chamada HTTP e registra métricas em caso de falha de rede."""
+        start = time.perf_counter()
+
+        try:
+            response = self._session.request(
+                method,
+                url,
+                params=params,
+                json=json_body,
+                headers=headers,
+                timeout=self._timeout,
+            )
+        except requests.RequestException as exc:
+            duration = time.perf_counter() - start
+            # status_code = 0 para indicar erro de rede (sem resposta HTTP)
+            self._metrics.record_request(
+                duration=duration,
+                status_code=0,
+                is_retry=is_retry,
+            )
+            raise exc
+
+        duration = time.perf_counter() - start
+        return response, duration
+
+    def _handle_network_exception(
+        self,
+        exc: requests.RequestException,
+        url: str,
+        resource: Optional[str],
+        attempt: int,
+    ) -> None:
+        """Loga erro de rede e decide se deve encerrar ou tentar novamente."""
+        self._logger.error(
+            "bling.request.error",
+            exc_info=exc,
+            extra={
+                "event": "bling.request.error",
+                "resource": resource,
+                "attempt": attempt,
+                "url": url,
+            },
+        )
+        if attempt >= self._max_retries:
+            # Mantém a mensagem original de erro de rede
+            raise BlingAPIError("Exceeded maximum retries due to network errors") from exc
 
     def _respect_rate_limit(self) -> None:
         if self._rate_limit_per_second <= 0:
